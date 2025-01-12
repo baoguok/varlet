@@ -1,7 +1,8 @@
-import ActionSheet from '../index'
-import VarActionSheet from '../ActionSheet'
 import { createApp } from 'vue'
-import { delay, trigger } from '../../utils/jest'
+import { expect, test, vi } from 'vitest'
+import { delay, trigger } from '../../utils/test'
+import VarActionSheet from '../ActionSheet'
+import ActionSheet from '../index'
 
 test('test action sheet plugin', () => {
   const app = createApp({}).use(ActionSheet)
@@ -9,10 +10,10 @@ test('test action sheet plugin', () => {
 })
 
 test('test action sheet functional show & close', async () => {
-  const onOpen = jest.fn()
-  const onOpened = jest.fn()
-  const onClose = jest.fn()
-  const onClosed = jest.fn()
+  const onOpen = vi.fn()
+  const onOpened = vi.fn()
+  const onClose = vi.fn()
+  const onClosed = vi.fn()
 
   ActionSheet({
     actions: [],
@@ -38,7 +39,7 @@ test('test action sheet functional show & close', async () => {
 })
 
 test('test action sheet functional onSelect', async () => {
-  const onSelect = jest.fn()
+  const onSelect = vi.fn()
 
   ActionSheet({
     actions: [{ name: 'Item 01' }],
@@ -53,7 +54,7 @@ test('test action sheet functional onSelect', async () => {
 })
 
 test('test action sheet functional disabled', async () => {
-  const onSelect = jest.fn()
+  const onSelect = vi.fn()
 
   ActionSheet({
     actions: [
@@ -70,4 +71,38 @@ test('test action sheet functional disabled', async () => {
   await delay(300)
 
   ActionSheet.close()
+  await delay(300)
+})
+
+test('test setDefaultOptions and resetDefaultOptions', async () => {
+  const onSelect = vi.fn()
+  ActionSheet.setDefaultOptions({ onSelect })
+
+  ActionSheet({
+    actions: [{ name: 'Item 01' }],
+  })
+  await delay(16)
+  await trigger(document.querySelector('.var-action-sheet__action-item'), 'click')
+  expect(onSelect).toHaveBeenCalledTimes(1)
+  await delay(300)
+
+  ActionSheet.resetDefaultOptions()
+  ActionSheet({
+    actions: [{ name: 'Item 01' }],
+  })
+  await delay(16)
+  await trigger(document.querySelector('.var-action-sheet__action-item'), 'click')
+  expect(onSelect).toHaveBeenCalledTimes(1)
+
+  ActionSheet.close()
+  await delay(300)
+})
+
+test('test safe area', async () => {
+  ActionSheet({
+    actions: [{ name: 'Item 01' }],
+    safeArea: true,
+  })
+  await delay(16)
+  expect(document.body.innerHTML).toMatchSnapshot()
 })

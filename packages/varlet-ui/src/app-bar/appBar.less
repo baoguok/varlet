@@ -1,32 +1,38 @@
-@app-bar-color: var(--color-primary);
-@app-bar-height: 54px;
-@app-bar-text-color: #fff;
-@app-bar-title-padding: 0 12px;
-@app-bar-left-gap: 6px;
-@app-bar-right-gap: 6px;
-
 :root {
-  --app-bar-color: @app-bar-color;
-  --app-bar-title-padding: @app-bar-title-padding;
+  --app-bar-color: var(--color-primary);
+  --app-bar-title-padding: 0 12px;
+  --app-bar-title-font-size: var(--font-size-lg);
   --app-bar-text-color: #fff;
-  --app-bar-height: @app-bar-height;
-  --app-bar-left-gap: @app-bar-left-gap;
-  --app-bar-right-gap: @app-bar-right-gap;
+  --app-bar-height: 54px;
+  --app-bar-left-gap: 6px;
+  --app-bar-right-gap: 6px;
+  --app-bar-border-radius: 4px;
+  --app-bar-font-size: var(--font-size-lg);
+  --app-bar-border-bottom: thin solid var(--color-outline);
 }
 
 .var-app-bar {
   position: relative;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: var(--app-bar-height);
+  width: 100%;
+  font-size: var(--app-bar-font-size);
   background: var(--app-bar-color);
   color: var(--app-bar-text-color);
   transition: background-color 0.25s;
 
-  &__title {
-    flex: 1;
+  &__toolbar {
+    position: relative;
     display: flex;
+    justify-content: center;
+    align-items: center;
+    height: var(--app-bar-height);
+  }
+
+  &__title {
+    font-size: var(--app-bar-title-font-size);
+    flex: 1;
+    height: 100%;
+    display: flex;
+    align-items: center;
     justify-content: center;
     white-space: nowrap;
     text-overflow: ellipsis;
@@ -39,7 +45,6 @@
     display: flex;
     align-items: center;
     height: 100%;
-    z-index: 2;
   }
 
   &__left {
@@ -52,5 +57,25 @@
     position: absolute;
     top: 0;
     right: var(--app-bar-right-gap);
+  }
+
+  &--round {
+    border-radius: var(--app-bar-border-radius);
+  }
+
+  &--safe-area-top {
+    padding-top: constant(safe-area-inset-top);
+    padding-top: env(safe-area-inset-top);
+    box-sizing: content-box !important;
+  }
+
+  &--fixed {
+    position: fixed;
+    top: 0;
+    left: 0;
+  }
+
+  &--border {
+    border-bottom: var(--app-bar-border-bottom);
   }
 }

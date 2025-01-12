@@ -1,6 +1,11 @@
 <template>
-  <transition name="var-fade">
-    <span :class="classes(n(), 'var--box', ...contentClass)" :style="chipStyles" v-bind="$attrs">
+  <transition :name="n('$-fade')">
+    <!-- eslint-disable-next-line vue/require-toggle-inside-transition -->
+    <span
+      :class="classes(n(), n('$--box'), formatElevation(elevation, 1), ...contentClass)"
+      :style="chipStyle"
+      v-bind="$attrs"
+    >
       <slot name="left" />
 
       <span :class="n(`text-${size}`)">
@@ -9,31 +14,31 @@
 
       <slot name="right" />
 
-      <span v-if="closable" :class="n('--close')" @click="onClose">
-        <var-icon :name="`${iconName ? iconName : 'close-circle'}`" />
+      <span v-if="closeable" :class="n('--close')" @click="handleClose">
+        <var-icon :name="`${iconName ? iconName : 'close-circle'}`" :namespace="namespace" />
       </span>
     </span>
   </transition>
 </template>
 
 <script lang="ts">
+import { computed, CSSProperties, defineComponent } from 'vue'
+import { call } from '@varlet/shared'
 import VarIcon from '../icon'
-import { defineComponent, computed } from 'vue'
+import { createNamespace, formatElevation } from '../utils/components'
 import { props } from './props'
-import type { ComputedRef } from 'vue'
-import { createNamespace } from '../utils/components'
 
-const { n, classes } = createNamespace('chip')
+const { name, n, classes } = createNamespace('chip')
 
 export default defineComponent({
-  name: 'VarChip',
+  name,
   components: {
     VarIcon,
   },
   inheritAttrs: false,
   props,
   setup(props) {
-    const chipStyles = computed(() => {
+    const chipStyle = computed<CSSProperties>(() => {
       const { plain, textColor, color } = props
 
       if (plain) {
@@ -48,22 +53,27 @@ export default defineComponent({
         background: color,
       }
     })
-
-    const contentClass: ComputedRef<Array<string | null | undefined>> = computed(() => {
+    const contentClass = computed<(string | null)[]>(() => {
       const { size, block, type, plain, round } = props
 
-      const blockClass = block ? 'var--flex' : 'var--inline-flex'
+      const blockClass = block ? n('$--flex') : n('$--inline-flex')
       const plainTypeClass = plain ? `${n('plain')} ${n(`plain-${type}`)}` : n(`--${type}`)
       const roundClass = round ? n('--round') : null
 
       return [n(`--${size}`), blockClass, plainTypeClass, roundClass]
     })
 
+    function handleClose(e: Event) {
+      call(props.onClose, e)
+    }
+
     return {
+      chipStyle,
+      contentClass,
       n,
       classes,
-      chipStyles,
-      contentClass,
+      formatElevation,
+      handleClose,
     }
   },
 })
@@ -71,6 +81,7 @@ export default defineComponent({
 
 <style lang="less">
 @import '../styles/common';
+@import '../styles/elevation';
 @import '../icon/icon';
 @import './chip';
 </style>

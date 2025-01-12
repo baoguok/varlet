@@ -1,6 +1,9 @@
-import { VarComponent } from './varComponent'
+import { VNode } from 'vue'
+import { BasicAttributes, SetPropsDefaults, VarComponent } from './varComponent'
 
-export interface CollapseItemProps {
+export declare const collapseItemProps: Record<keyof CollapseItemProps, any>
+
+export interface CollapseItemProps extends BasicAttributes {
   name?: string | number
   title?: string
   icon?: string
@@ -8,7 +11,15 @@ export interface CollapseItemProps {
 }
 
 export class CollapseItem extends VarComponent {
+  static setPropsDefaults: SetPropsDefaults<CollapseItemProps>
+
   $props: CollapseItemProps
+
+  $slots: {
+    default(): VNode[]
+    title(): VNode[]
+    icon(): VNode[]
+  }
 }
 
 export class _CollapseItemComponent extends CollapseItem {}

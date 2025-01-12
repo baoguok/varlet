@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -7,10 +7,12 @@
     <link rel="icon" type="image/svg" href="./logo.svg" />
     <title>Varlet UI Playground</title>
     <script>
-      // process shim for old versions of @vue/compiler-sfc dependency
       window.process = { env: {} }
-      const saved = localStorage.getItem('varlet-ui-playground-prefer-dark')
-      if (saved !== 'false') {
+      const theme = localStorage.getItem('varlet-ui-playground-prefer-theme')
+      if (
+        (theme && theme.toLowerCase().includes('dark')) ||
+        (!theme && window.matchMedia('(prefers-color-scheme: dark)').matches)
+      ) {
         document.documentElement.classList.add('dark')
       }
     </script>

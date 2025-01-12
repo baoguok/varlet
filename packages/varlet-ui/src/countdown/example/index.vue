@@ -1,40 +1,35 @@
 <script setup>
-import AppType from '@varlet/cli/site/mobile/components/AppType'
-import VarCountdown from '..'
-import Snackbar from '../../snackbar'
-import VarButton from '../../button'
-import VarRow from '../../row'
-import dark from '../../themes/dark'
 import { ref } from 'vue'
-import { pack, use } from './locale'
-import { watchLang, watchDarkMode } from '@varlet/cli/site/utils'
+import { AppType, onThemeChange, watchLang } from '@varlet/cli/client'
+import { Snackbar } from '@varlet/ui'
+import { t, use } from './locale'
 
 const countdown = ref(null)
 const time = ref(3000)
 
-const end = () => {
+watchLang(use)
+onThemeChange()
+
+function end() {
   Snackbar.info('end!')
 }
 
-const change = () => {
+function change() {
   console.log('change')
 }
-
-watchLang(use)
-watchDarkMode(dark)
 </script>
 
 <template>
-  <app-type>{{ pack.basicUsage }}</app-type>
+  <app-type>{{ t('basicUsage') }}</app-type>
   <var-countdown time="108000000" />
 
-  <app-type>{{ pack.customFormat }}</app-type>
-  <var-countdown time="108000000" :format="pack.format" />
+  <app-type>{{ t('customFormat') }}</app-type>
+  <var-countdown time="108000000" :format="t('format')" />
 
-  <app-type>{{ pack.showMillisecond }}</app-type>
+  <app-type>{{ t('showMillisecond') }}</app-type>
   <var-countdown time="108000000" format="HH : mm : ss : SS" />
 
-  <app-type>{{ pack.customStyle }}</app-type>
+  <app-type>{{ t('customStyle') }}</app-type>
   <var-countdown time="108000000">
     <template #default="timeData">
       <span class="countdown-example-block">{{ timeData.hours }}</span>
@@ -45,22 +40,23 @@ watchDarkMode(dark)
     </template>
   </var-countdown>
 
-  <app-type>{{ pack.manualControl }}</app-type>
-  <var-countdown :time="time" ref="countdown" :auto-start="false" format="ss : SSS" @end="end" @change="change" />
+  <app-type>{{ t('manualControl') }}</app-type>
+  <var-countdown ref="countdown" :time="time" :auto-start="false" format="ss : SSS" @end="end" @change="change" />
   <var-row justify="space-between" align="center" style="margin-top: 10px">
-    <var-button type="primary" @click="$refs.countdown.start()">{{ pack.startText }}</var-button>
-    <var-button @click="$refs.countdown.pause()">{{ pack.pauseText }}</var-button>
-    <var-button @click="$refs.countdown.reset()">{{ pack.resetText }}</var-button>
+    <var-button type="primary" @click="$refs.countdown.start()">{{ t('startText') }}</var-button>
+    <var-button @click="$refs.countdown.pause()">{{ t('pauseText') }}</var-button>
+    <var-button @click="$refs.countdown.reset()">{{ t('resetText') }}</var-button>
   </var-row>
 </template>
 
 <style scoped>
 .countdown-example-block {
-  background: #ff9f00;
-  color: white;
+  background: var(--color-primary);
+  color: var(--color-on-primary);
   width: 30px;
   height: 30px;
   border-radius: 50%;
+  padding: 18px;
   display: inline-flex;
   align-items: center;
   justify-content: center;

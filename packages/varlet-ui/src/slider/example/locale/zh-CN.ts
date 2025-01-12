@@ -2,6 +2,7 @@ export default {
   basicUsage: '基本使用',
   stepSize: '指定步长',
   dualThumb: '双滑块',
+  range: '选择范围',
   disable: '禁用',
   readonly: '只读',
   sliderSize: '不同大小',
@@ -9,4 +10,7 @@ export default {
   showLabel: '显示标签',
   customBtn: '自定义按钮',
   validateValue: '值的校验',
+  validateWithZod: '使用 Zod 校验',
+  errMsg: '错误信息',
+  vertical: '垂直方向',
 }

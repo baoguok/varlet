@@ -1,7 +1,9 @@
-import type { App, TeleportProps } from 'vue'
-import { VarComponent } from './varComponent'
+import { App, TeleportProps, VNode } from 'vue'
+import { BasicAttributes, ListenerProp, SetPropsDefaults, VarComponent } from './varComponent'
 
-export interface ActionSheetProps {
+export declare const actionSheetProps: Record<keyof ActionSheetProps, any>
+
+export interface ActionSheetProps extends BasicAttributes {
   actions?: ActionItem[]
   show?: boolean
   title?: string
@@ -11,28 +13,31 @@ export interface ActionSheetProps {
   lockScroll?: boolean
   closeOnClickAction?: boolean
   closeOnClickOverlay?: boolean
-  teleport?: TeleportProps['to']
-  onOpen?: () => void
-  onOpened?: () => void
-  onClose?: () => void
-  onClosed?: () => void
-  onSelect?: (action: ActionItem) => void
-  onClickOverlay?: () => void
-  'onUpdate:show'?: (show: boolean) => void
+  closeOnKeyEscape?: boolean
+  safeArea?: boolean
+  teleport?: TeleportProps['to'] | false
+  onOpen?: ListenerProp<() => void>
+  onOpened?: ListenerProp<() => void>
+  onClose?: ListenerProp<() => void>
+  onClosed?: ListenerProp<() => void>
+  onSelect?: ListenerProp<(action: ActionItem) => void>
+  onClickOverlay?: ListenerProp<() => void>
+  onKeyEscape?: ListenerProp<() => void>
+  'onUpdate:show'?: ListenerProp<(show: boolean) => void>
 }
 
 export interface ActionItem {
   name: string
-  color: string
-  icon: string
-  iconSize: string | number
-  className: string
-  disabled: boolean
+  color?: string
+  icon?: string
+  namespace?: string
+  iconSize?: string | number
+  className?: string
+  disabled?: boolean
 }
 
 export interface ActionSheetOptions {
-  actions: ActionItem[]
-  show?: boolean
+  actions?: ActionItem[]
   title?: string
   overlay?: boolean
   overlayClass?: string
@@ -40,29 +45,45 @@ export interface ActionSheetOptions {
   lockScroll?: boolean
   closeOnClickAction?: boolean
   closeOnClickOverlay?: boolean
+  closeOnKeyEscape?: boolean
+  safeArea?: boolean
   onOpen?: () => void
   onOpened?: () => void
   onClose?: () => void
   onClosed?: () => void
   onClickOverlay?: () => void
+  onKeyEscape?: () => void
   onSelect?: (action: ActionItem) => void
 }
 
 export class ActionSheetComponent extends VarComponent {
   $props: ActionSheetProps
+
+  $slots: {
+    default(): VNode[]
+    title(): VNode[]
+    actions(): VNode[]
+  }
 }
 
 export type ActionSheetActions = ActionItem | 'close'
 
 export interface IActionSheet {
-  (options: ActionSheetOptions): Promise<ActionSheetActions>
+  (options?: ActionSheetOptions): Promise<ActionSheetActions>
+
   Component: typeof ActionSheetComponent
+
+  setDefaultOptions(options: ActionSheetOptions): void
+
+  resetDefaultOptions(): void
 
   close(): void
 
   install(app: App): void
+
+  setPropsDefaults: SetPropsDefaults<ActionSheetProps>
 }
 
 export class _ActionSheetComponent extends ActionSheetComponent {}
 
-export const ActionSheet: IActionSheet
+export declare const ActionSheet: IActionSheet

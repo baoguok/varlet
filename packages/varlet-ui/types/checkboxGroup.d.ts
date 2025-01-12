@@ -1,19 +1,50 @@
-import { VarComponent } from './varComponent'
+import { VNode, VNodeChild } from 'vue'
+import {
+  BasicAttributes,
+  Direction as CheckboxGroupDirection,
+  Rules as CheckboxGroupRules,
+  ListenerProp,
+  SetPropsDefaults,
+  VarComponent,
+} from './varComponent'
 
-export type CheckboxGroupValidateTriggers = 'onChange'
+export declare const checkboxGroupProps: Record<keyof CheckboxGroupProps, any>
 
-export interface CheckboxGroupProps {
+export type CheckboxGroupValidateTrigger = 'onChange'
+
+export type CheckboxGroupOptionLabelRender = (option: CheckboxGroupOption, checked: boolean) => VNodeChild
+
+export interface CheckboxGroupOption {
+  label?: string | VNode | CheckboxGroupOptionLabelRender
+  value?: any
+  disabled?: boolean
+
+  [key: PropertyKey]: any
+}
+
+export { CheckboxGroupDirection }
+
+export interface CheckboxGroupProps extends BasicAttributes {
   modelValue?: any[]
   max?: string | number
-  direction?: 'horizontal' | 'vertical'
-  validateTrigger?: Array<CheckboxGroupValidateTriggers>
-  rules?: Array<(value: any) => any>
-  onChange?: (value: Array<any>) => void
-  'onUpdate:modelValue'?: (value: Array<any>) => void
+  labelKey?: string
+  valueKey?: string
+  options?: CheckboxGroupOption[]
+  direction?: CheckboxGroupDirection
+  validateTrigger?: CheckboxGroupValidateTrigger[]
+  rules?: CheckboxGroupRules
+  onChange?: ListenerProp<(value: Array<any>) => void>
+  'onUpdate:modelValue'?: ListenerProp<(value: Array<any>) => void>
 }
 
 export class CheckboxGroup extends VarComponent {
+  static setPropsDefaults: SetPropsDefaults<CheckboxGroupProps>
+
   $props: CheckboxGroupProps
+
+  $slots: {
+    default(): VNode[]
+  }
 
   validate(): Promise<boolean>
 
@@ -21,9 +52,9 @@ export class CheckboxGroup extends VarComponent {
 
   reset(): void
 
-  checkAll(): any
+  checkAll(): any[]
 
-  inverseAll(): any
+  inverseAll(): any[]
 }
 
 export class _CheckboxGroupComponent extends CheckboxGroup {}

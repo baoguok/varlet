@@ -1,29 +1,46 @@
-import vue from '@vitejs/plugin-vue'
 import fs from 'fs'
-import { resolve } from 'path'
+import { fileURLToPath, URL } from 'node:url'
 import { defineConfig, Plugin } from 'vite'
 
-const varletESMBundleFile = resolve(__dirname, '../varlet-ui/es/varlet.esm.js')
-const varletTouchEmulatorFile = resolve(__dirname, '../varlet-touch-emulator/index.js')
-const varletCSSFile = resolve(__dirname, '../varlet-ui/es/style.css')
+function toPath(path: string) {
+  return fileURLToPath(new URL(path, import.meta.url))
+}
 
-function copyVarletPlugin(): Plugin {
+function copyVarletDependencies(): Plugin {
   return {
-    name: 'copy-varlet',
+    name: 'copy-varlet-dependencies',
+
     buildStart() {
-      fs.copyFileSync(varletESMBundleFile, resolve('public/varlet.esm.js'))
-      fs.copyFileSync(varletTouchEmulatorFile, resolve('public/varlet-touch-emulator.js'))
-      fs.copyFileSync(varletCSSFile, resolve('public/varlet.css'))
+      fs.copyFileSync(toPath('../varlet-ui/es/varlet.esm.js'), toPath('./public/varlet.esm.js'))
+      fs.copyFileSync(toPath('../varlet-touch-emulator/iife.js'), toPath('./public/varlet-touch-emulator.js'))
+      fs.copyFileSync(toPath('../varlet-ui/es/style.css'), toPath('./public/varlet.css'))
+      fs.writeFileSync(
+        toPath('./public/varlet-area.js'),
+        `export default ${fs.readFileSync(toPath('../varlet-ui/json/area.json'))}`,
+      )
     },
   }
 }
 
-export default defineConfig(async () => {
-  return {
-    base: './',
-    plugins: [vue(), copyVarletPlugin()],
-    build: {
-      outDir: 'site',
-    },
-  }
+export default defineConfig({
+  base: './',
+
+  server: {
+    host: '0.0.0.0',
+    port: 3000,
+  },
+
+  optimizeDeps: {
+    exclude: ['@vue/repl'],
+  },
+
+  build: {
+    outDir: 'site',
+  },
+
+  define: {
+    __APP_ENABLE_PREVIEW__: process.env.ENABLE_PREVIEW,
+  },
+
+  plugins: [copyVarletDependencies()],
 })

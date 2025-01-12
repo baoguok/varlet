@@ -1,118 +1,91 @@
 <script setup>
 import { ref } from 'vue'
-import VarAppBar from '..'
-import VarIcon from '../../icon'
-import vRipple from '../../ripple'
-import AppType from '@varlet/cli/site/mobile/components/AppType'
-import Snackbar from '../../snackbar'
-import VarMenu from '../../menu'
-import VarButton from '../../button'
-import VarCell from '../../cell'
-import dark from '../../themes/dark'
-import { pack, use } from './locale'
-import { watchLang, watchDarkMode } from '@varlet/cli/site/utils'
+import { AppType, onThemeChange, watchLang } from '@varlet/cli/client'
+import { t, use } from './locale'
 
-const offsetY = ref(false)
-const menuList = ref([])
-const bgColor = ref('#fff')
+const active = ref(0)
 
-const searchData = () => {
-  Snackbar({
-    content: pack.value.search,
-    position: 'top',
-  })
-}
-
-const goBack = () => {
-  Snackbar({
-    content: pack.value.goBack,
-    position: 'top',
-  })
-}
-
-const changeOffset = () => {
-  menuList.value = [
-    { label: pack.value.options1, value: 'menu1' },
-    { label: pack.value.options2, value: 'menu2' },
-  ]
-
-  offsetY.value = true
-}
-
-watchLang((lang) => {
-  use(lang)
-
-  offsetY.value = false
-})
-
-watchDarkMode(dark, (themes) => {
-  bgColor.value = themes === 'darkThemes' ? '#272727' : '#fff'
-})
+watchLang(use)
+onThemeChange()
 </script>
 
 <template>
-  <app-type>{{ pack.basicAppBar }}</app-type>
-  <var-app-bar :title="pack.title" />
+  <app-type>{{ t('basicUsage') }}</app-type>
+  <var-app-bar :title="t('title')" />
 
-  <app-type>{{ pack.customStyle }}</app-type>
-  <var-app-bar :title="pack.title" title-position="center" color="#00c48f" />
+  <app-type>{{ t('round') }}</app-type>
+  <var-app-bar :title="t('round')" title-position="center" round />
 
-  <app-type>{{ pack.addSlotsAtTitle }}</app-type>
-  <var-app-bar>{{ pack.addTheTitleFromTheSlot }}</var-app-bar>
+  <app-type>{{ t('customStyle') }}</app-type>
+  <var-app-bar
+    :title="t('title')"
+    title-position="center"
+    color="linear-gradient(90deg, rgba(72,176,221,1) 0%, rgba(0,208,161,1) 100%)"
+  />
 
-  <app-type>{{ pack.addLeftSlot }}</app-type>
-  <var-app-bar :title="pack.title" title-position="center">
+  <app-type>{{ t('addTitleSlot') }}</app-type>
+  <var-app-bar>{{ t('addTitleSlot') }}</var-app-bar>
+
+  <app-type>{{ t('addLeftAndRightSlot') }}</app-type>
+  <var-app-bar :title="t('title')">
     <template #left>
-      <var-button round text color="transparent" text-color="#ffffff" @click="goBack">
-        <var-icon name="chevron-left" :size="24" />
-      </var-button>
-    </template>
-  </var-app-bar>
-
-  <app-type>{{ pack.addRightSlot }}</app-type>
-  <var-app-bar :title="pack.title">
-    <template #right>
-      <var-button round text color="transparent" text-color="#ffffff" @click="searchData">
-        <var-icon name="magnify" :size="24" />
-      </var-button>
-    </template>
-  </var-app-bar>
-
-  <app-type>{{ pack.addLeftAndRightSlot }}</app-type>
-  <var-app-bar :title="pack.title">
-    <template #left>
-      <var-button round text color="transparent" text-color="#ffffff" @click="goBack">
+      <var-button round text color="transparent" text-color="#ffffff">
         <var-icon name="chevron-left" :size="24" />
       </var-button>
     </template>
 
     <template #right>
-      <var-menu :offset-y="42" :offset-x="-20" v-model:show="offsetY">
-        <var-button round text color="transparent" text-color="#ffffff" @click="changeOffset">
+      <var-menu>
+        <var-button round text color="transparent" text-color="#ffffff">
           <var-icon name="menu" :size="24" />
         </var-button>
 
         <template #menu>
-          <div class="var-app-var--example-menu-list" :style="{ background: bgColor }">
-            <var-cell class="var-app-var--example-menu-cell" v-for="value in menuList" :key="value.value" v-ripple>
-              {{ value.label }}
-            </var-cell>
-          </div>
+          <var-cell ripple>{{ t('option') }}</var-cell>
+          <var-cell ripple>{{ t('option') }}</var-cell>
+          <var-cell ripple>{{ t('option') }}</var-cell>
         </template>
       </var-menu>
     </template>
   </var-app-bar>
 
-  <div class="var-app-var--example-space"></div>
+  <app-type>{{ t('custom') }}</app-type>
+  <var-app-bar
+    round
+    image="tree.jpeg"
+    image-linear-gradient="to right top, rgba(29, 68, 147, 0.5) 0%, rgba(74, 198, 170, 0.9) 100%"
+  >
+    {{ t('title') }}
+    <template #left>
+      <var-button round text color="transparent" text-color="#fff">
+        <var-icon name="menu" :size="24" />
+      </var-button>
+    </template>
+
+    <template #right>
+      <var-button round text color="transparent" text-color="#fff">
+        <var-icon name="map-marker-radius" :size="24" />
+      </var-button>
+      <var-button round text color="transparent" text-color="#fff">
+        <var-icon name="star" :size="24" />
+      </var-button>
+      <var-button round text color="transparent" text-color="#fff">
+        <var-icon name="heart" :size="24" />
+      </var-button>
+    </template>
+
+    <template #content>
+      <var-tabs
+        v-model:active="active"
+        style="margin-top: 20vmin"
+        color="transparent"
+        active-color="#fff"
+        inactive-color="#ddd"
+      >
+        <var-tab>{{ t('option') }}</var-tab>
+        <var-tab>{{ t('option') }}</var-tab>
+        <var-tab>{{ t('option') }}</var-tab>
+      </var-tabs>
+    </template>
+  </var-app-bar>
 </template>
-
-<style>
-.var-app-var--example-menu-list .var-app-var--example-menu-cell {
-  display: block;
-  padding: 10px;
-}
-
-.var-app-var--example-space {
-  height: 80px;
-}
-</style>

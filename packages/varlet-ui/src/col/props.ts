@@ -1,5 +1,23 @@
-import type { PropType } from 'vue'
-import { SizeDescriptor } from './provide'
+import { type PropType } from 'vue'
+import { defineListenerProp } from '../utils/components'
+import { type ColSizeDescriptor } from './provide'
+
+export type ColAlign =
+  | 'stretch'
+  | 'center'
+  | 'start'
+  | 'end'
+  | 'baseline'
+  | 'initial'
+  | 'inherit'
+  | 'flex-start'
+  | 'flex-end'
+
+export type ColJustify = 'start' | 'end' | 'center' | 'space-around' | 'space-between' | 'flex-start' | 'flex-end'
+
+export type ColDirection = 'row' | 'column'
+
+export type ColBreakpoint = string | number | ColSizeDescriptor | undefined
 
 export const props = {
   span: {
@@ -10,22 +28,16 @@ export const props = {
     type: [String, Number],
     default: 0,
   },
-  onClick: {
-    type: Function as PropType<(e: Event) => void>,
+  direction: {
+    type: String as PropType<ColDirection>,
+    default: 'row',
   },
-  xs: {
-    type: [Object as SizeDescriptor, Number, String] as PropType<string | number | SizeDescriptor | undefined>,
-  },
-  sm: {
-    type: [Object as SizeDescriptor, Number, String] as PropType<string | number | SizeDescriptor | undefined>,
-  },
-  md: {
-    type: [Object as SizeDescriptor, Number, String] as PropType<string | number | SizeDescriptor | undefined>,
-  },
-  lg: {
-    type: [Object as SizeDescriptor, Number, String] as PropType<string | number | SizeDescriptor | undefined>,
-  },
-  xl: {
-    type: [Object as SizeDescriptor, Number, String] as PropType<string | number | SizeDescriptor | undefined>,
-  },
+  justify: String as PropType<ColJustify>,
+  align: String as PropType<ColDirection>,
+  xs: [Object, Number, String] as PropType<ColBreakpoint>,
+  sm: [Object, Number, String] as PropType<ColBreakpoint>,
+  md: [Object, Number, String] as PropType<ColBreakpoint>,
+  lg: [Object, Number, String] as PropType<ColBreakpoint>,
+  xl: [Object, Number, String] as PropType<ColBreakpoint>,
+  onClick: defineListenerProp<(e: Event) => void>(),
 }

@@ -1,8 +1,8 @@
 <template>
   <div
-    :class="classes(n(), 'var--box', computeColorClass(), n(`--${itemDirection}`))"
     ref="tabEl"
-    v-ripple="{ disabled }"
+    v-ripple="{ disabled: disabled || !ripple }"
+    :class="classes(n(), n('$--box'), computeColorClass(), n(`--${itemDirection}`))"
     :style="{
       color: computeColorStyle(),
     }"
@@ -13,25 +13,24 @@
 </template>
 
 <script lang="ts">
+import { computed, defineComponent, ref, watch } from 'vue'
+import { call } from '@varlet/shared'
 import Ripple from '../ripple'
-import { defineComponent, ref, computed, watch } from 'vue'
-import { props } from './props'
 import { createNamespace } from '../utils/components'
-import { useTabs } from './provide'
-import type { Ref, ComputedRef } from 'vue'
-import type { TabProvider } from './provide'
+import { props } from './props'
+import { useTabs, type TabProvider } from './provide'
 
-const { n, classes } = createNamespace('tab')
+const { name, n, classes } = createNamespace('tab')
 
 export default defineComponent({
-  name: 'VarTab',
+  name,
   directives: { Ripple },
   props,
   setup(props) {
-    const tabEl: Ref<HTMLElement | null> = ref(null)
-    const name: ComputedRef<string | number | undefined> = computed(() => props.name)
-    const disabled: ComputedRef<boolean> = computed(() => props.disabled)
-    const element: ComputedRef<HTMLElement | null> = computed(() => tabEl.value)
+    const tabEl = ref<HTMLElement | null>(null)
+    const element = computed<HTMLElement | null>(() => tabEl.value)
+    const name = computed(() => props.name)
+    const disabled = computed(() => props.disabled)
     const { index, tabs, bindTabs } = useTabs()
     const { onTabClick, active, activeColor, inactiveColor, disabledColor, itemDirection, resize } = tabs
 
@@ -44,48 +43,43 @@ export default defineComponent({
 
     bindTabs(tabProvider)
 
-    const computeColorStyle = () => {
-      const { disabled, name } = props
+    watch(() => [props.name, props.disabled], resize)
 
-      return disabled
-        ? disabledColor.value
-        : active.value === name || active.value === index?.value
-        ? activeColor.value
-        : inactiveColor.value
+    function shouldActive() {
+      if (props.name != null) {
+        return active.value === props.name
+      }
+
+      return active.value === index?.value
     }
 
-    const computeColorClass = () => {
-      const { disabled, name } = props
-
-      return disabled
-        ? 'var-tab--disabled'
-        : active.value === name || active.value === index?.value
-        ? 'var-tab--active'
-        : 'var-tab--inactive'
+    function computeColorStyle() {
+      return props.disabled ? disabledColor.value : shouldActive() ? activeColor.value : inactiveColor.value
     }
 
-    const handleClick = (event: Event) => {
+    function computeColorClass() {
+      return props.disabled ? n('$-tab--disabled') : shouldActive() ? n('$-tab--active') : n('$-tab--inactive')
+    }
+
+    function handleClick(event: Event) {
       const { disabled, name, onClick } = props
 
       if (disabled) {
         return
       }
 
-      onClick?.(name ?? index.value, event)
+      call(onClick, name ?? index.value, event)
       onTabClick(tabProvider)
     }
 
-    watch(() => props.name, resize)
-    watch(() => props.disabled, resize)
-
     return {
-      n,
-      classes,
       tabEl,
       active,
       activeColor,
       inactiveColor,
       itemDirection,
+      n,
+      classes,
       computeColorStyle,
       computeColorClass,
       handleClick,

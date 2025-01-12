@@ -16,7 +16,7 @@ const loading = ref(false)
 const finished = ref(false)
 const list = ref([])
 
-const load = () => {
+function load() {
   setTimeout(() => {
     for (let i = 0; i < 20; i++) {
       list.value.push(list.value.length + 1)
@@ -57,7 +57,7 @@ const loading = ref(false)
 const error = ref(false)
 const list = ref([])
 
-const load = () => {
+function load() {
   setTimeout(() => {
     if (list.value.length === 40) {
       error.value = true
@@ -97,7 +97,7 @@ const loading = ref(false)
 const finished = ref(false)
 const list = ref([])
 
-const load = () => {
+function load() {
   setTimeout(() => {
     for (let i = 0; i < 20; i++) {
       list.value.push(list.value.length + 1)
@@ -128,6 +128,45 @@ const load = () => {
 </template>
 ```
 
+### 组合
+
+与 `PullRefresh` 组件结合使用即可实现上拉加载和下拉刷新的功能，需保证`PullRefresh` 容器高度不为 `0`。
+
+```html
+<script setup>
+import { ref } from 'vue'
+
+const refreshing = ref(false)
+const loading = ref(false)
+const list = ref([])
+
+function refresh() {
+  setTimeout(() => {
+    console.log('refresh')
+    refreshing.value = false
+  }, 2000)
+}
+
+function load() {
+  setTimeout(() => {
+    for (let i = 0; i < 20; i++) {
+      list.value.push(list.value.length + 1)
+    }
+    
+    loading.value = false
+  }, 1000)
+}
+</script>
+
+<template>
+  <var-pull-refresh v-model="refreshing" @refresh="refresh">
+    <var-list v-model:loading="loading" @load="load">
+      <var-cell :key="d" v-for="d in list">ListItem {{ d }}</var-cell>
+    </var-list>
+  </var-pull-refresh>
+</template>
+```
+
 ### 注意
 
 我们是通过监听滚动容器的 `scroll` 事件检测是否触底并执行加载。
@@ -152,9 +191,9 @@ const load = () => {
 
 ### 方法
 
-| 方法名  | 说明                               | 参数 |
-| ------- | ---------------------------------- | ---- |
-| `check` | 触发位置检查, 触底触发 load 事件。 | `-`  |
+| 方法名  | 说明                               | 参数 | 返回值 |
+| ------- | ---------------------------------- | ---- | --- |
+| `check` | 触发位置检查, 触底触发 load 事件。 | `-`  | `-` |
 
 ### 事件
 
@@ -173,7 +212,7 @@ const load = () => {
 
 ### 样式变量
 
-以下为组件使用的 css 变量，可以使用 [StyleProvider 组件](#/zh-CN/style-provider) 进行样式定制
+以下为组件使用的 css 变量，可以使用 [StyleProvider 组件](#/zh-CN/style-provider) 进行样式定制。
 
 | 变量名                      | 默认值                |
 | --------------------------- | --------------------- |

@@ -1,206 +1,170 @@
 # AppBar
 
-### Basic AppBar
+### Intro
 
-Set the navigation bar title through the `title` attribute.
+Provide navigation function for the page, often used at the top of the page.
+
+### Basic Usage
+
+Set the title of the app bar through the `title` prop.
 
 ```html
 <template>
-  <var-app-bar title="title" />
+   <var-app-bar title="title" />
 </template>
 ```
 
-### Custom Style
+### Use Border Radius
 
-Set the position of the title and the color of the navigation bar through the `title-position` and `color` attributes.
+Turn on rounded border with the `round` prop.
 
 ```html
 <template>
-  <var-app-bar
-    title="title"
-    title-position="center"
-    color="#00c48f"
-  />
+   <var-app-bar title="Use Border Radius" title-position="center" round />
 </template>
 ```
 
-### Add Slots At Title
+### Custom Background Color
 
 ```html
 <template>
-  <var-app-bar>Add the title from the slot</var-app-bar>
+   <var-app-bar
+     title="title"
+     title-position="center"
+     color="linear-gradient(90deg, rgba(72,176,221,1) 0%, rgba(0,208,161,1) 100%)"
+   />
 </template>
 ```
 
-### Add Left Slot
+### Add Title Slot
 
 ```html
-<script setup>
-import { Snackbar } from '@varlet/ui'
-
-const goBack = () => {
-  Snackbar({
-    content: 'Go Back',
-    position: 'top'
-  })
-}
-</script>
-
 <template>
-  <var-app-bar title="title">
-    <template #left>
-      <var-button
-        round
-        text
-        color="transparent"
-        text-color="#ffffff"
-        @click="goBack"
-      >
-        <var-icon name="chevron-left" :size="24" />
-      </var-button>
-    </template>
-  </var-app-bar>
-</template>
-```
-
-### Add Right Slot
-
-```html
-<script setup>
-import { Snackbar } from '@varlet/ui'
-
-const searchData = () => {
-  Snackbar({
-    content: 'search',
-    position: 'top'
-  })
-}
-</script>
-
-<template>
-  <var-app-bar title="title">
-    <template #right>
-      <var-button
-        round
-        text
-        color="transparent"
-        text-color="#ffffff"
-        @click="searchData"
-      >
-        <var-icon name="magnify" :size="24" />
-      </var-button>
-    </template>
-  </var-app-bar>
+   <var-app-bar>Add Title Slot</var-app-bar>
 </template>
 ```
 
 ### Add Left And Right Slot
 
 ```html
-<script setup>
-import { ref } from 'vue'
-import { Snackbar } from '@varlet/ui'
-
-const offsetY = ref(false)
-const menuList = ref([
-  { label: 'options1', value: 'menu1' },
-  { label: 'options2', value: 'menu2' }
-])
-
-const goBack = () => {
-  Snackbar({
-    content: 'Go Back',
-    position: 'top'
-  })
-}
-</script>
-
 <template>
   <var-app-bar title="Title">
     <template #left>
       <var-button
-        round
-        text
         color="transparent"
         text-color="#fff"
-        @click="goBack"
+        round
+        text
       >
         <var-icon name="chevron-left" :size="24" />
       </var-button>
     </template>
 
     <template #right>
-      <var-menu 
-        class="app-bar-example-menu" 
-        :offset-y="42" 
-        :offset-x="-20" 
-        v-model:show="offsetY"
-      >
+      <var-menu>
         <var-button
+          color="transparent"
+          text-color="#fff"
           round
           text
-          color="transparent"
-          text-color="#ffffff"
-          @click="offsetY = true"
         >
           <var-icon name="menu" :size="24" />
         </var-button>
 
         <template #menu>
-          <div class="app-bar-example-menu-list">
-            <var-cell
-              class="app-bar-example-menu-cell"
-              v-for="value in menuList"
-              :key="value.value"
-              v-ripple
-            >
-              {{ value.label }}
-            </var-cell>
-          </div>
+          <var-cell ripple>OPTION</var-cell>
+          <var-cell ripple>OPTION</var-cell>
+          <var-cell ripple>OPTION</var-cell>
         </template>
       </var-menu>
     </template>
   </var-app-bar>
 </template>
+```
 
-<style>
-.app-bar-example-menu {   
-  background: transparent; 
-}
+### Custom Content
 
-.app-bar-example-menu-list {
-  background: #fff;
-}
+```html
+<script setup>
+import { ref } from 'vue'
 
-.app-bar-example-menu-cell {
-  display: block;
-  padding: 10px;
-}
-</style>
+const active = ref(0)
+</script>
+
+<template>
+  <var-app-bar
+    round
+    image="https://varletjs.org/tree.jpeg"
+    image-linear-gradient="to right top, rgba(29, 68, 147, 0.5) 0%, rgba(74, 198, 170, 0.9) 100%"
+  >
+    Title
+    <template #left>
+      <var-button round text color="transparent" text-color="#fff">
+        <var-icon name="menu" :size="24" />
+      </var-button>
+    </template>
+
+    <template #right>
+      <var-button round text color="transparent" text-color="#fff">
+        <var-icon name="map-marker-radius" :size="24" />
+      </var-button>
+      <var-button round text color="transparent" text-color="#fff">
+        <var-icon name="star" :size="24" />
+      </var-button>
+      <var-button round text color="transparent" text-color="#fff">
+        <var-icon name="heart" :size="24" />
+      </var-button>
+    </template>
+
+    <template #content>
+      <var-tabs
+        style="margin-top: 100px"
+        color="transparent"
+        active-color="#fff"
+        inactive-color="#ddd"
+        v-model:active="active"
+      >
+        <var-tab>OPTION</var-tab>
+        <var-tab>OPTION</var-tab>
+        <var-tab>OPTION</var-tab>
+      </var-tabs>
+    </template>
+  </var-app-bar>
+</template>
 ```
 
 ## API
 
 ### Props
 
-| Prop | Description | Type | Default |
-| --- | --- | --- | --- |
-| `color` | Background | _string_ | `-` |
-| `text-color` | Text color  | _string_ | `-` |
-| `title` | Title | _string_ | - |
-| `title-position` | Title location,Can be set to `left`,`center`,`right` | _string_ | `left` |
-| `elevation` | Set altitude for navigation bar | _boolean_ | `true` |
+| Prop             | Description                                          | Type | Default |
+|------------------|------------------------------------------------------| --- |---------|
+| `color`          | Background                                           | _string_ | `-`     |
+| `text-color`     | Text color                                           | _string_ | `-`     |
+| `title`          | Title                                                | _string_ | -       |
+| `title-position` | Title location, can be set to `left`, `center`, `right` | _string_ | `left`  |
+| `elevation` | Elevation level, options `true` `false` and level of `0-24` | _string \| number \| boolean_|   `true`    |
+| `fixed`          | Whether to fixed to the top     | _boolean_ | `false` |
+| `placeholder` ***3.2.14***  | Whether to generate placeholder elements of the same height at the top (`fixed` required)  | _boolean_ | `false` |
+| `z-index`          | AppBar element z-index                            | _number \| string_ | `1` |
+| `round`          | Whether to use rounded border                        | _boolean_ | `false` |
+| `border` ***3.3.2***          | Whether to use bottom border                            | _boolean_ | `false` |
+| `image`          | Background image                            | _string_ | `-` |
+| `image-linear-gradient` | Background image linear gradient | _string_ | `-` |
+| `safe-area-top` | Whether to enable top safe area adaptation | _boolean_ | `false` |
 
 ### Slots
 
-| Slot | Description | Arguments |
-| --- | --- | --- |
+| Name | Description                                                 | SlotProps |
+| --- |-------------------------------------------------------------| --- |
 | `default` | Customize the title content to override the `title` content | `-` |
-| `left` | Insert the content to the left of the AppBar | `-` |
-| `right` | Insert the content to the right of the AppBar | `-` |
+| `left` | Insert the content to the left of the app bar               | `-` |
+| `right` | Insert the content to the right of the app bar              | `-` |
+| `content` | Insert the content to the extra content of the app bar   | `-` |
 
 ### Style Variables
-Here are the CSS variables used by the component, Styles can be customized using [StyleProvider](#/en-US/style-provider)
+
+Here are the CSS variables used by the component. Styles can be customized using [StyleProvider](#/en-US/style-provider).
 
 | Variable | Default |
 | --- | --- |
@@ -208,5 +172,8 @@ Here are the CSS variables used by the component, Styles can be customized using
 | `--app-bar-text-color` | `#fff` |
 | `--app-bar-height` | `54px` |
 | `--app-bar-title-padding` | `0 12px` |
+| `--app-bar-title-font-size` | `var(--font-size-lg)` |
 | `--app-bar-left-gap` | `6px` |
 | `--app-bar-right-gap` | `6px` |
+| `--app-bar-border-radius` | `4px` |
+| `--app-bar-border-bottom` | `thin solid var(--color-outline)` |

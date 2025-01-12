@@ -1,17 +1,9 @@
-@divider-color: rgba(0, 0, 0, 0.12);
-@divider-text-color: #888;
-@divider-text-margin: 8px 0;
-@divider-text-padding: 0 8px;
-@divider-inset: 72px;
-@divider-vertical-inset: 8px;
-
 :root {
-  --divider-color: @divider-color;
-  --divider-text-color: @divider-text-color;
-  --divider-text-margin: @divider-text-margin;
-  --divider-text-padding: @divider-text-padding;
-  --divider-inset: @divider-inset;
-  --divider-vertical-inset: @divider-vertical-inset;
+  --divider-color: var(--color-outline);
+  --divider-text-color: #888;
+  --divider-text-margin: 8px 0;
+  --divider-text-padding: 0 8px;
+  --divider-inset: 72px;
 }
 
 .var-divider {
@@ -26,9 +18,9 @@
 
   &--vertical {
     width: 0;
-    height: 80%;
-    margin: auto var(--divider-text-margin);
-    padding: var(--divider-text-margin);
+    height: auto;
+    align-self: stretch;
+    margin: 0 var(--divider-text-margin);
     border-top: none;
     border-left: 1px solid var(--divider-color);
   }
@@ -36,12 +28,6 @@
   &--inset {
     width: calc(100% - var(--divider-inset));
     left: var(--divider-inset);
-  }
-
-  &--vertical&--inset {
-    width: 0;
-    left: unset;
-    height: calc(80% - var(--divider-vertical-inset));
   }
 
   &__text {
@@ -74,5 +60,21 @@
   &--dashed&--vertical {
     border-top: none;
     border-left-style: dashed;
+  }
+
+  &--hairline {
+    transform: scaleY(0.5);
+  }
+
+  &--hairline&--with-text {
+    transform: none;
+    &::before,
+    &::after {
+      transform: scaleY(0.5);
+    }
+  }
+
+  &--hairline&--vertical {
+    transform: scaleX(0.5);
   }
 }

@@ -1,96 +1,124 @@
 <script setup>
-import VarSwipe from '..'
-import VarSwipeItem from '../../swipe-item'
-import AppType from '@varlet/cli/site/mobile/components/AppType'
-import Snackbar from '../../snackbar'
-import { use, pack } from './locale'
-import { watchLang } from '@varlet/cli/site/utils'
+import { AppType, onThemeChange, watchLang } from '@varlet/cli/client'
+import { Snackbar } from '@varlet/ui'
+import { t, use } from './locale'
 
 watchLang(use)
+onThemeChange()
 </script>
 
 <template>
-  <app-type>{{ pack.basicUsage }}</app-type>
-  <var-swipe class="swipe" ref="swipe">
+  <app-type>{{ t('basicUsage') }}</app-type>
+  <var-swipe class="swipe">
     <var-swipe-item>
-      <img class="swipe-item" src="https://varlet-varletjs.vercel.app/cat.jpg" alt="" />
+      <img class="swipe-item" :src="'cat.jpg'" alt="" />
     </var-swipe-item>
     <var-swipe-item>
-      <img class="swipe-item" src="https://varlet-varletjs.vercel.app/cat2.jpg" alt="" />
+      <img class="swipe-item" :src="'cat2.jpg'" alt="" />
     </var-swipe-item>
     <var-swipe-item>
-      <img class="swipe-item" src="https://varlet-varletjs.vercel.app/cat3.jpg" alt="" />
+      <img class="swipe-item" :src="'cat3.jpg'" alt="" />
     </var-swipe-item>
   </var-swipe>
 
-  <app-type>{{ pack.forbidLoop }}</app-type>
+  <app-type>{{ t('forbidLoop') }}</app-type>
   <var-swipe class="swipe" :loop="false">
     <var-swipe-item>
-      <img class="swipe-item" src="https://varlet-varletjs.vercel.app/cat.jpg" alt="" />
+      <img class="swipe-item" :src="'cat.jpg'" alt="" />
     </var-swipe-item>
     <var-swipe-item>
-      <img class="swipe-item" src="https://varlet-varletjs.vercel.app/cat2.jpg" alt="" />
+      <img class="swipe-item" :src="'cat2.jpg'" alt="" />
     </var-swipe-item>
     <var-swipe-item>
-      <img class="swipe-item" src="https://varlet-varletjs.vercel.app/cat3.jpg" alt="" />
+      <img class="swipe-item" :src="'cat3.jpg'" alt="" />
     </var-swipe-item>
   </var-swipe>
 
-  <app-type>{{ pack.autoplay }}</app-type>
+  <app-type>{{ t('autoplay') }}</app-type>
   <var-swipe class="swipe" :autoplay="2000">
     <var-swipe-item>
-      <img class="swipe-item" src="https://varlet-varletjs.vercel.app/cat.jpg" alt="" />
+      <img class="swipe-item" :src="'cat.jpg'" alt="" />
     </var-swipe-item>
     <var-swipe-item>
-      <img class="swipe-item" src="https://varlet-varletjs.vercel.app/cat2.jpg" alt="" />
+      <img class="swipe-item" :src="'cat2.jpg'" alt="" />
     </var-swipe-item>
     <var-swipe-item>
-      <img class="swipe-item" src="https://varlet-varletjs.vercel.app/cat3.jpg" alt="" />
+      <img class="swipe-item" :src="'cat3.jpg'" alt="" />
     </var-swipe-item>
   </var-swipe>
 
-  <app-type>{{ pack.vertical }}</app-type>
+  <app-type>{{ t('vertical') }}</app-type>
   <var-swipe class="swipe" vertical>
     <var-swipe-item>
-      <img class="swipe-item" src="https://varlet-varletjs.vercel.app/cat.jpg" alt="" />
+      <img class="swipe-item" :src="'cat.jpg'" alt="" />
     </var-swipe-item>
     <var-swipe-item>
-      <img class="swipe-item" src="https://varlet-varletjs.vercel.app/cat2.jpg" alt="" />
+      <img class="swipe-item" :src="'cat2.jpg'" alt="" />
     </var-swipe-item>
     <var-swipe-item>
-      <img class="swipe-item" src="https://varlet-varletjs.vercel.app/cat3.jpg" alt="" />
+      <img class="swipe-item" :src="'cat3.jpg'" alt="" />
     </var-swipe-item>
   </var-swipe>
 
-  <app-type>{{ pack.handleChange }}</app-type>
-  <var-swipe class="swipe" @change="Snackbar">
+  <app-type>{{ t('navigation') }}</app-type>
+  <var-swipe class="swipe" navigation>
     <var-swipe-item>
-      <img class="swipe-item" src="https://varlet-varletjs.vercel.app/cat.jpg" alt="" />
+      <img class="swipe-item" :src="'cat.jpg'" alt="" />
     </var-swipe-item>
     <var-swipe-item>
-      <img class="swipe-item" src="https://varlet-varletjs.vercel.app/cat2.jpg" alt="" />
+      <img class="swipe-item" :src="'cat2.jpg'" alt="" />
     </var-swipe-item>
     <var-swipe-item>
-      <img class="swipe-item" src="https://varlet-varletjs.vercel.app/cat3.jpg" alt="" />
+      <img class="swipe-item" :src="'cat3.jpg'" alt="" />
     </var-swipe-item>
   </var-swipe>
 
-  <app-type>{{ pack.customIndicator }}</app-type>
-  <var-swipe class="swipe">
-    <template #default>
-      <var-swipe-item>
-        <img class="swipe-item" src="https://varlet-varletjs.vercel.app/cat.jpg" alt="" />
-      </var-swipe-item>
-      <var-swipe-item>
-        <img class="swipe-item" src="https://varlet-varletjs.vercel.app/cat2.jpg" alt="" />
-      </var-swipe-item>
-      <var-swipe-item>
-        <img class="swipe-item" src="https://varlet-varletjs.vercel.app/cat3.jpg" alt="" />
-      </var-swipe-item>
-    </template>
+  <var-swipe class="swipe" style="margin-top: 12px" navigation="hover">
+    <var-swipe-item>
+      <img class="swipe-item" :src="'cat.jpg'" alt="" />
+    </var-swipe-item>
+    <var-swipe-item>
+      <img class="swipe-item" :src="'cat2.jpg'" alt="" />
+    </var-swipe-item>
+    <var-swipe-item>
+      <img class="swipe-item" :src="'cat3.jpg'" alt="" />
+    </var-swipe-item>
+  </var-swipe>
 
-    <template #indicator="{ index, length }">
-      <div class="indicators">{{ index + 1 }} / {{ length }}</div>
+  <app-type>{{ t('handleChange') }}</app-type>
+  <var-swipe class="swipe" @change="(index) => Snackbar(String(index))">
+    <var-swipe-item>
+      <img class="swipe-item" :src="'cat.jpg'" alt="" />
+    </var-swipe-item>
+    <var-swipe-item>
+      <img class="swipe-item" :src="'cat2.jpg'" alt="" />
+    </var-swipe-item>
+    <var-swipe-item>
+      <img class="swipe-item" :src="'cat3.jpg'" alt="" />
+    </var-swipe-item>
+  </var-swipe>
+
+  <app-type>{{ t('customIndicator') }}</app-type>
+  <var-swipe class="swipe-example">
+    <var-swipe-item>
+      <img class="swipe-item" :src="'cat.jpg'" />
+    </var-swipe-item>
+    <var-swipe-item>
+      <img class="swipe-item" :src="'cat2.jpg'" />
+    </var-swipe-item>
+    <var-swipe-item>
+      <img class="swipe-item" :src="'cat3.jpg'" />
+    </var-swipe-item>
+    <template #indicator="{ index, length, to }">
+      <div class="swipe-indicators">
+        <div
+          v-for="(l, idx) in length"
+          :key="l"
+          class="swipe-indicator"
+          :class="{ 'swipe-active-indicator': idx === index }"
+          @click="to(idx)"
+        ></div>
+      </div>
     </template>
   </var-swipe>
 
@@ -102,6 +130,10 @@ watchLang(use)
   height: 160px;
 }
 
+.swipe-example {
+  height: 160px;
+}
+
 .swipe-item {
   width: 100%;
   height: 100%;
@@ -109,18 +141,28 @@ watchLang(use)
   pointer-events: none;
 }
 
-.space {
-  height: 20px;
+.swipe-indicators {
+  position: absolute;
+  display: flex;
+  bottom: 10px;
+  left: 50%;
+  transform: translateX(-50%);
 }
 
-.indicators {
-  position: absolute;
-  bottom: 0;
-  width: 100%;
-  text-align: center;
-  padding: 4px 0;
-  color: #fff;
-  font-size: 14px;
-  background: rgba(0, 0, 0, 0.6);
+.swipe-indicator {
+  width: 8px;
+  height: 8px;
+  background: #fff;
+  opacity: 0.3;
+  margin: 0 4px;
+  transition: opacity 0.3s;
+}
+
+.swipe-active-indicator {
+  opacity: 1;
+}
+
+.space {
+  height: 20px;
 }
 </style>

@@ -1,16 +1,17 @@
+import { Dialog } from '@varlet/ui'
 import { saveAs } from 'file-saver'
-
 import index from './template/index.html?raw'
 import main from './template/main.js?raw'
 import pkg from './template/package.json?raw'
-import config from './template/vite.config.js?raw'
 import readme from './template/README.md?raw'
+import config from './template/vite.config.js?raw'
 
-const excludes = ['varlet-repl-plugin.js', 'import-map.json']
+const excludes = ['varlet-repl-plugin.js', 'import-map.json', 'tsconfig.json', 'AppWrapper.vue']
 
 export async function downloadProject(store: any) {
-  // eslint-disable-next-line no-alert
-  if (!confirm('Download project files?')) {
+  const action = await Dialog({ title: 'Notice!', message: 'Download project files?' })
+
+  if (action !== 'confirm') {
     return
   }
 
@@ -28,21 +29,15 @@ export async function downloadProject(store: any) {
   src.file('main.js', main)
 
   const files = store.getFiles()
-  // eslint-disable-next-line guard-for-in,no-restricted-syntax
+
   for (const file in files) {
     if (!excludes.includes(file)) {
-      let code = files[file]
-
-      if (file === 'App.vue') {
-        code = code
-          .replace("import { installVarletUI } from './varlet-repl-plugin.js'\n", '')
-          .replace('installVarletUI()\n', '')
-      }
+      const code = files[file]
 
       src.file(file, code)
     }
   }
 
   const blob = await zip.generateAsync({ type: 'blob' })
-  saveAs(blob, 'vite-varlet-starter.zip')
+  saveAs(blob, 'varlet-playground-demo.zip')
 }

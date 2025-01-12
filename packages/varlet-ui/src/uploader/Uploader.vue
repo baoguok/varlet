@@ -1,60 +1,101 @@
 <template>
-  <div :class="classes(n(), 'var--box')">
+  <div :class="classes(n(), n('$--box'))">
     <div :class="n('file-list')">
       <div
-        :class="classes(n('file'), 'var-elevation--2', [f.state === 'loading', n('--loading')])"
-        :key="f.id"
         v-for="f in files"
+        :key="f.id"
         v-ripple="{ disabled: disabled || formDisabled || readonly || formReadonly || !ripple }"
+        :class="classes(n('file'), formatElevation(elevation, 2), [f.state === 'loading', n('--loading')])"
         @click="preview(f)"
       >
         <div :class="n('file-name')">{{ f.name || f.url }}</div>
-        <div :class="n('file-close')" v-if="removable" @click.stop="handleRemove(f)">
-          <var-icon :class="n('file-close-icon')" var-uploader-cover name="delete" />
-        </div>
-        <img :class="n('file-cover')" :style="{ objectFit: f.fit }" :src="f.cover" :alt="f.name" v-if="f.cover" />
-        <div
-          :class="
-            classes(n('file-indicator'), [f.state === 'success', n('--success')], [f.state === 'error', n('--error')])
+        <slot
+          v-if="removable"
+          name="remove-button"
+          :remove="
+            () => {
+              handleRemove(f)
+            }
           "
-        ></div>
+        >
+          <div :class="n('file-close')" @click.stop="handleRemove(f)">
+            <var-icon :class="n('file-close-icon')" var-uploader-cover name="delete" />
+          </div>
+        </slot>
+        <img
+          v-if="f.cover"
+          role="img"
+          :class="n('file-cover')"
+          :style="{ objectFit: f.fit }"
+          :src="f.cover"
+          :alt="f.name"
+        />
+        <div :class="n('file-indicator')">
+          <div
+            :class="
+              classes(n('progress'), [f.state === 'success', n('--success')], [f.state === 'error', n('--error')])
+            "
+            :style="{ width: f.state === 'success' || f.state === 'error' ? '100%' : `${f.progress}%` }"
+          ></div>
+        </div>
       </div>
 
       <div
+        v-if="!maxlength || modelValue.length < toNumber(maxlength)"
+        ref="actionRef"
+        v-ripple="{
+          disabled: disabled || formDisabled || readonly || formReadonly || !ripple || Boolean($slots.default),
+        }"
+        v-hover:desktop="handleHovering"
         :class="
-          classes([!$slots.default, `${n('action')} var-elevation--2`], [disabled || formDisabled, n('--disabled')])
+          classes(
+            n('--outline-none'),
+            [!$slots.default, `${n('action')} ${formatElevation(elevation, 2)}`],
+            [disabled || formDisabled, n('--disabled')],
+          )
         "
-        v-if="!maxlength || modelValue.length < maxlength"
-        v-ripple="{ disabled: disabled || formDisabled || readonly || formReadonly || !ripple || $slots.default }"
-        @click="triggerAction"
+        :tabindex="disabled || formDisabled ? undefined : '0'"
+        @click="handleActionClick"
+        @focus="isFocusing = true"
+        @blur="isFocusing = false"
       >
         <input
           ref="input"
-          :class="n('action-input')"
           type="file"
+          :class="n('action-input')"
           :multiple="multiple"
           :accept="accept"
           :capture="capture"
           :disabled="disabled || formDisabled || readonly || formReadonly"
           @change="handleChange"
+          @click.stop
         />
 
         <slot>
           <var-icon :class="n('action-icon')" var-uploader-cover name="plus" />
+          <var-hover-overlay
+            :hovering="hovering && !disabled && !formDisabled && !readonly && !formReadonly"
+            :focusing="isFocusing && !disabled && !formDisabled && !readonly && !formReadonly"
+          />
         </slot>
       </div>
     </div>
 
-    <var-form-details :error-message="errorMessage" :maxlength-text="maxlengthText" />
+    <var-form-details :error-message="errorMessage" :extra-message="maxlengthText">
+      <template v-if="$slots['extra-message']" #extra-message>
+        <slot name="extra-message" />
+      </template>
+    </var-form-details>
 
     <var-popup
+      v-model:show="showPreview"
       :class="n('preview')"
       var-uploader-cover
       position="center"
-      v-model:show="showPreview"
       @closed="currentPreview = null"
     >
       <video
+        v-if="currentPreview && isHTMLSupportVideo(currentPreview?.url)"
         :class="n('preview-video')"
         playsinline="true"
         webkit-playsinline="true"
@@ -63,28 +104,30 @@
         x5-video-player-fullscreen="false"
         controls
         :src="currentPreview?.url"
-        v-if="currentPreview && isHTMLSupportVideo(currentPreview?.url)"
       ></video>
     </var-popup>
   </div>
 </template>
 
 <script lang="ts">
+import { computed, defineComponent, nextTick, reactive, ref, watch } from 'vue'
+import { call, isNumber, normalizeToArray, toDataURL, toNumber } from '@varlet/shared'
+import { useEventListener } from '@varlet/use'
 import VarFormDetails from '../form-details'
-import VarIcon from '../icon'
-import VarPopup from '../popup'
-import ImagePreview from '../image-preview'
-import Ripple from '../ripple'
-import { defineComponent, nextTick, reactive, computed, watch, ref } from 'vue'
-import { props } from './props'
-import { isNumber, isHTMLSupportImage, isHTMLSupportVideo, toNumber, isString } from '../utils/shared'
-import { call, useValidation, createNamespace } from '../utils/components'
 import { useForm } from '../form/provide'
-import type { ComputedRef, Ref } from 'vue'
-import type { UploaderProvider } from './provide'
-import type { VarFile, ValidateTriggers } from './props'
+import Hover from '../hover'
+import VarHoverOverlay, { useHoverOverlay } from '../hover-overlay'
+import VarIcon from '../icon'
+import ImagePreview from '../image-preview'
+import VarPopup from '../popup'
+import Ripple from '../ripple'
+import { createNamespace, formatElevation, useValidation } from '../utils/components'
+import { toSizeUnit } from '../utils/elements'
+import { isHTMLSupportImage, isHTMLSupportVideo } from '../utils/shared'
+import { props, type UploaderValidateTrigger, type VarFile } from './props'
+import { type UploaderProvider } from './provide'
 
-const { n, classes } = createNamespace('uploader')
+const { name, n, classes } = createNamespace('uploader')
 
 interface ValidationVarFile {
   valid: boolean
@@ -102,19 +145,22 @@ interface VarFileUtils {
 let fid = 0
 
 export default defineComponent({
-  name: 'VarUploader',
-  directives: { Ripple },
+  name,
+  directives: { Ripple, Hover },
   components: {
     VarIcon,
     VarPopup,
     VarFormDetails,
+    VarHoverOverlay,
   },
   props,
   setup(props) {
-    const input: Ref<null | HTMLElement> = ref(null)
-    const showPreview: Ref<boolean> = ref(false)
-    const currentPreview: Ref<null | VarFile> = ref(null)
-    const maxlengthText: ComputedRef<string> = computed(() => {
+    const isFocusing = ref(false)
+    const actionRef = ref<null | HTMLElement>(null)
+    const input = ref<null | HTMLElement>(null)
+    const showPreview = ref(false)
+    const currentPreview = ref<null | VarFile>(null)
+    const maxlengthText = computed(() => {
       const {
         maxlength,
         modelValue: { length },
@@ -130,101 +176,159 @@ export default defineComponent({
       // expose
       resetValidation,
     } = useValidation()
-
+    const { hovering, handleHovering } = useHoverOverlay()
     const files = computed(() => {
       const { modelValue, hideList } = props
 
       if (hideList) {
         return []
       }
-
       return modelValue
     })
 
-    const triggerAction = () => {
-      input.value!.click()
+    let callReset = false
+    const varFileUtils: VarFileUtils = {
+      getSuccess,
+      getError,
+      getLoading,
+    }
+    const uploaderProvider: UploaderProvider = {
+      validate,
+      resetValidation,
+      reset,
     }
 
-    const preview = (varFile: VarFile) => {
-      const { disabled, readonly, previewed } = props
+    call(bindForm, uploaderProvider)
 
-      if (form?.disabled.value || form?.readonly.value || disabled || readonly || !previewed) {
+    useEventListener(() => window, 'keydown', handleKeydown)
+    useEventListener(() => window, 'keyup', handleKeyup)
+
+    watch(
+      () => props.modelValue,
+      () => {
+        !callReset && validateWithTrigger('onChange')
+        callReset = false
+      },
+      { deep: true },
+    )
+
+    function handleKeydown(event: KeyboardEvent) {
+      if (!isFocusing.value) {
+        return
+      }
+
+      if (event.key === ' ' || event.key === 'Enter') {
+        event.preventDefault()
+      }
+
+      if (event.key === 'Enter') {
+        actionRef.value!.click()
+      }
+    }
+
+    function handleKeyup(event: KeyboardEvent) {
+      if (!isFocusing.value || event.key !== ' ') {
+        return
+      }
+
+      event.preventDefault()
+      actionRef.value!.click()
+    }
+
+    function preview(varFile: VarFile) {
+      const { disabled, previewed, preventDefaultPreview, onPreview } = props
+
+      if (form?.disabled.value || disabled || !previewed) {
+        return
+      }
+
+      call(onPreview, reactive(varFile))
+
+      if (preventDefaultPreview) {
         return
       }
 
       const { url } = varFile
 
-      if (isString(url) && isHTMLSupportImage(url)) {
+      if (isHTMLSupportImage(url)) {
         ImagePreview(url)
         return
       }
 
-      if (isString(url) && isHTMLSupportVideo(url)) {
+      if (isHTMLSupportVideo(url)) {
         currentPreview.value = varFile
         showPreview.value = true
       }
     }
 
-    const createVarFile = (file: File): VarFile => {
+    function createVarFile(file: File): VarFile {
       return {
         id: fid++,
         url: '',
         cover: '',
         name: file.name,
         file,
+        progress: 0,
       }
     }
 
-    const getFiles = (event: Event): File[] => {
+    function getFiles(event: Event): File[] {
       const el = event.target as HTMLInputElement
       const { files: fileList } = el
       return Array.from<File>(fileList as ArrayLike<File>)
     }
 
-    const resolver = (varFile: VarFile): Promise<VarFile> => {
-      return new Promise((resolve) => {
-        const fileReader = new FileReader()
+    async function resolver(varFile: VarFile): Promise<VarFile> {
+      const file = varFile.file!
+      const shouldWithDataURL =
+        (props.resolveType === 'default' && file.type.startsWith('image')) || props.resolveType === 'data-url'
 
-        fileReader.onload = () => {
-          const base64 = fileReader.result as string
+      if (shouldWithDataURL) {
+        const dataURL = await toDataURL(file)
+        varFile.cover = dataURL
+        varFile.url = dataURL
+      }
 
-          varFile.file!.type.startsWith('image') && (varFile.cover = base64)
-          varFile.url = base64
-
-          resolve(varFile)
-        }
-
-        fileReader.readAsDataURL(varFile.file as File)
-      })
+      return varFile
     }
 
-    const getResolvers = (varFiles: VarFile[]) => varFiles.map(resolver)
+    function getResolvers(varFiles: VarFile[]) {
+      return varFiles.map(resolver)
+    }
 
-    const getBeforeReaders = (varFiles: VarFile[]): Promise<ValidationVarFile>[] => {
+    function getBeforeReaders(varFiles: VarFile[]): Promise<ValidationVarFile>[] {
       const { onBeforeRead } = props
 
-      return varFiles.map((varFile) => {
-        return new Promise((resolve) => {
-          const valid = onBeforeRead ? onBeforeRead(reactive(varFile)) : true
-          Promise.resolve(valid).then((valid) =>
-            resolve({
-              valid,
-              varFile,
+      return varFiles.map(
+        (varFile) =>
+          new Promise((resolve) => {
+            if (!onBeforeRead) {
+              resolve({
+                valid: true,
+                varFile,
+              })
+            }
+
+            const results = normalizeToArray(call(onBeforeRead, reactive(varFile)))
+            Promise.all(results).then((values) => {
+              resolve({
+                valid: values.every(Boolean),
+                varFile,
+              })
             })
-          )
-        })
-      })
+          }),
+      )
     }
 
-    const handleChange = async (event: Event) => {
-      const { maxsize, maxlength, modelValue, onOversize, onAfterRead, readonly, disabled } = props
+    async function handleChange(event: Event) {
+      const { maxsize, maxlength, modelValue, onOversize, onAfterRead, onBeforeFilter, readonly, disabled } = props
 
       if (form?.disabled.value || form?.readonly.value || disabled || readonly) {
         return
       }
 
-      const getValidSizeVarFile = (varFiles: VarFile[]): VarFile[] => {
-        return varFiles.filter((varFile) => {
+      const getValidSizeVarFile = (varFiles: VarFile[]): VarFile[] =>
+        varFiles.filter((varFile) => {
           if (varFile.file!.size > toNumber(maxsize)) {
             call(onOversize, reactive(varFile))
             return false
@@ -232,16 +336,31 @@ export default defineComponent({
 
           return true
         })
-      }
 
       const getValidLengthVarFiles = (varFiles: VarFile[]): VarFile[] => {
         const limit = Math.min(varFiles.length, toNumber(maxlength) - modelValue.length)
         return varFiles.slice(0, limit)
       }
 
+      const getFilterVarFiles = async (varFiles: VarFile[]): Promise<VarFile[]> => {
+        if (!onBeforeFilter) {
+          return varFiles
+        }
+
+        const events = normalizeToArray(onBeforeFilter)
+
+        for (const event of events) {
+          varFiles = await event(varFiles)
+        }
+
+        return varFiles
+      }
+
       // limit
       const files = getFiles(event)
       let varFiles: VarFile[] = files.map(createVarFile)
+
+      varFiles = await getFilterVarFiles(varFiles)
       varFiles = maxsize != null ? getValidSizeVarFile(varFiles) : varFiles
       varFiles = maxlength != null ? getValidLengthVarFiles(varFiles) : varFiles
 
@@ -255,89 +374,105 @@ export default defineComponent({
       validVarFiles.forEach((varFile) => call(onAfterRead, reactive(varFile)))
     }
 
-    const handleRemove = async (removedVarFile: VarFile) => {
+    async function handleRemove(removedVarFile: VarFile) {
       const { disabled, readonly, modelValue, onBeforeRemove, onRemove } = props
 
       if (form?.disabled.value || form?.readonly.value || disabled || readonly) {
         return
       }
 
-      if (onBeforeRemove && !(await onBeforeRemove(removedVarFile))) {
-        return
+      if (onBeforeRemove) {
+        const results = normalizeToArray(call(onBeforeRemove, reactive(removedVarFile)))
+        if ((await Promise.all(results)).some((result) => !result)) {
+          return
+        }
       }
 
       const expectedFiles: VarFile[] = modelValue.filter((varFile) => varFile !== removedVarFile)
-      call(onRemove, removedVarFile)
+      call(onRemove, reactive(removedVarFile))
       validateWithTrigger('onRemove')
       call(props['onUpdate:modelValue'], expectedFiles)
     }
 
-    // expose
-    const getSuccess = () => props.modelValue.filter((varFile) => varFile.state === 'success')
+    function handleActionClick(event: Event) {
+      if (form?.disabled.value || props.disabled) {
+        return
+      }
 
-    // expose
-    const getError = () => props.modelValue.filter((varFile) => varFile.state === 'error')
+      if (props.onClickAction) {
+        call(props.onClickAction, chooseFile, event)
+        return
+      }
 
-    // expose
-    const getLoading = () => props.modelValue.filter((varFile) => varFile.state === 'loading')
-
-    const varFileUtils: VarFileUtils = {
-      getSuccess,
-      getError,
-      getLoading,
+      chooseFile()
     }
 
-    const validateWithTrigger = (trigger: ValidateTriggers) => {
+    // expose
+    function getSuccess() {
+      return props.modelValue.filter((varFile) => varFile.state === 'success')
+    }
+
+    // expose
+    function getError() {
+      return props.modelValue.filter((varFile) => varFile.state === 'error')
+    }
+
+    // expose
+    function getLoading() {
+      return props.modelValue.filter((varFile) => varFile.state === 'loading')
+    }
+
+    // expose
+    function chooseFile() {
+      input.value!.click()
+    }
+
+    // expose
+    function closePreview() {
+      currentPreview.value = null
+      showPreview.value = false
+      ImagePreview.close()
+    }
+
+    function validateWithTrigger(trigger: UploaderValidateTrigger) {
       nextTick(() => {
         const { validateTrigger, rules, modelValue } = props
         vt(validateTrigger, trigger, rules, modelValue, varFileUtils)
       })
     }
 
-    let callReset = false
+    // expose
+    function validate() {
+      return v(props.rules, props.modelValue, varFileUtils)
+    }
 
     // expose
-    const validate = () => v(props.rules, props.modelValue, varFileUtils)
-
-    // expose
-    const reset = () => {
+    function reset() {
       callReset = true
       call(props['onUpdate:modelValue'], [])
       resetValidation()
     }
 
-    const uploaderProvider: UploaderProvider = {
-      validate,
-      resetValidation,
-      reset,
-    }
-
-    call(bindForm, uploaderProvider)
-
-    watch(
-      () => props.modelValue,
-      () => {
-        !callReset && validateWithTrigger('onChange')
-        callReset = false
-      },
-      { deep: true }
-    )
-
     return {
-      n,
-      classes,
       input,
+      actionRef,
       files,
       showPreview,
       currentPreview,
       errorMessage,
       maxlengthText,
-      isHTMLSupportVideo,
-      isHTMLSupportImage,
+      hovering,
+      isFocusing,
       formDisabled: form?.disabled,
       formReadonly: form?.readonly,
+      n,
+      classes,
+      formatElevation,
+      toNumber,
+      handleHovering,
+      isHTMLSupportVideo,
+      isHTMLSupportImage,
       preview,
-      triggerAction,
       handleChange,
       handleRemove,
       getSuccess,
@@ -346,6 +481,10 @@ export default defineComponent({
       validate,
       resetValidation,
       reset,
+      chooseFile,
+      closePreview,
+      handleActionClick,
+      toSizeUnit,
     }
   },
 })
@@ -354,9 +493,13 @@ export default defineComponent({
 <style lang="less">
 @import '../styles/common';
 @import '../styles/elevation';
+@import '../hover-overlay/hoverOverlay';
+@import '../ripple/ripple';
 @import '../form-details/formDetails';
 @import '../icon/icon';
 @import '../popup/popup';
+@import '../swipe/swipe';
+@import '../swipe-item/swipeItem';
 @import '../image-preview/imagePreview';
 @import './uploader';
 </style>

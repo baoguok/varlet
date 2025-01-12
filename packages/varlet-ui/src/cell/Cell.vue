@@ -1,44 +1,74 @@
 <template>
-  <div :class="classes(n(), [border, n('--border')])">
-    <div :class="classes(n('icon'), [iconClass, iconClass])" v-if="$slots.icon || icon">
-      <slot name="icon">
-        <var-icon class="var--flex" :name="icon" />
+  <div
+    v-ripple="{ disabled: !ripple }"
+    :class="classes(n(), [border, n('--border')], [onClick, n('--cursor')])"
+    :style="borderOffsetStyles"
+    @click="handleClick"
+  >
+    <slot name="icon">
+      <div v-if="icon" :class="classes(n('icon'), iconClass)">
+        <var-icon :name="icon" :namespace="namespace" />
+      </div>
+    </slot>
+
+    <div :class="n('content')">
+      <slot>
+        <div v-if="title" :class="classes(n('title'), titleClass)">
+          {{ title }}
+        </div>
+      </slot>
+
+      <slot name="description">
+        <div v-if="description" :class="classes(n('description'), descriptionClass)">
+          {{ description }}
+        </div>
       </slot>
     </div>
-    <div :class="n('content')">
-      <div :class="classes(n('title'), [titleClass, titleClass])">
-        <slot>{{ title }}</slot>
-      </div>
-      <div :class="classes(n('desc'), [descClass, descClass])" v-if="$slots.desc || desc">
-        <slot name="desc">
-          {{ desc }}
-        </slot>
-      </div>
-    </div>
-    <div :class="classes(n('extra'), [extraClass, extraClass])" v-if="$slots.extra">
+
+    <div v-if="$slots.extra" :class="classes(n('extra'), extraClass)">
       <slot name="extra" />
     </div>
   </div>
 </template>
 
 <script lang="ts">
-import { defineComponent } from 'vue'
-import { props } from './props'
+import { computed, CSSProperties, defineComponent } from 'vue'
+import { call } from '@varlet/shared'
 import VarIcon from '../icon'
+import Ripple from '../ripple'
 import { createNamespace } from '../utils/components'
+import { toSizeUnit } from '../utils/elements'
+import { props } from './props'
 
-const { n, classes } = createNamespace('cell')
+const { name, n, classes } = createNamespace('cell')
 
 export default defineComponent({
-  name: 'VarCell',
-  components: {
-    VarIcon,
-  },
+  name,
+  components: { VarIcon },
+  directives: { Ripple },
   props,
-  setup() {
+  setup(props) {
+    const borderOffsetStyles = computed<CSSProperties>(() => {
+      if (props.borderOffset == null) {
+        return {}
+      }
+
+      return {
+        '--cell-border-left': toSizeUnit(props.borderOffset),
+        '--cell-border-right': toSizeUnit(props.borderOffset),
+      }
+    })
+
+    function handleClick(e: Event) {
+      call(props.onClick, e)
+    }
+
     return {
+      borderOffsetStyles,
       n,
       classes,
+      toSizeUnit,
+      handleClick,
     }
   },
 })
@@ -47,5 +77,6 @@ export default defineComponent({
 <style lang="less">
 @import '../styles/common';
 @import '../icon/icon';
+@import '../ripple/ripple';
 @import './cell';
 </style>

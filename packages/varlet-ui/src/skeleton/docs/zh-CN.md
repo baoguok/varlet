@@ -1,6 +1,7 @@
 # 骨架屏
 
 ### 介绍
+
 显示一些带过渡效果的占位元素，优化加载过程。
 
 ### 基本使用
@@ -31,7 +32,7 @@ const loading = ref(true)
 </template>
 ```
 
-### 自定义段落高度
+### 自定义段落宽度
 
 ```html
 <script setup>
@@ -103,7 +104,7 @@ import { ref } from 'vue'
 
 const loading = ref(false)
 
-const fullscreen = () => {
+function fullscreen() {
   loading.value = true
 
   setTimeout(() => {
@@ -130,21 +131,21 @@ const fullscreen = () => {
 | `avatar` | 是否显示头像 | _boolean_ | `false` |
 | `fullscreen` | 是否开启全屏模式 | _boolean_ | `false` |
 | `fullscreen-z-index` | 全屏模式的层级 | _string \| number_ | `100` |
-| `title-width` | 标题宽度 | _string \| number_ | `50%` |
-| `card-height` | 卡片高度 | _string \| number_ | `160px` |
-| `avatar-size` | 头像尺寸 | _string \| number_ | `34px` |
+| `title-width` | 标题宽度 | _string \| number_ | `-` |
+| `card-height` | 卡片高度 | _string \| number_ | `-` |
+| `avatar-size` | 头像尺寸 | _string \| number_ | `-` |
 | `rows` | 段落行数 | _string \| number_ | `3` |
-| `rows-width` | 段落每一行的宽度 | _number[] \| string[]_ | `['12px', '12px', '12px']` |
+| `rows-width` | 段落每一行的宽度 | _number[] \| string[]_ | `[]` |
 
 ### 插槽
 
 | 插槽名 | 说明 | 参数 |
-| --- | --- | --- |
-| `default` | 加载成功后显示的内容 | `-` |
+| --- |--| --- |
+| `default` | 非加载状态下的内容 | `-` |
 
 ### 样式变量
 
-以下为组件使用的 css 变量，可以使用 [StyleProvider 组件](#/zh-CN/style-provider) 进行样式定制
+以下为组件使用的 css 变量，可以使用 [StyleProvider 组件](#/zh-CN/style-provider) 进行样式定制。
 
 | 变量名 | 默认值 |
 | --- | --- |

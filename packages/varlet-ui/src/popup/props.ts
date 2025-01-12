@@ -1,32 +1,21 @@
-import type { PropType, TeleportProps } from 'vue'
+import { type PropType, type TeleportProps } from 'vue'
+import { defineListenerProp } from '../utils/components'
 
-function positionValidator(position: string): boolean {
-  return ['top', 'bottom', 'right', 'left', 'center'].includes(position)
-}
+export type PopupPosition = 'top' | 'bottom' | 'right' | 'left' | 'center'
 
 export const props = {
-  show: {
-    type: Boolean,
-    default: false,
-  },
+  show: Boolean,
   position: {
-    type: String as PropType<'top' | 'bottom' | 'right' | 'left' | 'center'>,
+    type: String as PropType<PopupPosition>,
     default: 'center',
-    validator: positionValidator,
   },
-  transition: {
-    type: String,
-  },
+  transition: String,
   overlay: {
     type: Boolean,
     default: true,
   },
-  overlayClass: {
-    type: String,
-  },
-  overlayStyle: {
-    type: Object,
-  },
+  overlayClass: String,
+  overlayStyle: Object,
   lockScroll: {
     type: Boolean,
     default: true,
@@ -35,29 +24,28 @@ export const props = {
     type: Boolean,
     default: true,
   },
+  closeOnKeyEscape: {
+    type: Boolean,
+    default: true,
+  },
+  defaultStyle: {
+    type: Boolean,
+    default: true,
+  },
+  zIndex: Number,
+  safeArea: Boolean,
+  safeAreaTop: Boolean,
   teleport: {
-    type: String as PropType<TeleportProps['to']>,
+    type: [String, Object, Boolean] as PropType<TeleportProps['to'] | false>,
+    default: 'body',
   },
-  onOpen: {
-    type: Function as PropType<() => void>,
-  },
-  onOpened: {
-    type: Function as PropType<() => void>,
-  },
-  onClose: {
-    type: Function as PropType<() => void>,
-  },
-  onClosed: {
-    type: Function as PropType<() => void>,
-  },
-  onClickOverlay: {
-    type: Function as PropType<() => void>,
-  },
+  onOpen: defineListenerProp<() => void>(),
+  onOpened: defineListenerProp<() => void>(),
+  onClose: defineListenerProp<() => void>(),
+  onClosed: defineListenerProp<() => void>(),
+  onKeyEscape: defineListenerProp<() => void>(),
+  onClickOverlay: defineListenerProp<() => void>(),
+  'onUpdate:show': defineListenerProp<(show: boolean) => void>(),
   // internal for Dialog
-  onRouteChange: {
-    type: Function as PropType<() => void>,
-  },
-  'onUpdate:show': {
-    type: Function as PropType<(show: boolean) => void>,
-  },
+  onRouteChange: defineListenerProp<() => void>(),
 }

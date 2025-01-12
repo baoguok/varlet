@@ -1,18 +1,23 @@
-import type { PropType, TeleportProps } from 'vue'
-
-function alignmentValidator(alignment: string) {
-  return ['top', 'bottom'].includes(alignment)
-}
+import { type PropType, type TeleportProps } from 'vue'
+import { type PositioningStrategy } from '@popperjs/core'
+import { defineListenerProp } from '../utils/components'
+import { type Placement, type Reference, type Trigger } from './usePopover'
 
 export const props = {
-  show: {
-    type: Boolean,
-    default: false,
+  show: Boolean,
+  disabled: Boolean,
+  trigger: {
+    type: String as PropType<Trigger>,
+    default: 'click',
   },
-  alignment: {
-    type: String as PropType<'top' | 'bottom'>,
-    default: 'top',
-    validator: alignmentValidator,
+  reference: [String, Object] as PropType<Reference>,
+  placement: {
+    type: String as PropType<Placement>,
+    default: 'cover-top-start',
+  },
+  strategy: {
+    type: String as PropType<PositioningStrategy>,
+    default: 'absolute',
   },
   offsetX: {
     type: [Number, String],
@@ -23,22 +28,32 @@ export const props = {
     default: 0,
   },
   teleport: {
-    type: String as PropType<TeleportProps['to']>,
+    type: [String, Object, Boolean] as PropType<TeleportProps['to'] | false>,
     default: 'body',
   },
-  onOpen: {
-    type: Function as PropType<() => void>,
+  sameWidth: Boolean,
+  elevation: {
+    type: [Boolean, String, Number],
+    default: true,
   },
-  onOpened: {
-    type: Function as PropType<() => void>,
+  defaultStyle: {
+    type: Boolean,
+    default: true,
   },
-  onClose: {
-    type: Function as PropType<() => void>,
+  popoverClass: String,
+  closeOnClickReference: Boolean,
+  closeOnKeyEscape: {
+    type: Boolean,
+    default: true,
   },
-  onClosed: {
-    type: Function as PropType<() => void>,
-  },
-  'onUpdate:show': {
-    type: Function as PropType<(show: boolean) => void>,
-  },
+  onOpen: defineListenerProp<() => void>(),
+  onOpened: defineListenerProp<() => void>(),
+  onClose: defineListenerProp<() => void>(),
+  onClosed: defineListenerProp<() => void>(),
+  onClickOutside: defineListenerProp<(event: Event) => void>(),
+  'onUpdate:show': defineListenerProp<(show: boolean) => void>(),
+
+  // internal start
+  cascadeOptimization: Boolean,
+  // internal end
 }

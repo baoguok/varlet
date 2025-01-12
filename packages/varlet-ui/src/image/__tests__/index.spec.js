@@ -1,10 +1,11 @@
-import Image from '..'
-import VarImage from '../Image'
-import { mount } from '@vue/test-utils'
 import { createApp } from 'vue'
-import { delay, trigger } from '../../utils/jest'
+import { mount } from '@vue/test-utils'
+import { describe, expect, test, vi } from 'vitest'
+import Image from '..'
+import { delay, trigger } from '../../utils/test'
+import VarImage from '../Image'
 
-const SRC = 'https://varlet-varletjs.vercel.app/cat.png'
+const SRC = 'https://varletjs.org/varlet/cat.png'
 
 test('test image plugin', () => {
   const app = createApp({}).use(Image)
@@ -13,8 +14,8 @@ test('test image plugin', () => {
 
 describe('test image component event', () => {
   test('test image onLoad & onError', () => {
-    const onLoad = jest.fn()
-    const onError = jest.fn()
+    const onLoad = vi.fn()
+    const onError = vi.fn()
     const wrapper = mount(VarImage, {
       props: {
         onLoad,
@@ -31,8 +32,8 @@ describe('test image component event', () => {
   })
 
   test('test image onLoad & onError in lazy mode', () => {
-    const onLoad = jest.fn()
-    const onError = jest.fn()
+    const onLoad = vi.fn()
+    const onError = vi.fn()
     const wrapper = mount(VarImage, {
       props: {
         lazy: true,
@@ -58,7 +59,6 @@ describe('test image component event', () => {
     const wrapper = mount(VarImage)
     const img = wrapper.find('img')
     await img.trigger('load')
-    await img.trigger('error')
 
     await wrapper.setProps({ lazy: true })
 
@@ -68,6 +68,25 @@ describe('test image component event', () => {
     lazyImage.element._lazy.state = 'error'
     await lazyImage.trigger('load')
     wrapper.unmount()
+  })
+
+  test('test image onClick', () => {
+    function expectOnClick(props = {}) {
+      const onClick = vi.fn()
+      const wrapper = mount(VarImage, {
+        props: {
+          onClick,
+          ...props,
+        },
+      })
+
+      wrapper.find('.var-image__image').trigger('click')
+      expect(onClick).toHaveBeenCalledTimes(1)
+      wrapper.unmount()
+    }
+
+    expectOnClick()
+    expectOnClick({ lazy: true })
   })
 })
 
@@ -102,6 +121,41 @@ describe('test image component props', () => {
     })
 
     expect(wrapper.find('.var-image__image').attributes('alt')).toContain('This is alt')
+    wrapper.unmount()
+  })
+
+  test('test image title', () => {
+    const wrapper = mount(VarImage, {
+      props: {
+        title: 'This is title',
+      },
+    })
+
+    expect(wrapper.find('.var-image__image').attributes('title')).toContain('This is title')
+    wrapper.unmount()
+  })
+
+  test('test image referrerpolicy', () => {
+    const wrapper = mount(VarImage, {
+      props: {
+        referrerpolicy: 'no-referrer',
+      },
+    })
+
+    expect(wrapper.find('.var-image__image').attributes('referrerpolicy')).toContain('no-referrer')
+    wrapper.unmount()
+  })
+
+  test('test image position', async () => {
+    const wrapper = mount(VarImage)
+
+    expect(wrapper.find('.var-image__image').attributes('style')).toContain('object-position: 50% 50%')
+
+    await wrapper.setProps({
+      position: 'left',
+    })
+    expect(wrapper.find('.var-image__image').attributes('style')).toContain('object-position: left')
+
     wrapper.unmount()
   })
 
@@ -182,18 +236,6 @@ describe('test image component props', () => {
     wrapper.unmount()
   })
 
-  test('test image error', () => {
-    const wrapper = mount(VarImage, {
-      props: {
-        lazy: true,
-        error: SRC,
-      },
-    })
-
-    expect(wrapper.find('.var-image__image').attributes('lazy-error')).toContain(SRC)
-    wrapper.unmount()
-  })
-
   test('test image ripple', async () => {
     const wrapper = mount(VarImage, {
       props: {
@@ -203,12 +245,16 @@ describe('test image component props', () => {
     })
 
     await trigger(wrapper, 'touchstart')
-    await delay(500)
+    await delay(250)
     expect(wrapper.find('.var-ripple').exists()).toBe(true)
+
+    await trigger(document, 'touchend')
+    await delay(500)
+    expect(wrapper.find('.var-ripple').exists()).toBe(false)
 
     await wrapper.setProps({ ripple: false })
     await trigger(wrapper, 'touchstart')
-    await delay(500)
+    await delay(250)
     expect(wrapper.find('.var-ripple').exists()).toBe(false)
 
     wrapper.unmount()

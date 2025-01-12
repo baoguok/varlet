@@ -1,9 +1,10 @@
+import { createApp } from 'vue'
+import { mount } from '@vue/test-utils'
+import { describe, expect, test } from 'vitest'
 import Loading from '..'
 import VarLoading from '../Loading'
-import { mount } from '@vue/test-utils'
-import { createApp } from 'vue'
 
-test('test loading plugin', () => {
+test('test loading use', () => {
   const app = createApp({}).use(Loading)
   expect(app.component(Loading.name)).toBeTruthy()
 })
@@ -30,16 +31,12 @@ describe('test loading component props', () => {
   })
 
   test('test loading size', () => {
-    let sizeNum = 36
     ;['large', 'normal', 'small', 'mini'].forEach((size) => {
       const wrapper = mount(VarLoading, {
         props: { size },
       })
 
-      expect(wrapper.find('.var-loading__circle-block').attributes('style')).toContain(
-        `width: ${sizeNum}px; height: ${sizeNum}px;`
-      )
-      sizeNum -= 6
+      expect(wrapper.find('.var-loading__circle-block').classes()).toContain(`var-loading__circle-block--${size}`)
       wrapper.unmount()
     })
   })
@@ -63,9 +60,9 @@ describe('test loading component props', () => {
       },
     })
 
-    expect(wrapper.find('.var-loading__body').exists()).toBe(true)
+    expect(wrapper.find('.var-loading__content-mask').exists()).toBe(true)
     await wrapper.setProps({ loading: false })
-    expect(wrapper.find('.var-loading__body').exists()).toBe(false)
+    expect(wrapper.find('.var-loading__content-mask').exists()).toBe(false)
     wrapper.unmount()
   })
 

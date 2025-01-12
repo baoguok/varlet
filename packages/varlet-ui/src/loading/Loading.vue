@@ -1,15 +1,16 @@
 <template>
   <div :class="n()">
-    <div :class="classes(n('content'), [loading, n('content--active')])" v-if="$slots.default">
+    <div v-if="$slots.default" :class="classes(n('content'), [loading, n('content--active')])">
       <slot />
+      <div v-if="loading" :class="n('content-mask')"></div>
     </div>
-    <div :class="classes('var--box', n('body'), [$slots.default, n('inside')])" v-if="isShow">
-      <div :class="n('circle')" v-if="type === 'circle'">
+    <div v-if="isShow" :class="classes(n('$--box'), n('body'), [$slots.default, n('inside')])">
+      <div v-if="type === 'circle'" :class="n('circle')">
         <span
-          :class="n('circle-block')"
+          :class="classes(n('circle-block'), n(`circle-block--${size}`))"
           :style="{
-            width: getRadius * 2 + 'px',
-            height: getRadius * 2 + 'px',
+            width: multiplySizeUnit(radius, 2),
+            height: multiplySizeUnit(radius, 2),
             color,
           }"
         >
@@ -20,7 +21,7 @@
       </div>
 
       <template v-for="(nums, key) in loadingTypeDict" :key="key">
-        <div :class="classes(n(key), n(`${key}--${size}`))" v-if="type === key">
+        <div v-if="type === key" :class="classes(n(key), n(`${key}--${size}`))">
           <div
             v-for="num in nums"
             :key="num + key"
@@ -30,9 +31,9 @@
         </div>
       </template>
       <div
+        v-if="$slots.description || description"
         :class="classes(n('description'), n(`description--${size}`))"
         :style="{ color }"
-        v-if="$slots.description || description"
       >
         <slot name="description">{{ description }}</slot>
       </div>
@@ -42,17 +43,25 @@
 
 <script lang="ts">
 import { computed, defineComponent } from 'vue'
+import { call } from '@varlet/shared'
+import { createNamespace } from '../utils/components'
+import { multiplySizeUnit } from '../utils/elements'
 import { props } from './props'
-import { toNumber } from '../utils/shared'
-import type { ComputedRef } from 'vue'
-import { createNamespace, call } from '../utils/components'
 
-const { n, classes } = createNamespace('loading')
+const { name, n, classes } = createNamespace('loading')
 
 export default defineComponent({
-  name: 'VarLoading',
+  name,
   props,
   setup(props, { slots }) {
+    const isShow = computed(() => {
+      if (!call(slots.default)) {
+        return true
+      }
+
+      return props.loading
+    })
+
     const loadingTypeDict = {
       wave: 5,
       cube: 4,
@@ -60,29 +69,12 @@ export default defineComponent({
       disappear: 3,
     }
 
-    const sizeDict = {
-      mini: 9,
-      small: 12,
-      normal: 15,
-      large: 18,
-    }
-
-    const getRadius: ComputedRef<number> = computed(() => {
-      return props.radius ? toNumber(props.radius) : sizeDict[props.size]
-    })
-
-    const isShow: ComputedRef<boolean> = computed(() => {
-      if (!call(slots.default)) return true
-
-      return props.loading
-    })
-
     return {
+      loadingTypeDict,
+      isShow,
       n,
       classes,
-      loadingTypeDict,
-      getRadius,
-      isShow,
+      multiplySizeUnit,
     }
   },
 })

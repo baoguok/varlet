@@ -1,15 +1,18 @@
-import VarSnackbarCore from './core.vue'
-import VarSnackbar from './Snackbar.vue'
-import context from '../context'
+import type { App, Component, TeleportProps, VNode } from 'vue'
 import { reactive, TransitionGroup } from 'vue'
-import { mountInstance } from '../utils/components'
-import { isNumber, isPlainObject, isString, toNumber } from '../utils/shared'
-import type { LoadingType, LoadingSize } from '../loading/props'
-import type { App, Component, TeleportProps } from 'vue'
+import { call, isFunction, isPlainObject, isString, toNumber } from '@varlet/shared'
+import context from '../context'
+import type { LoadingSize, LoadingType } from '../loading/props'
+import { mountInstance, withInstall, withPropsDefaultsSetter } from '../utils/components'
+import VarSnackbarCore from './core.vue'
+import { props as snackbarProps } from './props'
+import VarSnackbar from './Snackbar.vue'
 
 export type SnackbarType = 'success' | 'warning' | 'info' | 'error' | 'loading'
 
 export const SNACKBAR_TYPE: Array<SnackbarType> = ['loading', 'success', 'warning', 'info', 'error']
+
+export type SlotType = string | VNode | (() => VNode)
 
 interface SnackbarHandel {
   clear: () => void
@@ -17,15 +20,17 @@ interface SnackbarHandel {
 
 interface SnackbarOptions {
   type?: SnackbarType
-  content?: string
+  content?: SlotType
+  icon?: SlotType
+  action?: SlotType
   position?: 'top' | 'center' | 'bottom'
   loadingType?: LoadingType
   loadingSize?: LoadingSize
   lockScroll?: boolean
   contentClass?: string
   duration?: number
+  elevation?: boolean | string | number
   vertical?: boolean
-  show?: boolean
   forbidClick?: boolean
   onOpen?: () => void
   onClose?: () => void
@@ -33,6 +38,7 @@ interface SnackbarOptions {
   onClosed?: () => void
   // internal
   teleport?: TeleportProps['to']
+  show?: boolean
 }
 
 interface UniqSnackbarOptions {
@@ -43,7 +49,7 @@ interface UniqSnackbarOptions {
 }
 
 interface Snackbar {
-  (options: SnackbarOptions | string): SnackbarHandel
+  (options?: SnackbarOptions | string): SnackbarHandel
 
   install(app: App): void
 
@@ -61,6 +67,10 @@ interface Snackbar {
 
   clear(): void
 
+  setDefaultOptions(options: SnackbarOptions): void
+
+  resetDefaultOptions(): void
+
   Component: Component
 }
 
@@ -68,13 +78,14 @@ let sid = 0
 let isMount = false
 let unmount: () => void
 let isAllowMultiple = false
-let uniqSnackbarOptions: Array<UniqSnackbarOptions> = reactive<UniqSnackbarOptions[]>([])
-
-const defaultOption: Partial<Record<keyof SnackbarOptions, any>> = {
+const defaultOptionsValue: SnackbarOptions = {
   type: undefined,
   content: '',
+  icon: '',
+  action: '',
   position: 'top',
   duration: 3000,
+  elevation: true,
   vertical: false,
   contentClass: undefined,
   loadingType: 'circle',
@@ -87,12 +98,17 @@ const defaultOption: Partial<Record<keyof SnackbarOptions, any>> = {
   onClose: () => {},
   onClosed: () => {},
 }
+let uniqSnackbarOptions: Array<UniqSnackbarOptions> = reactive<UniqSnackbarOptions[]>([])
+
+let defaultOptions: SnackbarOptions = defaultOptionsValue
 
 const transitionGroupProps: any = {
   name: 'var-snackbar-fade',
   tag: 'div',
   class: 'var-transition-group',
 }
+
+const getSlotValue = (value?: SlotType) => () => (isFunction(value) ? value() : value)
 
 const TransitionGroupHost = {
   setup() {
@@ -105,13 +121,17 @@ const TransitionGroupHost = {
           ;(transitionGroupEl as HTMLElement).classList.remove('var-pointer-auto')
         }
 
-        if (isAllowMultiple) reactiveSnackOptions.position = 'top'
-
-        const position = isAllowMultiple ? 'relative' : 'absolute' // avoid stylelint value-keyword-case error
-
         const style = {
-          position,
+          position: isAllowMultiple ? 'relative' : 'absolute',
           ...getTop(reactiveSnackOptions.position),
+        }
+
+        const { content, icon, action } = reactiveSnackOptions
+
+        const slots = {
+          default: getSlotValue(content),
+          icon: getSlotValue(icon),
+          action: getSlotValue(action),
         }
 
         return (
@@ -122,16 +142,15 @@ const TransitionGroupHost = {
             data-id={id}
             _update={_update}
             v-model={[reactiveSnackOptions.show, 'show']}
+            v-slots={slots}
           />
         )
       })
 
-      const zindex = context.zIndex // avoid stylelint value-keyword-case error
-
       return (
         <TransitionGroup
           {...transitionGroupProps}
-          style={{ zIndex: zindex }}
+          style={{ zIndex: context.zIndex }}
           onAfterEnter={opened}
           onAfterLeave={removeUniqOption}
         >
@@ -142,10 +161,10 @@ const TransitionGroupHost = {
   },
 }
 
-const Snackbar: Snackbar = function (options: SnackbarOptions | string | number): SnackbarHandel {
-  const snackOptions: SnackbarOptions = isString(options) || isNumber(options) ? { content: String(options) } : options
+const Snackbar: Snackbar = function (options?: SnackbarOptions | string): SnackbarHandel {
+  const snackOptions: SnackbarOptions = normalizeOptions(options)
   const reactiveSnackOptions: SnackbarOptions = reactive<SnackbarOptions>({
-    ...defaultOption,
+    ...defaultOptions,
     ...snackOptions,
   })
   reactiveSnackOptions.show = true
@@ -193,10 +212,6 @@ SNACKBAR_TYPE.forEach((type) => {
   }
 })
 
-Snackbar.install = function (app: App) {
-  app.component(VarSnackbar.name, VarSnackbar)
-}
-
 Snackbar.allowMultiple = function (bool = false) {
   if (bool !== isAllowMultiple) {
     uniqSnackbarOptions.forEach((option: UniqSnackbarOptions) => {
@@ -213,12 +228,20 @@ Snackbar.clear = function () {
   })
 }
 
-Snackbar.Component = VarSnackbar
+Snackbar.setDefaultOptions = function (options: SnackbarOptions) {
+  defaultOptions = options
+}
+
+Snackbar.resetDefaultOptions = function () {
+  defaultOptions = defaultOptionsValue
+}
 
 function opened(element: HTMLElement): void {
   const id = element.getAttribute('data-id')
   const option = uniqSnackbarOptions.find((option) => option.id === toNumber(id))
-  if (option) option.reactiveSnackOptions.onOpened?.()
+  if (option) {
+    call(option.reactiveSnackOptions.onOpened)
+  }
 }
 
 function removeUniqOption(element: HTMLElement): void {
@@ -228,13 +251,13 @@ function removeUniqOption(element: HTMLElement): void {
   const option = uniqSnackbarOptions.find((option) => option.id === toNumber(id))
   if (option) {
     option.animationEnd = true
-    option.reactiveSnackOptions.onClosed?.()
+    call(option.reactiveSnackOptions.onClosed)
   }
 
   const isAllAnimationEnd = uniqSnackbarOptions.every((option) => option.animationEnd)
 
   if (isAllAnimationEnd) {
-    unmount?.()
+    call(unmount)
     uniqSnackbarOptions = reactive<UniqSnackbarOptions[]>([])
     isMount = false
   }
@@ -242,6 +265,10 @@ function removeUniqOption(element: HTMLElement): void {
 
 function addUniqOption(uniqSnackbarOptionItem: UniqSnackbarOptions) {
   uniqSnackbarOptions.push(uniqSnackbarOptionItem)
+}
+
+function normalizeOptions(options = {}): SnackbarOptions {
+  return isString(options) ? { content: options } : options
 }
 
 function updateUniqOption(reactiveSnackOptions: SnackbarOptions, _update: string) {
@@ -256,14 +283,19 @@ function updateUniqOption(reactiveSnackOptions: SnackbarOptions, _update: string
 }
 
 function getTop(position = 'top') {
-  if (position === 'bottom') return { [position]: '5%' }
+  if (position === 'bottom') {
+    return { top: '85%' }
+  }
 
   return { top: position === 'top' ? '5%' : '45%' }
 }
 
-VarSnackbar.install = function (app: App) {
-  app.component(VarSnackbar.name, VarSnackbar)
-}
+Snackbar.Component = VarSnackbar
+withInstall(VarSnackbar)
+withInstall(VarSnackbar, Snackbar)
+withPropsDefaultsSetter(Snackbar, snackbarProps)
+
+export { snackbarProps }
 
 export const _SnackbarComponent = VarSnackbar
 

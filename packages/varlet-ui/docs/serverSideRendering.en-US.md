@@ -1,46 +1,21 @@
-# Server side rendering
+# Server Side Rendering
 
 ### Intro
 
-Here is the basic way to introduce `Varlet` in `Nuxt`. You can introduce the entire `Varlet` or just a few components as needed. Let's start with how to introduce the full `Varlet`.
+Here we introduce you to the basic way of introducing `Varlet` into `Nuxt`.
 
-### Create Nuxt project
+### Create a Nuxt project
 
-`Nuxt.js`  is a server rendering application framework based on `Vue.js`，For more details, please go [Nuxt](https://v3.nuxtjs.org/).
+`Nuxt.js` is a server-side rendering application framework based on `Vue.js`. For detailed tutorials, please go to [Nuxt](https://nuxt.com).
 
-### Fully import
+### Nuxt Module
 
-`Nuxt` will automatically read the files in your `plugins` directory and load them.
-So you can create a new `varlet.ts` in the `plugins` directory and write the following:
+The first party of the component library provides [Varlet Nuxt Module](https://nuxt.com/modules/varlet) to support on-demand import and automatic import. Execute the following command to install it. After successful installation, nuxt related configuration will be automatically completed.
 
-```js
-// playground-ignore
-import { defineNuxtPlugin } from '#app'
-import Varlet from '@varlet/ui'
-import '@varlet/ui/es/style.js'
-
-export default defineNuxtPlugin((nuxtApp) => {
-  nuxtApp.vueApp.use(Varlet)
-})
+```shell
+# playground-ignore
+npx nuxi@latest module add varlet
 ```
 
-The above imports `Varlet` entirely. Note that CSS file needs to be imported separately.
-
-### On demand
-
-The on-demand import avoids the full import of components and can effectively reduce the size of the distribution package.
-Each component is a `Vue plugin` and is composed of `component logic` and `style files`.
-It is manually install and used as follows.
-
-```js
-// playground-ignore
-import { defineNuxtPlugin } from '#app'
-import { Button } from '@varlet/ui'
-import '@varlet/ui/es/button/style/index.js'
-
-export default defineNuxtPlugin((nuxtApp) => {
-  nuxtApp.vueApp.use(Button)
-})
-```
-
-For more examples, see [varlet-nuxt3-example](https://github.com/varletjs/varlet-nuxt3-example).
+### Example Repo
+[varlet-install-example/nuxt](https://github.com/varletjs/varlet-install-example/tree/main/nuxt)

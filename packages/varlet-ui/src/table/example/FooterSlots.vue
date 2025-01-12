@@ -1,12 +1,11 @@
 <script setup>
-import VarTable from '..'
-import VarPagination from '../../pagination'
-import dark from '../../themes/dark'
-import { watchLang, watchDarkMode } from '@varlet/cli/site/utils'
-import { use, pack } from './locale'
 import { ref } from 'vue'
+import { onThemeChange, watchLang } from '@varlet/cli/client'
+import { t, use } from './locale'
 
-const gen = (current, size) => {
+const list = ref(gen(1, 10))
+
+function gen(current, size) {
   return Array.from({ length: size }).map((_, index) => {
     const id = (current - 1) * size + index + 1
 
@@ -18,23 +17,21 @@ const gen = (current, size) => {
   })
 }
 
-const list = ref(gen(1, 10))
-
-const get = (current, size) => {
+function get(current, size) {
   list.value = gen(current, size)
 }
 
 watchLang(use, 'pc')
-watchDarkMode(dark)
+onThemeChange()
 </script>
 
 <template>
   <var-table class="reset">
     <thead>
       <tr>
-        <th>{{ pack.name }}</th>
-        <th>{{ pack.math }}</th>
-        <th>{{ pack.english }}</th>
+        <th>{{ t('name') }}</th>
+        <th>{{ t('math') }}</th>
+        <th>{{ t('english') }}</th>
       </tr>
     </thead>
     <tbody>

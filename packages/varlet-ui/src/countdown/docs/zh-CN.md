@@ -59,23 +59,24 @@ const time = ref(30 * 60 * 60 * 1000)
 ```html
 <template>
   <var-countdown :time="108000000">
-    <template #default="timeData">
-      <span class="countdown-example-block">{{ timeData.hours }}</span>
+    <template #default="{ hours, minutes, seconds }">
+      <span class="countdown-example-block">{{ hours }}</span>
       <span class="countdown-example-colon">:</span>
-      <span class="countdown-example-block">{{ timeData.minutes }}</span>
+      <span class="countdown-example-block">{{ minutes }}</span>
       <span class="countdown-example-colon">:</span>
-      <span class="countdown-example-block">{{ timeData.seconds }}</span>
+      <span class="countdown-example-block">{{ seconds }}</span>
      </template>
   </var-countdown>
 </template>
 
 <style>
 .countdown-example-block {
-  background: #ff9f00;
-  color: white;
+  background: var(--color-primary);
+  color: var(--color-on-primary);
   width: 30px;
   height: 30px;
   border-radius: 50%;
+  padding: 18px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -100,11 +101,11 @@ import { Snackbar } from '@varlet/ui'
 
 const countdown = ref(null)
 
-const end = () => {
+function end() {
   Snackbar.info('end!')
 }
 
-const change = () => {
+function change() {
   console.log('change')
 }
 </script>
@@ -119,9 +120,9 @@ const change = () => {
     @change="change"
   />
   <var-row justify="space-between" align="center" style="margin-top: 10px">
-    <var-button type="primary" @click="$refs.countdown.start()">开始</var-button>
-    <var-button @click="$refs.countdown.pause()">暂停</var-button>
-    <var-button @click="$refs.countdown.reset()">重置</var-button>
+    <var-button type="primary" @click="countdown.start()">开始</var-button>
+    <var-button @click="countdown.pause()">暂停</var-button>
+    <var-button @click="countdown.reset()">重置</var-button>
   </var-row>
 </template>
 ```
@@ -173,10 +174,19 @@ const change = () => {
 
 ### 方法
 
-通过 ref 可以获取到 CountDown 实例并调用实例方法
+通过 ref 可以获取到 CountDown 实例并调用实例方法.
 
-| 方法名 | 说明 | 参数 |
-| ---- | ------- | -------- |
-| `start` | 开始倒计时 | `-` |
-| `pause` | 暂停倒计时 | `-` |
-| `reset` | 重设倒计时，若 `auto-start` 为 `true`，重设后会自动开始倒计时 | `-` |
+| 方法名 | 说明 | 参数 | 返回值 |
+| --- | --- | --- | --- |
+| `start` | 开始倒计时 | `-` | `-` |
+| `pause` | 暂停倒计时 | `-` | `-` |
+| `reset` | 重设倒计时，若 `auto-start` 为 `true`，重设后会自动开始倒计时 | `-` | `-` |
+
+### 样式变量
+
+以下为组件使用的 css 变量，可以使用 [StyleProvider 组件](#/zh-CN/style-provider) 进行样式定制。
+
+| 变量名                         | 默认值 |
+|-----------------------------| --- |
+| `--countdown-text-color`     | `var(--color-text)`                |
+| `--countdown-text-font-size` | `var(--font-size-lg)` |

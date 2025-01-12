@@ -1,7 +1,8 @@
-import Dialog from '../index'
-import VarDialog from '../Dialog'
 import { createApp } from 'vue'
-import { delay, trigger } from '../../utils/jest'
+import { expect, test, vi } from 'vitest'
+import { delay, trigger } from '../../utils/test'
+import VarDialog from '../Dialog'
+import Dialog from '../index'
 
 test('test dialog plugin', () => {
   const app = createApp({}).use(Dialog)
@@ -9,10 +10,10 @@ test('test dialog plugin', () => {
 })
 
 test('test dialog functional show & close', async () => {
-  const onOpen = jest.fn()
-  const onOpened = jest.fn()
-  const onClose = jest.fn()
-  const onClosed = jest.fn()
+  const onOpen = vi.fn()
+  const onOpened = vi.fn()
+  const onClose = vi.fn()
+  const onClosed = vi.fn()
 
   Dialog({
     message: 'test message',
@@ -38,8 +39,8 @@ test('test dialog functional show & close', async () => {
 })
 
 test('test dialog functional confirm & cancel', async () => {
-  const onConfirm = jest.fn()
-  const onCancel = jest.fn()
+  const onConfirm = vi.fn()
+  const onCancel = vi.fn()
 
   Dialog({
     message: 'test confirm',
@@ -58,5 +59,24 @@ test('test dialog functional confirm & cancel', async () => {
   await trigger(document.querySelector('.var-dialog__cancel-button'), 'click')
   expect(onCancel).toHaveBeenCalledTimes(1)
 
+  Dialog.close()
+  await delay(300)
+})
+
+test('test dialog setDefaultOptions and resetDefaultOptions', async () => {
+  const onConfirm = vi.fn()
+
+  Dialog.setDefaultOptions({ onConfirm })
+  Dialog('test confirm')
+  await delay(16)
+  await trigger(document.querySelector('.var-dialog__confirm-button'), 'click')
+  expect(onConfirm).toHaveBeenCalledTimes(1)
+  await delay(300)
+
+  Dialog.resetDefaultOptions()
+  Dialog('test confirm')
+  await delay(16)
+  await trigger(document.querySelector('.var-dialog__confirm-button'), 'click')
+  expect(onConfirm).toHaveBeenCalledTimes(1)
   Dialog.close()
 })

@@ -1,11 +1,9 @@
 <script setup>
-import VarPagination from '../Pagination'
-import dark from '../../themes/dark'
-import { watchLang, watchDarkMode } from '@varlet/cli/site/utils'
+import { onThemeChange, watchLang } from '@varlet/cli/client'
 import { use } from './locale'
 
 watchLang(use, 'pc')
-watchDarkMode(dark)
+onThemeChange()
 </script>
 
 <template>

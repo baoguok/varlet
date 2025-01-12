@@ -1,14 +1,11 @@
-import type { PropType } from 'vue'
+import { defineListenerProp } from '../utils/components'
 
 export const props = {
-  name: {
-    type: [String, Number],
-  },
-  disabled: {
+  name: [String, Number],
+  disabled: Boolean,
+  ripple: {
     type: Boolean,
-    default: false,
+    default: true,
   },
-  onClick: {
-    type: Function as PropType<(active: string | number, e: Event) => void>,
-  },
+  onClick: defineListenerProp<(active: string | number, e: Event) => void>(),
 }

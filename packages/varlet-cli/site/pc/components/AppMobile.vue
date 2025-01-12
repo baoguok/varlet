@@ -1,38 +1,60 @@
 <template>
-  <div class="varlet-site-mobile">
+  <div class="varlet-site-mobile varlet-site-mobile--375">
     <div class="varlet-site-mobile-content">
-      <iframe id="mobile" :src="`./mobile.html#/${componentName}?language=${language}&platform=pc&replace=${replace}`"></iframe>
+      <iframe
+        id="mobile"
+        :src="`${getMobileIndex()}#/${componentName}?language=${language}&platform=pc&replace=${replace}${
+          hash ? `#${hash}` : ''
+        }`"
+      ></iframe>
     </div>
   </div>
 </template>
 
-<script>
+<script lang="ts">
+import { getMobileIndex } from '@varlet/cli/client'
+
 export default {
   name: 'AppMobile',
   props: {
     componentName: {
-      type: String
+      type: String,
     },
     language: {
-      type: String
+      type: String,
     },
     replace: {
-      type: String
+      type: String,
+    },
+    hash: {
+      type: String,
+    },
+  },
+  setup() {
+    return {
+      getMobileIndex,
     }
-  }
+  },
 }
 </script>
 
-<style scoped lang="less">
+<style lang="less">
 .varlet-site-mobile {
   position: sticky;
-  flex: 0 0 325px;
+  flex: 0 0 330px;
   top: 80px;
   height: calc(100vh - 100px);
   margin-right: 38px;
   overflow: hidden;
   box-shadow: 0 0 14px 6px var(--site-config-color-shadow);
   border-radius: 2px;
+  margin-top: 20px;
+
+  @media screen and (min-width: 1600px) {
+    &--375 {
+      flex: 0 0 375px;
+    }
+  }
 
   &-content {
     width: 100%;
@@ -49,6 +71,13 @@ export default {
       width: 100%;
       height: 100%;
     }
+  }
+
+  iframe {
+    display: block;
+    width: 100%;
+    height: 100%;
+    border: none;
   }
 }
 </style>

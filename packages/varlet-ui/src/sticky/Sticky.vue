@@ -1,7 +1,7 @@
 <template>
   <div
-    :class="classes(n(), [enableCSSMode, n('--css-mode')])"
     ref="stickyEl"
+    :class="classes(n(), [enableCSSMode, n('--css-mode')])"
     :style="{
       zIndex: toNumber(zIndex),
       top: enableCSSMode ? `${offsetTop}px` : undefined,
@@ -10,8 +10,8 @@
     }"
   >
     <div
-      :class="n('wrapper')"
       ref="wrapperEl"
+      :class="n('wrapper')"
       :style="{
         zIndex: toNumber(zIndex),
         position: enableFixedMode ? 'fixed' : undefined,
@@ -27,38 +27,55 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, onMounted, onUnmounted, onActivated, onDeactivated, computed, watch } from 'vue'
+import { computed, defineComponent, ref, watch } from 'vue'
+import { call, doubleRaf, getRect, raf, toNumber } from '@varlet/shared'
+import { onSmartMounted, onSmartUnmounted, onWindowResize, useEventListener } from '@varlet/use'
+import { createNamespace } from '../utils/components'
+import { getParentScroller, toPxNum } from '../utils/elements'
 import { props } from './props'
-import { doubleRaf, getParentScroller, toPxNum } from '../utils/elements'
-import { toNumber } from '../utils/shared'
-import type { Ref, ComputedRef } from 'vue'
-import { call, createNamespace } from '../utils/components'
 
-const { n, classes } = createNamespace('sticky')
+const { name, n, classes } = createNamespace('sticky')
+
+export interface StickyFixedParams {
+  offsetTop: number
+  isFixed: boolean
+}
 
 export default defineComponent({
-  name: 'VarSticky',
+  name,
   props,
   setup(props) {
-    const stickyEl: Ref<HTMLElement | null> = ref(null)
-    const wrapperEl: Ref<HTMLElement | null> = ref(null)
-
-    const isFixed: Ref<boolean> = ref(false)
-    const fixedTop: Ref<string> = ref('0px')
-    const fixedLeft: Ref<string> = ref('0px')
-    const fixedWidth: Ref<string> = ref('auto')
-    const fixedHeight: Ref<string> = ref('auto')
-    const fixedWrapperWidth: Ref<string> = ref('auto')
-    const fixedWrapperHeight: Ref<string> = ref('auto')
-
-    const enableCSSMode: ComputedRef<boolean> = computed(() => !props.disabled && props.cssMode)
-    const enableFixedMode: ComputedRef<boolean> = computed(() => !props.disabled && isFixed.value)
-    const offsetTop: ComputedRef<number> = computed(() => toPxNum(props.offsetTop))
+    const stickyEl = ref<HTMLElement | null>(null)
+    const wrapperEl = ref<HTMLElement | null>(null)
+    const isFixed = ref(false)
+    const fixedTop = ref('0px')
+    const fixedLeft = ref('0px')
+    const fixedWidth = ref('auto')
+    const fixedHeight = ref('auto')
+    const fixedWrapperWidth = ref('auto')
+    const fixedWrapperHeight = ref('auto')
+    const enableCSSMode = computed(() => !props.disabled && props.cssMode)
+    const enableFixedMode = computed(() => !props.disabled && !props.cssMode && isFixed.value)
+    const offsetTop = computed(() => toPxNum(props.offsetTop))
 
     let scroller: HTMLElement | Window
 
-    const handleScroll = () => {
-      const { onScroll, cssMode, disabled } = props
+    watch(() => props.disabled, resize)
+
+    onSmartMounted(async () => {
+      await doubleRaf()
+      setupScroller()
+      handleScroll()
+    })
+
+    onSmartUnmounted(removeScrollListener)
+
+    onWindowResize(resize)
+
+    useEventListener(() => window, 'scroll', handleScroll)
+
+    function computeFixedParams(): StickyFixedParams | undefined {
+      const { cssMode, disabled } = props
 
       if (disabled) {
         return
@@ -66,14 +83,14 @@ export default defineComponent({
 
       let scrollerTop = 0
 
-      if (scroller !== window) {
-        const { top } = (scroller as HTMLElement).getBoundingClientRect()
+      if (scroller && scroller !== window) {
+        const { top } = getRect(scroller as HTMLElement)
         scrollerTop = top
       }
 
       const wrapper = wrapperEl.value as HTMLElement
       const sticky = stickyEl.value as HTMLElement
-      const { top: stickyTop, left: stickyLeft } = sticky.getBoundingClientRect()
+      const { top: stickyTop, left: stickyLeft } = getRect(sticky)
       const currentOffsetTop = stickyTop - scrollerTop
 
       if (currentOffsetTop <= offsetTop.value) {
@@ -86,39 +103,55 @@ export default defineComponent({
           fixedWrapperHeight.value = `${wrapper.offsetHeight}px`
           isFixed.value = true
         }
-        call(onScroll, offsetTop.value, true)
-      } else {
-        isFixed.value = false
-        call(onScroll, currentOffsetTop, false)
+
+        return {
+          offsetTop: offsetTop.value,
+          isFixed: true,
+        }
+      }
+
+      isFixed.value = false
+
+      return {
+        offsetTop: currentOffsetTop,
+        isFixed: false,
       }
     }
 
-    const addScrollListener = async () => {
-      await doubleRaf()
+    function setupScroller() {
       scroller = getParentScroller(stickyEl.value as HTMLElement)
-      scroller !== window && scroller.addEventListener('scroll', handleScroll)
-      window.addEventListener('scroll', handleScroll)
-      handleScroll()
+
+      if (scroller !== window) {
+        scroller.addEventListener('scroll', handleScroll)
+      }
     }
 
-    const removeScrollListener = () => {
-      scroller !== window && scroller.removeEventListener('scroll', handleScroll)
-      window.removeEventListener('scroll', handleScroll)
+    function handleScroll() {
+      // returns undefined when disabled = true
+      const fixedParams = computeFixedParams()
+
+      if (fixedParams) {
+        call(props.onScroll, fixedParams.offsetTop, fixedParams.isFixed)
+      }
     }
 
-    watch(() => props.disabled, handleScroll)
+    function removeScrollListener() {
+      if (!scroller || scroller === window) {
+        // may be null in nuxt
+        return
+      }
 
-    onActivated(addScrollListener)
+      scroller.removeEventListener('scroll', handleScroll)
+    }
 
-    onDeactivated(removeScrollListener)
-
-    onMounted(addScrollListener)
-
-    onUnmounted(removeScrollListener)
+    // expose
+    async function resize() {
+      isFixed.value = false
+      await raf()
+      computeFixedParams()
+    }
 
     return {
-      n,
-      classes,
       stickyEl,
       wrapperEl,
       isFixed,
@@ -131,6 +164,9 @@ export default defineComponent({
       fixedWrapperHeight,
       enableCSSMode,
       enableFixedMode,
+      n,
+      classes,
+      resize,
       toNumber,
     }
   },

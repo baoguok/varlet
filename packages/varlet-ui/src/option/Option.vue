@@ -1,11 +1,15 @@
 <template>
   <div
-    :class="classes(n(), 'var--box', [optionSelected, n('--selected-color')])"
+    ref="root"
+    v-ripple="{ disabled: disabled || !ripple }"
+    v-hover:desktop="handleHovering"
+    :class="classes(n(), n('$--box'), [optionSelected, n('--selected-color')], [disabled, n('--disabled')])"
     :style="{
-      width: wrapWidth,
       color: optionSelected ? focusColor : undefined,
     }"
-    v-ripple
+    :tabindex="disabled ? undefined : '-1'"
+    @focus="isFocusing = true"
+    @blur="isFocusing = false"
     @click="handleClick"
   >
     <div
@@ -14,87 +18,147 @@
         background: optionSelected ? focusColor : undefined,
       }"
     ></div>
+
     <var-checkbox
-      ref="checkbox"
-      :checked-color="focusColor"
       v-if="multiple"
+      ref="checkbox"
       v-model="optionSelected"
+      :checked-color="focusColor"
+      :disabled="disabled"
       @click.stop
       @change="handleSelect"
     />
 
-    <div :class="classes(n('text'), 'var--ellipsis')">
-      <slot>
-        {{ label }}
-      </slot>
-    </div>
+    <slot :selected="optionSelected">
+      <div :class="classes(n('text'), n('$--ellipsis'))">
+        <maybe-v-node :is="labelVNode" />
+      </div>
+    </slot>
+
+    <var-hover-overlay :hovering="hovering && !disabled" :focusing="isFocusing && !disabled" />
   </div>
 </template>
 
 <script lang="ts">
+import { computed, defineComponent, ref, watch } from 'vue'
+import { isFunction, preventDefault } from '@varlet/shared'
+import { useEventListener } from '@varlet/use'
 import VarCheckbox from '../checkbox'
+import Hover from '../hover'
+import VarHoverOverlay, { useHoverOverlay } from '../hover-overlay'
 import Ripple from '../ripple'
-import { defineComponent, computed, ref, watch } from 'vue'
-import { useSelect } from './provide'
-import { createNamespace } from '../utils/components'
+import { createNamespace, MaybeVNode } from '../utils/components'
 import { props } from './props'
-import type { Ref, ComputedRef } from 'vue'
-import type { OptionProvider } from './provide'
+import { OptionProvider, useSelect } from './provide'
 
-const { n, classes } = createNamespace('option')
+const { name, n, classes } = createNamespace('option')
 
 export default defineComponent({
-  name: 'VarOption',
-  directives: { Ripple },
+  name,
+  directives: { Ripple, Hover },
   components: {
     VarCheckbox,
+    VarHoverOverlay,
+    MaybeVNode,
   },
   props,
   setup(props) {
-    const optionSelected: Ref<boolean> = ref(false)
-    const selected: ComputedRef<boolean> = computed(() => optionSelected.value)
-    const label: ComputedRef = computed(() => props.label)
-    const value: ComputedRef = computed(() => props.value)
+    const root = ref<HTMLElement>()
+    const isFocusing = ref(false)
+    const optionSelected = ref(false)
+    const selected = computed(() => optionSelected.value)
+    const value = computed<any>(() => props.value)
+    const disabled = computed(() => props.disabled)
+    const ripple = computed(() => props.ripple)
     const { select, bindSelect } = useSelect()
-    const { wrapWidth, multiple, focusColor, onSelect } = select
+    const { multiple, focusColor, onSelect, computeLabel } = select
+    const { hovering, handleHovering } = useHoverOverlay()
 
-    const handleClick = () => {
-      optionSelected.value = !optionSelected.value
-      onSelect(optionProvider)
-    }
-
-    const handleSelect = () => onSelect(optionProvider)
-
-    const sync = (checked: boolean) => {
-      optionSelected.value = checked
-    }
+    const labelVNode = computed(() =>
+      isFunction(props.label)
+        ? props.label(
+            props.option ?? {
+              label: props.label,
+              value: props.value,
+              disabled: props.disabled,
+            },
+            optionSelected.value,
+          )
+        : props.label,
+    )
 
     const optionProvider: OptionProvider = {
-      label,
+      label: labelVNode,
       value,
+      disabled,
+      ripple,
       selected,
       sync,
     }
 
-    watch(
-      [() => props.label, () => props.value],
-      () => {
-        if (props.label == null && props.value == null) {
-          throw Error("Props label and value can't both be undefined\n")
-        }
-      },
-      { immediate: true }
-    )
+    watch([() => props.label, () => props.value], computeLabel)
 
     bindSelect(optionProvider)
 
+    useEventListener(() => window, 'keydown', handleKeydown)
+    useEventListener(() => window, 'keyup', handleKeyup)
+
+    function handleClick() {
+      if (props.disabled) {
+        return
+      }
+
+      handleSelect()
+    }
+
+    function handleKeydown(event: KeyboardEvent) {
+      if (!isFocusing.value) {
+        return
+      }
+
+      if (event.key === ' ' || event.key === 'Enter') {
+        preventDefault(event)
+      }
+
+      if (event.key === 'Enter') {
+        root.value!.click()
+      }
+    }
+
+    function handleKeyup(event: KeyboardEvent) {
+      if (!isFocusing.value) {
+        return
+      }
+
+      if (event.key === ' ') {
+        preventDefault(event)
+        root.value!.click()
+      }
+    }
+
+    function handleSelect() {
+      if (multiple.value) {
+        optionSelected.value = !optionSelected.value
+      }
+
+      onSelect(optionProvider)
+    }
+
+    function sync(checked: boolean) {
+      optionSelected.value = checked
+    }
+
     return {
-      n,
-      classes,
+      root,
       optionSelected,
-      wrapWidth,
       multiple,
       focusColor,
+      hovering,
+      isFocusing,
+      labelVNode,
+      n,
+      classes,
+      handleHovering,
       handleClick,
       handleSelect,
     }
@@ -105,7 +169,7 @@ export default defineComponent({
 <style lang="less">
 @import '../styles/common';
 @import '../ripple/ripple';
+@import '../hover-overlay/hoverOverlay';
 @import '../checkbox/checkbox';
-@import '../select/select';
 @import './option';
 </style>

@@ -13,13 +13,12 @@ indicates that loading is under way, and setting `v-model` to `false` after comp
 <script setup>
 import { ref } from 'vue'
 
-const data1 = Array(10).fill('List Item')
-const data2 = Array(10).fill('This is new List Item')
-
+const data1 = Array(30).fill('List Item')
+const data2 = Array(30).fill('This is new List Item')
 const isRefresh = ref(false)
 const data = ref(data1)
 
-const refresh = () => {
+function refresh() {
   setTimeout(() => {
     data.value = data.value[0] === 'List Item' ? data2 : data1
     isRefresh.value = false
@@ -40,6 +39,45 @@ const refresh = () => {
 </template>
 ```
 
+### Combine
+
+Combined with the `List` component to implement the function of pull-up loading and pull-down refresh, ensuring the height of the `PullRefresh` is not `0` .
+
+```html
+<script setup>
+import { ref } from 'vue'
+
+const refreshing = ref(false)
+const loading = ref(false)
+const list = ref([])
+
+function refresh() {
+  setTimeout(() => {
+    console.log('refresh')
+    refreshing.value = false
+  }, 2000)
+}
+
+function load() {
+  setTimeout(() => {
+    for (let i = 0; i < 20; i++) {
+      list.value.push(list.value.length + 1)
+    }
+    
+    loading.value = false
+  }, 1000)
+}
+</script>
+
+<template>
+  <var-pull-refresh v-model="refreshing" @refresh="refresh">
+    <var-list v-model:loading="loading" @load="load">
+      <var-cell :key="d" v-for="d in list">ListItem {{ d }}</var-cell>
+    </var-list>
+  </var-pull-refresh>
+</template>
+```
+
 ### Attention
 
 When the height of the `PullRefresh` is `0`, it will be unavailable, so you need to ensure that the height of its child elements is **not** `0` or set height for the `PullRefresh`:
@@ -51,7 +89,7 @@ When the height of the `PullRefresh` is `0`, it will be unavailable, so you need
     <div style="height: 200px"></div>
   </var-pull-refresh>
 
-// or
+  <!-- or -->
   
   <var-pull-refresh style="height: 200px">
     <div></div>
@@ -67,12 +105,13 @@ When the height of the `PullRefresh` is `0`, it will be unavailable, so you need
 | ----- | -------------- | -------- | ---------- |
 | `v-model` | Loading status | _boolean_ | `-` |
 | `disabled` | Whether to disable pull refresh | _boolean_ | `false` |
+| `target` | The target to trigger scroll. If it is undefined back top will listen to the nearest scrollable parent. | _string \| HTMLElement_     | `-` |
 | `animation-duration` | The duration of the animation to return to the initial position after loading(ms) | _string \| number_ | `300` |
 | `success-duration` | Success text display duration(ms) | _string \| number_ | `2000` |
 | `bg-color` | BackgroundColor of control | _string_ | `#005CAF` |
-| `color` | color of control | _string_ | `#ffffff` |
+| `color` | Color of control | _string_ | `#ffffff` |
 | `success-bg-color` | BackgroundColor of control when the status is success | _string_ | `#4CAF50` |
-| `success-color` | color of control when the status is success | _string_ | `ffffff` |
+| `success-color` | Color of control when the status is success | _string_ | `ffffff` |
 
 ### Events
 
@@ -87,7 +126,7 @@ When the height of the `PullRefresh` is `0`, it will be unavailable, so you need
 | `default` | Default slot | `-` |
 
 ### Style Variables
-Here are the CSS variables used by the component, Styles can be customized using [StyleProvider](#/en-US/style-provider)
+Here are the CSS variables used by the component. Styles can be customized using [StyleProvider](#/en-US/style-provider).
 
 | Variable | Default |
 | --- | --- |

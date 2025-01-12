@@ -14,7 +14,7 @@
 <script setup>
 import { Snackbar, ActionSheet } from '@varlet/ui'
 
-const createBasic = async () => {
+async function createBasic() {
   const action = await ActionSheet({ 
     actions: [
       {
@@ -32,7 +32,7 @@ const createBasic = async () => {
     ] 
   })
   
-  action !== 'close' && Snackbar(`${action.name}`)
+  action !== 'close' && Snackbar(`您选择的是:${action.name}`)
 }
 </script>
 
@@ -47,7 +47,7 @@ const createBasic = async () => {
 <script setup>
 import { Snackbar, ActionSheet } from '@varlet/ui'
 
-const handleSelect = async () => {
+async function handleSelect(){
   const action = await ActionSheet({ 
     actions: [
       {
@@ -66,7 +66,7 @@ const handleSelect = async () => {
     title: '选择一个你喜欢的吧' 
   })
   
-  action !== 'close' && Snackbar(`${action.name}`)
+  action !== 'close' && Snackbar(`您选择的是:${action.name}`)
 }
 </script>
 
@@ -83,7 +83,7 @@ const handleSelect = async () => {
 <script setup>
 import { Snackbar, ActionSheet } from '@varlet/ui'
 
-const handleSelect = async () => {
+async function handleSelect() {
   const action = await ActionSheet({ 
     actions: [
       {
@@ -102,7 +102,7 @@ const handleSelect = async () => {
     ] 
   })
   
-  action !== 'close' && Snackbar(`${action.name}`)
+  action !== 'close' && Snackbar(`您选择的是:${action.name}`)
 }
 </script>
 
@@ -120,7 +120,7 @@ const handleSelect = async () => {
 <script setup>
 import { Snackbar, ActionSheet } from '@varlet/ui'
 
-const handleSelect = async () => {
+async function handleSelect(){
   await ActionSheet({ 
     actions: [
       {
@@ -137,7 +137,7 @@ const handleSelect = async () => {
       },
     ], 
     closeOnClickAction: false,
-    onSelect: action => Snackbar(`Your selected is:${action.name}`), 
+    onSelect: action => Snackbar(`您选择的是:${action.name}`), 
   })
 }
 </script>
@@ -155,28 +155,28 @@ const handleSelect = async () => {
 <script setup>
 import { Snackbar, ActionSheet } from '@varlet/ui'
 
-const handleSelect = async () => {
+async function handleSelect() {
   const action = await ActionSheet({ 
     actions: [
       {
         name: 'Item 01',
         icon: 'account-circle',
-        color: '#00c48f',
+        color: 'var(--color-success)',
       },
       {
         name: 'Item 02',
         icon: 'notebook',
-        color: '#ff9800',
+        color: 'var(--color-warning)',
       },
       {
         name: 'Item 03',
         icon: 'wifi',
-        color: '#00afef',
+        color: 'var(--color-info)',
       },
     ] 
   })
   
-  action !== 'close' && Snackbar(`${action.name}`)
+  action !== 'close' && Snackbar(`您选择的是:${action.name}`)
 }
 </script>
 
@@ -210,8 +210,8 @@ const actions = ref([
   },
 ])
 
-const handleSelect = (action) => {
-  Snackbar(`${action.name}`)
+function handleSelect(action){
+  Snackbar(`您选择的是:${action.name}`)
 }
 </script>
 
@@ -248,8 +248,8 @@ const actions = ref([
   },
 ])
 
-const handleSelect = (action) => {
-  Snackbar(`${action.name}`)
+function handleSelect(action){
+  Snackbar(`您选择的是:${action.name}`)
 }
 </script>
 
@@ -288,8 +288,8 @@ const actions = ref([
   },
 ])
 
-const handleSelect = (action) => {
-  Snackbar(`${action.name}`)
+function handleSelect(action) {
+  Snackbar(`您选择的是:${action.name}`)
 }
 </script>
 
@@ -326,8 +326,8 @@ const actions = ref([
   },
 ])
 
-const handleSelect = (action) => {
-  Snackbar(`${action.name}`)
+function handleSelect(action) {
+  Snackbar(`您选择的是:${action.name}`)
 }
 </script>
 
@@ -354,22 +354,22 @@ const actions = ref([
   {
     name: 'Item 01',
     icon: 'account-circle',
-    color: '#00c48f',
+    color: 'var(--color-success)',
   },
   {
     name: 'Item 02',
     icon: 'notebook',
-    color: '#ff9800',
+    color: 'var(--color-warning)',
   },
   {
     name: 'Item 03',
     icon: 'wifi',
-    color: '#00afef',
+    color: 'var(--color-info)',
   },
 ])
 
-const handleSelect = (action) => {
-  Snackbar(`${action.name}`)
+function handleSelect(action) {
+  Snackbar(`您选择的是:${action.name}`)
 }
 </script>
 
@@ -398,18 +398,30 @@ const handleSelect = (action) => {
 | `lock-scroll` | 是否禁止滚动穿透，禁止时滚动弹出层不会引发 body 的滚动 | _boolean_ | `true` |
 | `close-on-click-action` | 是否点击选项时关闭动作面板 | _boolean_ | `true` |
 | `close-on-click-overlay` | 是否点击遮罩层关闭动作面板 | _boolean_ | `true` |
-| `teleport` | 动作面板挂载的位置 | _TeleportProps['to']_ | `-` |
+| `close-on-key-escape` | 是否支持键盘 ESC 关闭动作面板 | _boolean_ | `true` |
+| `safe-area`   | 是否开启底部安全区适配      | _boolean_             | `false`  |
+| `teleport` | 动作面板挂载的位置 | _TeleportProps['to'] \| false_ | `body` |
 
 ### 事件
 
 | 事件名 | 说明 | 参数 |
 | --- | --- | --- |
-| `select` | 选择选项时出发 | `action: Action` |
+| `select` | 选择选项时触发 | `action: Action` |
 | `open` | 打开动作面板时触发 | `-` |
 | `opened` | 打开动作面板动画结束时触发 | `-` |
 | `close` | 关闭动作面板时触发 | `-` |
 | `closed` | 关闭动作面板动画结束时触发 | `-` |
 | `click-overlay` | 点击遮罩层时触发 | `-` |
+| `key-escape` | 点击键盘 ESC 时触发 | `-` |
+
+### 方法
+
+| 方法名 | 说明 | 参数 | 返回值 |
+| --- | --- | --- | --- |
+| `ActionSheet` | 显示动作面板 | _options_ | `-` |
+| `ActionSheet.close` | 关闭动作面板 | _-_ | `-` |
+| `ActionSheet.setDefaultOptions` | 设置默认的选项配置 | _options_ | `-` |
+| `ActionSheet.resetDefaultOptions` | 重置默认的选项配置 | _-_ | `-` |
 
 ### ActionSheet Options
 
@@ -417,18 +429,23 @@ const handleSelect = (action) => {
 
 | 参数 | 说明 | 类型 | 默认值 |
 | --- | --- | --- | --- |
+| `actions` | 选项列表 | _Actions_ | `[]` |
 | `title` | 动作面板标题 | _string_ | `请选择` |
 | `overlay` | 是否显示遮罩层 | _boolean_ | `true` |
 | `overlayClass` | 自定义遮罩层的 class | _string_ | `-` |
 | `overlayStyle` | 自定义遮罩层的 style | _object_ | `-` |
 | `lockScroll` | 是否禁止滚动穿透，禁止时滚动弹出层不会引发 body 的滚动 | _boolean_ | `true` |
+| `closeOnClickAction` | 是否点击选项时关闭动作面板 | _boolean_ | `true` |
 | `closeOnClickOverlay` | 是否点击遮罩层关闭弹出层 | _boolean_ | `true` |
+| `closeOnKeyEscape` | 是否支持键盘 ESC 关闭动作面板 | _boolean_ | `true`
+| `safe-area`              | 是否开启底部安全区适配	                                     | _boolean_             | `false`  |
 | `onOpen` | 动作面板开启回调 | _() => void_ | `-` |
 | `onOpened` | 动作面板开启动画结束回调 | _() => void_ | `-` |
 | `onClose` | 动作面板关闭回调 | _() => void_ | `-` |
 | `onClosed` |动作面板关闭动画结束回调 | _() => void_ | `-` |
 | `onSelect` | 选项选择时回调 | _(action: Action) => void_ | `-` |
 | `onClickOverlay` | 遮罩层点击回调 | _() => void_ | `-` |
+| `onKeyEscape` | 点击键盘 ESC 时触发 | _() => void_ | `-` |
 
 ### ActionSheet Action
 
@@ -438,6 +455,7 @@ const handleSelect = (action) => {
 | `color` | 选项文字颜色 | _string_ | `-` |
 | `icon` | icon 图标，支持网络图片地址 | _string_ | `-` |
 | `iconSize` | 图标尺寸 | _string_ | `-` |
+| `namespace` | 图标命名空间 | _string_ | `-` |
 | `className` | 选项附加类名 | _string_ | `-` |
 | `disabled` | 是否禁用选项 | _boolean_ | `false` |
 
@@ -450,11 +468,12 @@ const handleSelect = (action) => {
 
 ### 样式变量
 
-以下为组件使用的 css 变量，可以使用 [StyleProvider 组件](#/zh-CN/style-provider) 进行样式定制
+以下为组件使用的 css 变量，可以使用 [StyleProvider 组件](#/zh-CN/style-provider) 进行样式定制。
 
 | 变量名 | 默认值 |
 | --- | --- |
 | `--action-sheet-border-radius` | `2px` |
+| `--action-sheet-border-top` | `none` |
 | `--action-sheet-background` | `#fff` |
 | `--action-sheet-title-color` | `#888` |
 | `--action-sheet-title-padding` | `10px 16px` |

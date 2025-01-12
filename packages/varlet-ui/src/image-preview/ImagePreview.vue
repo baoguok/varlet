@@ -1,31 +1,34 @@
 <template>
   <var-popup
-    :class="n('popup')"
+    v-model:show="show"
     var-image-preview-cover
-    transition="var-fade"
-    :show="popupShow"
+    :class="n('popup')"
+    :transition="n('$-fade')"
     :overlay="false"
     :close-on-click-overlay="false"
+    :close-on-key-escape="closeOnKeyEscape"
     :lock-scroll="lockScroll"
     :teleport="teleport"
     @open="onOpen"
     @close="onClose"
     @closed="onClosed"
     @opened="onOpened"
+    @key-escape="onKeyEscape"
     @route-change="onRouteChange"
   >
     <var-swipe
+      ref="swipeRef"
       :class="n('swipe')"
       var-image-preview-cover
       :touchable="canSwipe"
       :indicator="indicator && images.length > 1"
-      :initial-index="initialIndex"
+      :initial-index="toNumber(initialIndex)"
       :loop="loop"
-      @change="onChange"
       v-bind="$attrs"
+      @change="onChange"
     >
       <template #default>
-        <var-swipe-item :class="n('swipe-item')" var-image-preview-cover v-for="image in images" :key="image">
+        <var-swipe-item v-for="(image, idx) in images" :key="image" :class="n('swipe-item')" var-image-preview-cover>
           <div
             :class="n('zoom-container')"
             :style="{
@@ -33,59 +36,61 @@
               transitionTimingFunction,
               transitionDuration,
             }"
-            @touchstart="handleTouchstart"
+            @touchstart="handleTouchstart($event, idx)"
             @touchmove="handleTouchmove"
             @touchend="handleTouchend"
+            @touchcancel="handleTouchcancel"
           >
-            <img :class="n('image')" :src="image" :alt="image" />
+            <img
+              role="img"
+              :class="classes(n('image'), [isPreventDefault, n('--prevent')])"
+              :src="image"
+              :alt="image"
+            />
           </div>
         </var-swipe-item>
       </template>
 
       <template #indicator="{ index, length }">
         <slot name="indicator" :index="index" :length="length">
-          <div :class="n('indicators')" v-if="indicator && images.length > 1">{{ index + 1 }} / {{ length }}</div>
+          <div v-if="indicator && images.length > 1" :class="n('indicators')">{{ index + 1 }} / {{ length }}</div>
         </slot>
       </template>
     </var-swipe>
 
     <slot name="close-icon">
-      <var-icon :class="n('close-icon')" name="close-circle" var-image-preview-cover v-if="closeable" @click="close" />
+      <var-icon v-if="closeable" :class="n('close-icon')" name="close-circle" var-image-preview-cover @click="close" />
     </slot>
 
-    <div :class="n('extra')">
+    <div v-if="$slots.extra" :class="n('extra')">
       <slot name="extra" />
     </div>
   </var-popup>
 </template>
 
 <script lang="ts">
-import VarSwipe from '../swipe'
-import VarSwipeItem from '../swipe-item'
+import { computed, defineComponent, ref } from 'vue'
+import { call, clamp, preventDefault, toNumber } from '@varlet/shared'
+import { useEventListener, useTouch, useVModel } from '@varlet/use'
 import VarIcon from '../icon'
 import VarPopup from '../popup'
-import { defineComponent, ref, computed, watch } from 'vue'
+import VarSwipe from '../swipe'
+import VarSwipeItem from '../swipe-item'
+import { type SwipeToOptions } from '../swipe/props'
+import { createNamespace } from '../utils/components'
 import { props } from './props'
-import { toNumber } from '../utils/shared'
-import type { Ref, ComputedRef } from 'vue'
-import { call, createNamespace } from '../utils/components'
 
-const { n, classes } = createNamespace('image-preview')
-
-type VarTouch = {
-  clientX: number
-  clientY: number
-  timestamp: number
-  target: HTMLElement
-}
+const { name, n, classes } = createNamespace('image-preview')
 
 const DISTANCE_OFFSET = 12
 const EVENT_DELAY = 200
 const TAP_DELAY = 350
 const ANIMATION_DURATION = 200
+const LONG_PRESS_DELAY = 500
+const BASE_RATIO = 1
 
 export default defineComponent({
-  name: 'VarImagePreview',
+  name,
   components: {
     VarSwipe,
     VarSwipeItem,
@@ -95,40 +100,34 @@ export default defineComponent({
   inheritAttrs: false,
   props,
   setup(props) {
-    const popupShow: Ref<boolean> = ref(false)
-    const initialIndex: ComputedRef<number> = computed(() => {
-      const { images, current } = props
-      const index = images.findIndex((image: string) => image === current)
-      return index >= 0 ? index : 0
+    const show = useVModel(props, 'show')
+    const scale = ref(1)
+    const translateX = ref(0)
+    const translateY = ref(0)
+    const transitionTimingFunction = ref<string | undefined>()
+    const transitionDuration = ref<string | undefined>()
+    const canSwipe = ref(true)
+    const swipeRef = ref<InstanceType<typeof VarSwipe> | null>(null)
+    const { moveX, moveY, distance, startTime, startTouch, moveTouch, endTouch } = useTouch()
+    const isPreventDefault = computed(() => {
+      const { imagePreventDefault, show } = props
+      return show && imagePreventDefault
     })
-    const scale: Ref<number> = ref(1)
-    const translateX: Ref<number> = ref(0)
-    const translateY: Ref<number> = ref(0)
-    const transitionTimingFunction: Ref<string | undefined> = ref(undefined)
-    const transitionDuration: Ref<string | undefined> = ref(undefined)
-    const canSwipe: Ref<boolean> = ref(true)
-    let startTouch: VarTouch | null = null
-    let prevTouch: VarTouch | null = null
-    let checker: number | null = null
 
-    const getDistance = (touch: VarTouch, target: VarTouch): number => {
-      const { clientX: touchX, clientY: touchY } = touch
-      const { clientX: targetX, clientY: targetY } = target
-
-      return Math.abs(Math.sqrt((targetX - touchX) ** 2 + (targetY - touchY) ** 2))
+    let closeRunner: number | null = null
+    let longPressRunner: number | null = null
+    let isLongPress = false
+    const targets: Record<string, HTMLElement | null> = {
+      start: null,
+      prev: null,
     }
 
-    const createVarTouch = (touches: Touch, target: HTMLElement): VarTouch => ({
-      clientX: touches.clientX,
-      clientY: touches.clientY,
-      timestamp: Date.now(),
-      target,
-    })
+    useEventListener(() => document, 'contextmenu', preventImageDefault)
 
-    const zoomIn = () => {
-      scale.value = toNumber(props.zoom)
+    function zoomIn(ratio: number | string) {
+      scale.value = toNumber(ratio)
       canSwipe.value = false
-      prevTouch = null
+      targets.prev = null
 
       window.setTimeout(() => {
         transitionTimingFunction.value = 'linear'
@@ -136,64 +135,90 @@ export default defineComponent({
       }, ANIMATION_DURATION)
     }
 
-    const zoomOut = () => {
+    function zoomOut() {
       scale.value = 1
       translateX.value = 0
       translateY.value = 0
       canSwipe.value = true
-      prevTouch = null
+      targets.prev = null
       transitionTimingFunction.value = undefined
       transitionDuration.value = undefined
     }
 
-    const isDoubleTouch = (currentTouch: VarTouch) => {
-      if (!prevTouch) {
+    function isDoubleTouch(target: HTMLElement) {
+      if (!targets.prev) {
         return false
       }
 
       return (
-        getDistance(prevTouch, currentTouch) <= DISTANCE_OFFSET &&
-        currentTouch.timestamp - prevTouch.timestamp <= EVENT_DELAY &&
-        prevTouch.target === currentTouch.target
+        distance.value <= DISTANCE_OFFSET &&
+        performance.now() - startTime.value <= EVENT_DELAY &&
+        targets.prev === target
       )
     }
 
-    const isTapTouch = (target: HTMLElement) => {
-      if (!target || !startTouch || !prevTouch) {
+    function isTapTouch(target: HTMLElement) {
+      if (!target || !targets.start || !targets.prev) {
         return false
       }
 
       return (
-        getDistance(startTouch, prevTouch) <= DISTANCE_OFFSET &&
-        Date.now() - prevTouch.timestamp < TAP_DELAY &&
-        (target === startTouch.target || target.parentNode === startTouch.target)
+        distance.value <= DISTANCE_OFFSET &&
+        performance.now() - startTime.value < TAP_DELAY &&
+        (target === targets.start || target.parentNode === targets.start)
       )
     }
 
-    const handleTouchend = (event: Event) => {
-      checker = window.setTimeout(() => {
-        isTapTouch(event.target as HTMLElement) && close()
-        startTouch = null
-      }, EVENT_DELAY)
+    function handleTouchcancel() {
+      endTouch()
+
+      window.clearTimeout(longPressRunner as number)
+      isLongPress = false
+      targets.start = null
     }
 
-    const handleTouchstart = (event: TouchEvent) => {
-      checker && window.clearTimeout(checker)
-      const { touches } = event
-      const currentTouch: VarTouch = createVarTouch(touches[0], event.currentTarget as HTMLElement)
-      startTouch = currentTouch
+    function handleTouchend(event: TouchEvent) {
+      endTouch()
 
-      if (isDoubleTouch(currentTouch)) {
-        scale.value > 1 ? zoomOut() : zoomIn()
+      window.clearTimeout(longPressRunner as number)
+
+      // avoid triggering tap event sometimes
+      if (isLongPress) {
+        isLongPress = false
         return
       }
 
-      prevTouch = currentTouch
+      const isTap = isTapTouch(event.target as HTMLElement)
+      closeRunner = window.setTimeout(() => {
+        isTap && close()
+        targets.start = null
+      }, EVENT_DELAY)
     }
 
-    const getZoom = (target: HTMLElement) => {
+    function handleTouchstart(event: TouchEvent, idx: number) {
+      window.clearTimeout(closeRunner as number)
+      window.clearTimeout(longPressRunner as number)
+
+      const target = event.currentTarget as HTMLElement
+      targets.start = target
+
+      longPressRunner = window.setTimeout(() => {
+        isLongPress = true
+        call(props.onLongPress, idx)
+      }, LONG_PRESS_DELAY)
+
+      if (isDoubleTouch(target)) {
+        scale.value > BASE_RATIO ? zoomOut() : zoomIn(props.zoom)
+        return
+      }
+
+      startTouch(event)
+      targets.prev = target
+    }
+
+    function getZoom(target: HTMLElement) {
       const { offsetWidth, offsetHeight } = target
-      const { naturalWidth, naturalHeight } = target.querySelector('.var-image-preview__image') as HTMLImageElement
+      const { naturalWidth, naturalHeight } = target.querySelector(`.${n('image')}`) as HTMLImageElement
 
       return {
         width: offsetWidth,
@@ -204,91 +229,112 @@ export default defineComponent({
       }
     }
 
-    const getLimitX = (target: HTMLElement) => {
+    function getLimitX(target: HTMLElement) {
       const { zoom, imageRadio, rootRadio, width, height } = getZoom(target)
+
       if (!imageRadio) {
         return 0
       }
+
       const displayWidth = imageRadio > rootRadio ? height / imageRadio : width
+
       return Math.max(0, (zoom * displayWidth - width) / 2) / zoom
     }
 
-    const getLimitY = (target: HTMLElement) => {
+    function getLimitY(target: HTMLElement) {
       const { zoom, imageRadio, rootRadio, width, height } = getZoom(target)
+
       if (!imageRadio) {
         return 0
       }
+
       const displayHeight = imageRadio > rootRadio ? height : width * imageRadio
+
       return Math.max(0, (zoom * displayHeight - height) / 2) / zoom
     }
 
-    const getMoveTranslate = (current: number, move: number, limit: number): number => {
-      if (current + move >= limit) {
-        return limit
-      }
-
-      if (current + move <= -limit) {
-        return -limit
-      }
-
-      return current + move
-    }
-
-    const handleTouchmove = (event: TouchEvent) => {
-      if (!prevTouch) {
+    function handleTouchmove(event: TouchEvent) {
+      if (!targets.prev) {
         return
       }
 
+      moveTouch(event)
+
       const target = event.currentTarget as HTMLElement
-      const { touches } = event
-      const currentTouch: VarTouch = createVarTouch(touches[0], target)
 
-      if (scale.value > 1) {
-        const moveX = currentTouch.clientX - prevTouch.clientX
-        const moveY = currentTouch.clientY - prevTouch.clientY
-
-        const limitX = getLimitX(target as HTMLElement)
-        const limitY = getLimitY(target as HTMLElement)
-
-        translateX.value = getMoveTranslate(translateX.value, moveX, limitX)
-        translateY.value = getMoveTranslate(translateY.value, moveY, limitY)
+      if (distance.value > DISTANCE_OFFSET) {
+        window.clearTimeout(longPressRunner as number)
       }
 
-      prevTouch = currentTouch
+      if (scale.value > BASE_RATIO) {
+        const limitX = getLimitX(target)
+        const limitY = getLimitY(target)
+
+        translateX.value = clamp(translateX.value + moveX.value, -limitX, limitX)
+        translateY.value = clamp(translateY.value + moveY.value, -limitY, limitY)
+      }
+
+      targets.prev = target
     }
 
-    const close = () => {
-      if (scale.value > 1) {
+    function close() {
+      if (scale.value > BASE_RATIO) {
         zoomOut()
         setTimeout(() => call(props['onUpdate:show'], false), ANIMATION_DURATION)
         return
       }
+
       call(props['onUpdate:show'], false)
     }
 
-    watch(
-      () => props.show,
-      (newValue) => {
-        popupShow.value = newValue
-      },
-      { immediate: true }
-    )
+    function preventImageDefault(event: Event) {
+      if (isPreventDefault.value) {
+        preventDefault(event)
+      }
+    }
+
+    // expose
+    function prev(options?: SwipeToOptions) {
+      swipeRef.value?.prev(options)
+    }
+
+    // expose
+    function next(options?: SwipeToOptions) {
+      swipeRef.value?.next(options)
+    }
+
+    // expose
+    function to(idx: number, options?: SwipeToOptions) {
+      swipeRef.value?.to(idx, options)
+    }
+
+    // expose
+    function zoom(ratio: number) {
+      ratio <= BASE_RATIO ? zoomOut() : zoomIn(ratio)
+    }
 
     return {
-      n,
-      classes,
-      initialIndex,
-      popupShow,
+      swipeRef,
+      isPreventDefault,
+      show,
       scale,
       translateX,
       translateY,
       canSwipe,
       transitionTimingFunction,
       transitionDuration,
+      n,
+      classes,
+      toNumber,
       handleTouchstart,
       handleTouchmove,
       handleTouchend,
+      handleTouchcancel,
       close,
+      prev,
+      next,
+      to,
+      zoom,
     }
   },
 })

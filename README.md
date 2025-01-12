@@ -1,55 +1,62 @@
-
 <div align="center">
-  <a href="https://varlet-varletjs.vercel.app">
-    <img src="https://varlet-varletjs.vercel.app/logo.svg" width="150">
+  <a href="https://varletjs.org/#/en-US/index">
+    <img src="https://varletjs.org/logo.svg" width="150">
   </a>
   <h1>VARLET</h1>
-  <p>基于 Vue3 的 Material design 风格移动端组件库</p>
+  <p>A Vue3 component library based on Material Design 2 and 3, supporting mobile and desktop.</p>
   <p>
-    <a href="https://varlet-varletjs.vercel.app">开发文档</a> | <a href="https://github.com/varletjs/varlet/blob/dev/README.en-US.md">English</a>
+    <a href="https://varletjs.org/#/en-US/index">Documentation</a> |
+    <a href="https://github.com/varletjs/varlet/blob/dev/README.zh-CN.md">中文介绍</a>
   </p>
   <p>
     <img src="https://img.shields.io/npm/v/@varlet/ui?style=flat-square" alt="version">
     <img src="https://img.shields.io/github/stars/varletjs/varlet" alt="stars">
     <img src="https://img.shields.io/badge/vue-v3.2.0%2B-%23407fbc" alt="vue">
-    <img src="https://img.shields.io/npm/l/@varlet/ui.svg" alt="licence">
+    <img src="https://img.shields.io/npm/l/@varlet/ui.svg" alt="license">
     <img src="https://img.shields.io/codecov/c/github/varletjs/varlet" alt="coverage">
-    <img src="https://img.badgesize.io/https://unpkg.com/@varlet/ui/umd/varlet.js?compression=gzip&label=gzip" alt="gzip" />
     <img src="https://github.com/varletjs/varlet/workflows/CI/badge.svg" alt="ci">
   </p>
 </div>
 
 ---
 
-### 介绍
+### Intro
 
-Varlet 是一个基于 `Vue3` 开发的 Material 风格移动端组件库，全面拥抱 `Vue3` 生态，由社区建立起来的组件库团队进行维护。
+Varlet is a `Vue3` component library based on Material Design 2 and 3, supporting mobile and desktop, developed and maintained by `varletjs` organization.
 
-### 特性
-- 🚀 提供50+个高质量通用组件 
-- 🚀 组件十分轻量
-- 💪 由国人开发，完善的中英文文档和后勤保障
-- 🛠️ 支持按需引入
-- 🛠️ 支持主题定制
-- 🌍 支持国际化
-- 💡 支持 webstorm，vscode 组件属性高亮
-- 💪 支持 SSR
-- 💡 支持 Typescript 
-- 💪 确保90%以上单元测试覆盖率，提供稳定性保证
-- 🛠️ 支持暗黑模式
 
-### 安装
+### Features
+
+- 🚀 &nbsp; Provide 60+ high quality general purpose components
+- 🚀 &nbsp; Components are very lightweight
+- 💪 &nbsp; Developed by Chinese, complete Chinese and English documentation and logistics support
+- 🛠️ &nbsp; Support on-demand introduction
+- 🛠️ &nbsp; Support theme customization
+- 🌍 &nbsp; Support internationalization
+- 💡 &nbsp; Support WebStorm syntax highlighting
+- 💪 &nbsp; Support the SSR
+- 📦 &nbsp; Support [Nuxt Module](https://github.com/varletjs/varlet-nuxt)
+- 💡 &nbsp; Support the Typescript
+- 💪 &nbsp; Make sure more than 90 percent unit test coverage, providing stability assurance
+- 🎨 &nbsp; Supports both Material Design 2 and Material Design 3 design systems
+- 🛠️ &nbsp; Support dark mode
+- 🔧 &nbsp; Provide official VSCode extension
+- ⌨️ &nbsp; Support Accessibility (still improving)
+
+### Install
 
 ### CDN
-`varlet.js` 包含组件库的所有样式和逻辑，引入即可。
+`varlet.js` contain all the styles and logic of the component library, and you can import them.
 
 ```html
 <div id="app"></div>
-<script src="https://cdn.jsdelivr.net/npm/vue@next"></script>
+<script src="https://cdn.jsdelivr.net/npm/vue"></script>
+ <!-- Desktop Adaptation -->
+<script src="https://cdn.jsdelivr.net/npm/@varlet/touch-emulator/iife.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@varlet/ui/umd/varlet.js"></script>
 <script>
   const app = Vue.createApp({
-    template: '<var-button>按钮</var-button>'
+    template: '<var-button>Button</var-button>'
   })
   app.use(Varlet).mount('#app')
 </script>
@@ -57,7 +64,7 @@ Varlet 是一个基于 `Vue3` 开发的 Material 风格移动端组件库，全�
 
 ### Webpack / Vite
 ```shell
-# 通过 npm 或 yarn 或 pnpm 安装
+# Install with npm or yarn or pnpm
 
 # npm
 npm i @varlet/ui -S
@@ -73,19 +80,83 @@ pnpm add @varlet/ui
 import App from './App.vue'
 import Varlet from '@varlet/ui'
 import { createApp } from 'vue'
-import '@varlet/ui/es/style.js'
+import '@varlet/ui/es/style'
 
 createApp(App).use(Varlet).mount('#app')
 ```
 
-### 捐赠我们
+### AI Agent for documentation
 
-我们将用捐赠所得去鼓励参与开源的贡献者们，给他们买一杯咖啡奶茶，购置对于项目有帮助基础设施，推动项目变得更好。
+You can get more information about `varlet` by asking in [AI Agent for documentation](https://gpt.qilepan.com/chat/share?shareId=y3ytky9ifjgl6fxtva1ai16h). Thanks to [qile AI](https://ai.qilepan.com/auth?type=register&invite=MjM0) for providing service support.
 
-<img style="width: 25%" src="https://github.com/varletjs/varlet/blob/dev/sponsor/wechat.png?raw=true" />
+### Official Ecosystem
 
-### Contributors
+The following projects are maintained by the official team for a long time.
+
+| Name | Description |
+|------------------------------------------------------------------------------------------------------|--------------------------------------|
+| [@varlet/cli](https://github.com/varletjs/varlet/tree/dev/packages/varlet-cli) | `Vue3 component library rapid prototyping tool` |
+| [@varlet/touch-emulator](https://github.com/varletjs/varlet/tree/dev/packages/varlet-touch-emulator) | `Desktop adapter, so that the mobile component library can run on the desktop` |
+| [@varlet/ui-playground](https://github.com/varletjs/varlet/tree/dev/packages/varlet-ui-playground) | `Varlet component library online editing tool` |
+| [@varlet/import-resolver](https://github.com/varletjs/varlet/tree/dev/packages/varlet-import-resolver)  | `A resolver for` [unplugin-vue-components](https://github.com/unplugin/unplugin-vue-components) ` used to implement Varlet and import it on demand`   |
+| [@varlet/preset-unocss](https://github.com/varletjs/varlet/tree/dev/packages/varlet-preset-unocss)  | [UnoCss](https://unocss.dev/) `presets for varlet` |
+| [@varlet/preset-tailwindcss](https://github.com/varletjs/varlet/tree/dev/packages/varlet-preset-tailwindcss)  | [tailwindcss](https://tailwindcss.com/) `presets for varlet` |
+| [varlet-theme-builder](https://github.com/varletjs/varlet-theme-builder) | `Theme generator for generating theme variables for varlet Material Design 3` | 
+| [varlet-vscode-extension](https://github.com/varletjs/varlet/tree/dev/packages/varlet-vscode-extension) | `Varlet Component Library VSCode Plugin` |
+| [vscode-theme-varlet](https://github.com/varletjs/vscode-theme-varlet)  | `Varlet VSCode Theme`   |
+| [varlet-app-example](https://github.com/varletjs/varlet-app-template)  | `Varlet component library app template`   |
+| [varlet-install-example](https://github.com/varletjs/varlet-install-example)  | `Case collection of Varlet component library and various ecosystem integration` |
+
+### Community Ecosystem
+
+The following projects are maintained by community personnel, welcome to add.
+
+| Name | Description |
+|----------------------------------------------------------------|-----------------------------------------|
+| [vue-h5-template](https://github.com/sunniejs/vue-h5-template) | `Vue-based mobile template scaffolding, providing mobile presets for Varlet component library` |
+| [create-vite-app](https://github.com/ErKeLost/create-vite-app) | `A desktop template scaffolding based on Vue3, providing desktop presets for Varlet component library` |
+| [vscode-common-intellisense](https://github.com/Simon-He95/vscode-common-intellisense) | `A VS Code extension that provides better intellisense to Varlet developers` |
+| [vue3-varlet-mobile](https://github.com/easy-temps/vue3-varlet-mobile) | `A mobile template based on Vue 3 and Varlet Component Library` |
+
+### Playground
+
+See [Varlet UI Playground](https://varletjs.org/playground).
+
+### Contribution
+
+See [Contributing Guide](https://github.com/varletjs/varlet/blob/dev/.github/CONTRIBUTING.md).
+
+### GitCode Repo
+
+See [Here](https://gitcode.com/varletjs/varlet).
+
+### Community
+
+We recommend that [issue](https://github.com/varletjs/varlet/issues) be used for problem feedback, or others:
+
+* Wechat group 
+
+<img style="width: 25%" src="https://cdn.jsdelivr.net/gh/varletjs/varlet-static/community.png" />
+
+* Join the [Discord](https://discord.gg/Dmb8ydBHkw)
+
+### Thanks to contributors
 
 <a href="https://github.com/varletjs/varlet/graphs/contributors">
   <img src="https://contrib.rocks/image?repo=varletjs/varlet" />
 </a>
+
+### Thanks to the following sponsors
+
+<a href="https://cdn.jsdelivr.net/gh/varletjs/varlet-static/sponsorkit/sponsors.svg">
+  <img src="https://cdn.jsdelivr.net/gh/varletjs/varlet-static/sponsorkit/sponsors.svg">
+</a>
+
+### Sponsor this project
+
+Sponsor this project to support our better creation. 
+
+#### Wechat / Alipay
+
+<img style="width: 25%" src="https://cdn.jsdelivr.net/gh/varletjs/varlet-static/wechat.jpg" />
+<img style="width: 25%" src="https://cdn.jsdelivr.net/gh/varletjs/varlet-static/alipay.jpg" />

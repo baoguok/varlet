@@ -1,96 +1,163 @@
 <template>
   <button
-    v-ripple="{ disabled: disabled || !ripple }"
+    v-ripple="{ disabled: disabled || !ripple || loading || pending }"
+    v-hover:desktop="handleHovering"
     :class="
       classes(
         n(),
-        'var--box',
-        n(`--${size}`),
-        [block, `var--flex ${n('--block')}`, 'var--inline-flex'],
-        [disabled, n('--disabled')],
-        [text, `${n(`--text-${type}`)} ${n('--text')}`, `${n(`--${type}`)} var-elevation--2`],
-        [text && disabled, n('--text-disabled')],
+        n('$--box'),
+        n(`--${states.size}`),
+        [block, `${n('$--flex')} ${n('--block')}`, n('$--inline-flex')],
+        [!states.text, states.elevation],
+        [!states.iconContainer && !states.text, n(`--${states.type}`)],
+        [states.text, `${n('--text')} ${n(`--text-${states.type}`)}`],
+        [states.iconContainer, n(`--icon-container-${states.type}`)],
         [round, n('--round')],
-        [outline, n('--outline')]
+        [states.outline, n('--outline')],
+        [loading || pending, n('--loading')],
+        [disabled, n('--disabled')],
+        [states.text && disabled, n('--text-disabled')],
       )
     "
+    :tabindex="focusable ? undefined : '-1'"
     :style="{
-      color: textColor,
-      background: color,
+      color: states.textColor,
+      background: states.color,
     }"
+    :type="nativeType"
     :disabled="disabled"
     @click="handleClick"
     @touchstart="handleTouchstart"
+    @focus="handleFocus"
+    @blur="isFocusing = false"
   >
     <var-loading
+      v-if="loading || pending"
       :class="n('loading')"
       var-button-cover
+      :color="loadingColor"
       :type="loadingType"
-      :size="loadingSize"
+      :size="loadingSize || states.size"
       :radius="loadingRadius"
-      v-if="loading || pending"
     />
     <div :class="classes(n('content'), [loading || pending, n('--hidden')])">
       <slot />
     </div>
+
+    <var-hover-overlay
+      :hovering="disabled || loading || pending ? false : hovering"
+      :focusing="disabled || loading || pending ? false : isFocusing"
+    />
   </button>
 </template>
 
 <script lang="ts">
-import Ripple from '../ripple'
+import { computed, defineComponent, ref } from 'vue'
+import { call, normalizeToArray } from '@varlet/shared'
+import Hover from '../hover'
+import VarHoverOverlay, { useHoverOverlay } from '../hover-overlay'
 import VarLoading from '../loading'
-import { defineComponent, ref } from 'vue'
+import Ripple from '../ripple'
+import { createNamespace, formatElevation } from '../utils/components'
 import { props } from './props'
-import { createNamespace } from '../utils/components'
-import type { Ref } from 'vue'
+import { useButtonGroup } from './provide'
 
-const { n, classes } = createNamespace('button')
+const { name, n, classes } = createNamespace('button')
 
 export default defineComponent({
-  name: 'VarButton',
+  name,
   components: {
     VarLoading,
+    VarHoverOverlay,
   },
-  directives: { Ripple },
+  directives: { Ripple, Hover },
   props,
   setup(props) {
-    const pending: Ref<boolean> = ref(false)
+    const isFocusing = ref(false)
+    const pending = ref(false)
+    const { buttonGroup } = useButtonGroup()
+    const { hovering, handleHovering } = useHoverOverlay()
+    const states = computed(() => {
+      if (!buttonGroup) {
+        return {
+          elevation: formatElevation(props.elevation, 2),
+          type: props.type ?? 'default',
+          size: props.size ?? 'normal',
+          color: props.color,
+          text: props.text,
+          textColor: props.textColor,
+          outline: props.outline,
+          iconContainer: props.iconContainer,
+        }
+      }
 
-    const attemptAutoLoading = (result: any) => {
+      const { type, size, color, textColor, mode } = buttonGroup
+
+      return {
+        elevation: '',
+        type: props.type ?? type.value,
+        size: props.size ?? size.value,
+        color: props.color ?? color.value,
+        textColor: props.textColor ?? textColor.value,
+        text: mode.value === 'text' || mode.value === 'outline',
+        outline: mode.value === 'outline',
+        iconContainer: mode.value === 'icon-container',
+      }
+    })
+
+    function attemptAutoLoading(result: any) {
       if (props.autoLoading) {
         pending.value = true
-        Promise.resolve(result).finally(() => {
-          pending.value = false
-        })
+
+        Promise.all(normalizeToArray(result))
+          .then(() => {
+            pending.value = false
+          })
+          .catch(() => {
+            pending.value = false
+          })
       }
     }
 
-    const handleClick = (e: Event) => {
+    function handleClick(e: Event) {
       const { loading, disabled, onClick } = props
 
       if (!onClick || loading || disabled || pending.value) {
         return
       }
 
-      attemptAutoLoading(onClick(e))
+      attemptAutoLoading(call(onClick, e))
     }
 
-    const handleTouchstart = (e: Event) => {
+    function handleTouchstart(e: Event) {
       const { loading, disabled, onTouchstart } = props
 
       if (!onTouchstart || loading || disabled || pending.value) {
         return
       }
 
-      attemptAutoLoading(onTouchstart(e))
+      attemptAutoLoading(call(onTouchstart, e))
+    }
+
+    function handleFocus() {
+      if (!props.focusable) {
+        return
+      }
+
+      isFocusing.value = true
     }
 
     return {
+      pending,
+      states,
+      hovering,
+      isFocusing,
       n,
       classes,
-      pending,
+      handleHovering,
       handleClick,
       handleTouchstart,
+      handleFocus,
     }
   },
 })
@@ -99,6 +166,7 @@ export default defineComponent({
 <style lang="less">
 @import '../styles/common';
 @import '../styles/elevation';
+@import '../hover-overlay/hoverOverlay';
 @import '../ripple/ripple';
 @import '../loading/loading';
 @import './button';

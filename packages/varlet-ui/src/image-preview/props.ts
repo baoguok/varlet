@@ -1,39 +1,36 @@
-import type { PropType } from 'vue'
-import { pickProps } from '../utils/components'
-import { props as swipeProps } from '../swipe/props'
-import { props as popupProps } from '../popup/props'
+import { type PropType } from 'vue'
+import { popupProps } from '../popup'
+import { swipeProps } from '../swipe'
+import { defineListenerProp, pickProps } from '../utils/components'
 
 export const props = {
-  show: {
-    type: Boolean,
-    default: false,
-  },
+  show: Boolean,
+  imagePreventDefault: Boolean,
   images: {
     type: Array as PropType<string[]>,
     default: () => [],
   },
-  current: {
-    type: String,
+  initialIndex: {
+    type: [String, Number],
+    default: 0,
   },
   zoom: {
     type: [String, Number],
     default: 2,
   },
-  closeable: {
-    type: Boolean,
-    default: false,
-  },
-  'onUpdate:show': {
-    type: Function as PropType<(show: boolean) => void>,
-  },
+  closeable: Boolean,
+  'onUpdate:show': defineListenerProp<(show: boolean) => void>(),
+  onLongPress: defineListenerProp<(index: number) => void>(),
   ...pickProps(swipeProps, ['loop', 'indicator', 'onChange']),
   ...pickProps(popupProps, [
     'lockScroll',
     'teleport',
+    'closeOnKeyEscape',
     'onOpen',
     'onClose',
     'onOpened',
     'onClosed',
+    'onKeyEscape',
     // internal for function call closes the dialog
     'onRouteChange',
   ]),

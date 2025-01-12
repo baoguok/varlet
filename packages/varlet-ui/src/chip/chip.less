@@ -1,45 +1,39 @@
-@chip-default-color: #e0e0e0;
-@chip-primary-color: var(--color-primary);
-@chip-danger-color: var(--color-danger);
-@chip-success-color: var(--color-success);
-@chip-warning-color: var(--color-warning);
-@chip-info-color: var(--color-info);
-@chip-border-radius: 2px;
-@chip-normal-height: 32px;
-@chip-large-height: 40px;
-@chip-small-height: 24px;
-@chip-mini-height: 16px;
-@chip-round-radius: 100px;
-@chip-normal-padding: 0px 10px;
-@chip-large-padding: 0px 17px;
-@chip-small-padding: 0px 6px;
-@chip-mini-padding: 0px 4px;
-@chip-text-normal-margin: 0 5px;
-@chip-text-large-margin: 0 5px;
-@chip-text-small-margin: 0 3px;
-@chip-text-mini-margin: 0 2px;
-
 :root {
-  --chip-default-color: @chip-default-color;
-  --chip-primary-color: @chip-primary-color;
-  --chip-danger-color: @chip-danger-color;
-  --chip-success-color: @chip-success-color;
-  --chip-warning-color: @chip-warning-color;
-  --chip-info-color: @chip-info-color;
-  --chip-border-radius: @chip-border-radius;
-  --chip-normal-height: @chip-normal-height;
-  --chip-large-height: @chip-large-height;
-  --chip-small-height: @chip-small-height;
-  --chip-mini-height: @chip-mini-height;
-  --chip-round-radius: @chip-round-radius;
-  --chip-normal-padding: @chip-normal-padding;
-  --chip-large-padding: @chip-large-padding;
-  --chip-small-padding: @chip-small-padding;
-  --chip-mini-padding: @chip-mini-padding;
-  --chip-text-normal-margin: @chip-text-normal-margin;
-  --chip-text-large-margin: @chip-text-large-margin;
-  --chip-text-small-margin: @chip-text-small-margin;
-  --chip-text-mini-margin: @chip-text-mini-margin;
+  --chip-default-text-color: #555;
+  --chip-primary-text-color: var(--color-on-primary-container);
+  --chip-danger-text-color: var(--color-on-danger-container);
+  --chip-success-text-color: var(--color-on-success-container);
+  --chip-warning-text-color: var(--color-on-warning-container);
+  --chip-info-text-color: var(--color-on-info-container);
+  --chip-default-color: #e0e0e0;
+  --chip-primary-color: var(--color-primary-container);
+  --chip-danger-color: var(--color-danger-container);
+  --chip-success-color: var(--color-success-container);
+  --chip-warning-color: var(--color-warning-container);
+  --chip-info-color: var(--color-info-container);
+  --chip-primary-plain-color: var(--color-primary);
+  --chip-danger-plain-color: var(--color-danger);
+  --chip-success-plain-color: var(--color-success);
+  --chip-warning-plain-color: var(--color-warning);
+  --chip-info-plain-color: var(--color-info);
+  --chip-border-radius: 2px;
+  --chip-normal-height: 32px;
+  --chip-large-height: 40px;
+  --chip-small-height: 24px;
+  --chip-mini-height: 16px;
+  --chip-round-radius: 100px;
+  --chip-normal-padding: 0 10px;
+  --chip-large-padding: 0 17px;
+  --chip-small-padding: 0 6px;
+  --chip-mini-padding: 0 4px;
+  --chip-text-normal-margin: 0 5px;
+  --chip-text-large-margin: 0 5px;
+  --chip-text-small-margin: 0 3px;
+  --chip-text-mini-margin: 0 2px;
+  --chip-mini-font-size: var(--font-size-xs);
+  --chip-small-font-size: var(--font-size-sm);
+  --chip-normal-font-size: var(--font-size-md);
+  --chip-large-font-size: var(--font-size-lg);
 }
 
 .var {
@@ -60,36 +54,37 @@
   cursor: default;
   border: thin solid transparent;
   vertical-align: middle;
-  line-height: 1;
-  transition: background-color 0.25s;
+  transition:
+    background-color 0.25s,
+    border-radius 0.25s;
 
   &--default {
-    color: inherit;
+    color: var(--chip-default-text-color);
     background: var(--chip-default-color);
   }
 
   &--primary {
-    color: #fff;
+    color: var(--chip-primary-text-color);
     background-color: var(--chip-primary-color);
   }
 
   &--info {
-    color: #fff;
+    color: var(--chip-info-text-color);
     background-color: var(--chip-info-color);
   }
 
   &--success {
-    color: #fff;
+    color: var(--chip-success-text-color);
     background-color: var(--chip-success-color);
   }
 
   &--warning {
-    color: #fff;
+    color: var(--chip-warning-text-color);
     background-color: var(--chip-warning-color);
   }
 
   &--danger {
-    color: #fff;
+    color: var(--chip-danger-text-color);
     background-color: var(--chip-danger-color);
   }
 
@@ -107,27 +102,27 @@
   }
 
   &__plain-primary {
-    color: var(--chip-primary-color);
+    color: var(--chip-primary-plain-color);
     border-color: currentColor;
   }
 
   &__plain-info {
-    color: var(--chip-info-color);
+    color: var(--chip-info-plain-color);
     border-color: currentColor;
   }
 
   &__plain-success {
-    color: var(--chip-success-color);
+    color: var(--chip-success-plain-color);
     border-color: currentColor;
   }
 
   &__plain-warning {
-    color: var(--chip-warning-color);
+    color: var(--chip-warning-plain-color);
     border-color: currentColor;
   }
 
   &__plain-danger {
-    color: var(--chip-danger-color);
+    color: var(--chip-danger-plain-color);
     border-color: currentColor;
   }
 
@@ -136,32 +131,32 @@
   }
 
   &--normal {
-    font-size: var(--font-size-md);
+    font-size: var(--chip-normal-font-size);
     padding: var(--chip-normal-padding);
     height: var(--chip-normal-height);
   }
 
   &--large {
     padding: var(--chip-large-padding);
-    font-size: var(--font-size-lg);
+    font-size: var(--chip-large-font-size);
     height: var(--chip-large-height);
   }
 
   &--small {
     padding: var(--chip-small-padding);
-    font-size: var(--font-size-sm);
+    font-size: var(--chip-small-font-size);
     height: var(--chip-small-height);
   }
 
   &--mini {
     padding: var(--chip-mini-padding);
-    font-size: var(--font-size-xs);
+    font-size: var(--chip-mini-font-size);
     height: var(--chip-mini-height);
   }
 
   &--close {
     cursor: pointer;
-    -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+    -webkit-tap-highlight-color: transparent;
   }
 
   &__text-large {

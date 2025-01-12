@@ -1,13 +1,13 @@
 <template>
-  <div :class="n()" :style="{ pointerEvents: isForbidClick ? 'auto' : 'none', zIndex }" v-show="show">
+  <div v-show="show" :class="n()" :style="{ pointerEvents: isForbidClick ? 'auto' : 'none', zIndex }">
     <div
       :class="
         classes(
           n('wrapper'),
           n(`wrapper-${position}`),
-          'var-elevation--4',
+          formatElevation(elevation, 4),
           [vertical, n('vertical')],
-          [type && SNACKBAR_TYPE.includes(type), n(`wrapper-${type}`)]
+          [type && SNACKBAR_TYPE.includes(type), n(`wrapper-${type}`)],
         )
       "
       :style="{ zIndex }"
@@ -15,9 +15,18 @@
       <div :class="[n('content'), contentClass]">
         <slot>{{ content }}</slot>
       </div>
-      <div :class="n('action')">
+      <div v-if="iconName || type === 'loading' || $slots.icon" :class="n('icon')">
         <var-icon v-if="iconName" :name="iconName" />
-        <var-loading v-if="type === 'loading'" :type="loadingType" :size="loadingSize" />
+        <var-loading
+          v-if="type === 'loading'"
+          :type="loadingType"
+          :size="loadingSize"
+          :color="loadingColor"
+          :radius="loadingRadius"
+        />
+        <slot name="icon" />
+      </div>
+      <div v-if="$slots.action" :class="n('action')">
         <slot name="action" />
       </div>
     </div>
@@ -25,16 +34,16 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, watch, ref, onMounted, computed } from 'vue'
-import VarLoading from '../loading'
-import VarIcon from '../icon'
-import { useZIndex } from '../context/zIndex'
-import { props } from './props'
+import { computed, defineComponent, ref, watch, type ComputedRef, type Ref } from 'vue'
+import { call } from '@varlet/shared'
+import { onSmartMounted } from '@varlet/use'
 import { useLock } from '../context/lock'
-import { SNACKBAR_TYPE } from './index'
-import type { Ref, ComputedRef } from 'vue'
-import type { SnackbarType } from './index'
-import { createNamespace } from '../utils/components'
+import { useZIndex } from '../context/zIndex'
+import VarIcon from '../icon'
+import VarLoading from '../loading'
+import { createNamespace, formatElevation } from '../utils/components'
+import { SNACKBAR_TYPE, type SnackbarType } from './index'
+import { props } from './props'
 
 const { n, classes } = createNamespace('snackbar')
 
@@ -59,20 +68,21 @@ export default defineComponent({
 
     useLock(
       () => props.show,
-      () => props.lockScroll
+      () => props.lockScroll,
     )
 
-    const isForbidClick: ComputedRef<boolean> = computed(() => props.type === 'loading' || props.forbidClick)
-
-    const iconName: ComputedRef<string> = computed(() => {
-      if (!props.type) return ''
-
-      return ICON_TYPE_DICT[props.type]
+    const isForbidClick: ComputedRef<boolean> = computed(() => {
+      const { type, forbidClick } = props
+      return type === 'loading' || forbidClick
     })
 
-    const updateAfterDuration = () => {
+    const iconName: ComputedRef<string> = computed(() => (!props.type ? '' : ICON_TYPE_DICT[props.type]))
+
+    function updateAfterDuration() {
       timer.value = setTimeout(() => {
-        props.type !== 'loading' && props['onUpdate:show']?.(false)
+        if (props.type !== 'loading') {
+          call(props['onUpdate:show'], false)
+        }
       }, props.duration)
     }
 
@@ -80,13 +90,13 @@ export default defineComponent({
       () => props.show,
       (show) => {
         if (show) {
-          props.onOpen?.()
+          call(props.onOpen)
           updateAfterDuration()
-        } else if (show === false) {
+        } else {
           clearTimeout(timer.value)
-          props.onClose?.()
+          call(props.onClose)
         }
-      }
+      },
     )
 
     watch(
@@ -94,23 +104,24 @@ export default defineComponent({
       () => {
         clearTimeout(timer.value)
         updateAfterDuration()
-      }
+      },
     )
 
-    onMounted(() => {
+    onSmartMounted(() => {
       if (props.show) {
-        props.onOpen?.()
+        call(props.onOpen)
         updateAfterDuration()
       }
     })
 
     return {
       SNACKBAR_TYPE,
-      n,
-      classes,
       zIndex,
       iconName,
       isForbidClick,
+      n,
+      classes,
+      formatElevation,
     }
   },
 })
@@ -120,7 +131,6 @@ export default defineComponent({
 @import '../styles/common';
 @import '../styles/elevation';
 @import '../loading/loading';
-@import '../button/button';
 @import '../icon/icon';
 @import './snackbar';
 </style>

@@ -18,8 +18,8 @@ Font icons are from [Material Design Icon](https://materialdesignicons.com/).
 
 ```html
 <template>
-  <var-icon name="checkbox-marked-circle" color="#2979ff" />
-  <var-icon name="checkbox-marked-circle" color="#2979ff" :size="26"/>
+  <var-icon name="checkbox-marked-circle" color="var(--color-primary)" />
+  <var-icon name="checkbox-marked-circle" color="var(--color-success)" />
 </template>
 ```
 
@@ -30,11 +30,11 @@ When the name passed in is a URL the `img` tag is displayed in `cover` mode.
 
 ```html
 <template>
-  <var-icon name="https://varlet-varletjs.vercel.app/cat.jpg" :size="32" />
+  <var-icon name="https://varletjs.org/cat.jpg" :size="32" />
 </template>
 ```
 
-### Event
+### Click Event
 
 ```html
 <script setup>
@@ -44,8 +44,8 @@ import { Snackbar } from '@varlet/ui'
 <template>
   <var-icon 
     name="checkbox-marked-circle"
-    color="#2979ff"
-    @click="() => Snackbar.success('Click success')"
+    color="var(--color-primary)"
+    @click="Snackbar.success('Click success')"
   />
 </template>
 ```
@@ -60,7 +60,7 @@ import { ref } from 'vue'
 
 const name = ref('information')
 
-const toggle = () => {
+function toggle() {
   name.value = name.value === 'information' 
     ? 'checkbox-marked-circle' 
     : 'information'
@@ -69,59 +69,150 @@ const toggle = () => {
 
 <template>
   <var-icon 
-    color="#2979ff" 
+    color="var(--color-primary)" 
     :name="name" 
     :transition="300" 
     :size="30" 
     @click="toggle"
   />
+
+  <var-icon
+    color="var(--color-primary)"
+    animation-class="fade"
+    :name="iconName"
+    :transition="300"
+    :size="30"
+    @click="toggle"
+  />
 </template>
+
+<style>
+.fade {
+  opacity: 0;
+  transition-property: opacity;
+}
+</style>
 ```
 
-### Custom Icons
+### Custom icon library (plugin definition)
 
-First you need to set up your own font and install it into your project.
-Let's assume that we extend a font named `my-icons`.
+Install `@varlet/unplugin-icon-builder` and integrate with the build tool. For more plug-in options, please [refer here](https://github.com/varletjs/varlet-iconx/tree/main/packages/varlet-unplugin-icon-builder#options-type-declaration).
 
-```css
-/* playground-ignore */
-/* Set the font */
-@font-face {
-  font-family: "my-icons";
-  src: url("https://xxx.my-icons.eot");
-  src: url("https://xxx.my-icons.eot") format("embedded-opentype"), 
-    url("https://xxx.my-icons.woff2") format("woff2"), 
-    url("https://xxx.my-icons.woff") format("woff"), 
-    url("https://xxx.my-icons.ttf") format("truetype");
-  font-weight: normal;
-  font-style: normal;
-}
+```shell
+# playground-ignore
+#npm
+npm i @varlet/unplugin-icon-builder -D
+# yarn
+yarn add @varlet/unplugin-icon-builder -D
+# pnpm
+pnpm add @varlet/unplugin-icon-builder -D
+```
 
-/* Font style */
-.my-icon--set,
-.my-icon--set::before {
-  position: relative;
-  display: inline-block;
-  font: normal normal normal 14px/1 "my-icons";
-  font-size: inherit;
-  text-rendering: auto;
-  -webkit-font-smoothing: antialiased;
-}
+#### Vite Configuration
 
-/* Font names map code points */
-.my-icon-hot::before {
-  content: "\F000";
+```ts
+// playground-ignore
+// vite.config.ts
+import { defineConfig } from 'vite'
+import icon from '@varlet/unplugin-icon-builder/vite'
+
+export default defineConfig({
+  plugins: [icon()],
+})
+```
+
+#### Webpack Configuration
+
+```ts
+// playground-ignore
+// vite.config.ts
+const Icon = require('@varlet/unplugin-icon-builder/webpack')
+
+module.exports = {
+  plugins: [Icon.default()]
 }
 ```
 
-Here you have successfully extended your icon library.
-So `my-icon` is your font `namespace`.
-You can use it this way:
+#### Vue Cli Configuration
+
+```ts
+// playground-ignore
+// vite.config.ts
+const { defineConfig } = require('@vue/cli-service')
+const Icon = require('@varlet/unplugin-icon-builder/webpack')
+
+module.exports = defineConfig({
+  transpileDependencies: true,
+  configureWebpack: {
+    plugins: [Icon.default()]
+  },
+})
+```
+
+#### Project Structure
+
+`svg-icons` will default to the icon library folder.
+
+```ts
+// playground-ignore
+|-- project
+   |-- src
+     |-- main.ts
+   |-- svg-icons
+     |-- account-circle.svg
+```
+
+#### Import the entry file into the virtual module
+
+```ts
+// playground-ignore
+// main.ts
+import 'virtual-icons'
+```
+
+#### Using Icons
 
 ```html
 <!-- playground-ignore -->
 <template>
-  <var-icon namespace="my-icon" name="hot" />
+  <var-icon namespace="i" name="account-circle" />
+</template>
+```
+
+### Custom icon library (manually defined)
+
+First you need to set up your own font and import it into your project. This assumes that a font named `i-icons` is extended.
+
+```css
+/* playground-ignore */
+/* Set font */
+@font-face {
+  font-family: "i-icons";
+  src: url("https://xxx.i-icons.ttf") format("truetype");
+}
+
+/* Set namespace */
+.i {
+  font-family: "i-icons";
+}
+/* or */
+.i--set {
+  font-family: "i-icons";
+}
+/* Set the end of the namespace */
+
+/* Font name mapping code point */
+.i-account-circle::before {
+  content: "\F000";
+}
+```
+
+#### Using icons
+
+```html
+<!-- playground-ignore -->
+<template>
+  <var-icon namespace="i" name="account-circle" />
 </template>
 ```
 
@@ -135,6 +226,7 @@ You can use it this way:
 | `size`       | icon size                                      | _string \| number_ | `-`        |
 | `color`      | icon color, Only applies to font icons         | _string_           | `-`        |
 | `namespace`  | Icon namespace, extensible custom icon library | _string_           | `var-icon` |
+| `animation-class` | Name of the transition animation class |  _string_ | `-` |
 | `transition` | Transition animation time(ms)                  | _string \| number_ | `0`        |
 
 ### Events
@@ -145,7 +237,7 @@ You can use it this way:
 
 ### Style Variables
 
-Here are the CSS variables used by the component, Styles can be customized using [StyleProvider](#/en-US/style-provider)
+Here are the CSS variables used by the component. Styles can be customized using [StyleProvider](#/en-US/style-provider).
 
 | Variable      | Default |
 | ------------- | ------- |

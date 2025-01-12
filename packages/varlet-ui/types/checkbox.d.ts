@@ -1,8 +1,11 @@
-import { VarComponent } from './varComponent'
+import { VNode } from 'vue'
+import { BasicAttributes, Rules as CheckboxRules, ListenerProp, SetPropsDefaults, VarComponent } from './varComponent'
 
-export type CheckboxValidateTriggers = 'onChange'
+export declare const checkboxProps: Record<keyof CheckboxProps, any>
 
-export interface CheckboxProps {
+export type CheckboxValidateTrigger = 'onChange'
+
+export interface CheckboxProps extends BasicAttributes {
   modelValue?: any
   checkedValue?: any
   uncheckedValue?: any
@@ -10,17 +13,32 @@ export interface CheckboxProps {
   uncheckedColor?: string
   disabled?: boolean
   readonly?: boolean
+  indeterminate?: boolean
   iconSize?: string | number
   ripple?: boolean
-  validateTrigger?: Array<CheckboxValidateTriggers>
-  rules?: Array<(value: any) => any>
-  onClick?: (e: Event) => void
-  onChange?: (value: any) => void
-  'onUpdate:modelValue'?: (value: any) => void
+  validateTrigger?: Array<CheckboxValidateTrigger>
+  rules?: CheckboxRules
+  onClick?: ListenerProp<(e: Event) => void>
+  onChange?: ListenerProp<(value: any, indeterminate: boolean) => void>
+  'onUpdate:modelValue'?: ListenerProp<(value: any) => void>
+  'onUpdate:indeterminate'?: ListenerProp<(value: boolean) => void>
+}
+
+export interface CheckboxData {
+  checked: boolean
 }
 
 export class Checkbox extends VarComponent {
+  static setPropsDefaults: SetPropsDefaults<CheckboxProps>
+
   $props: CheckboxProps
+
+  $slots: {
+    default(data: CheckboxData): VNode[]
+    'checked-icon'(): VNode[]
+    'unchecked-icon'(): VNode[]
+    'indeterminate-icon'(): VNode[]
+  }
 
   validate(): Promise<boolean>
 

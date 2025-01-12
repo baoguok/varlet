@@ -1,53 +1,46 @@
 <template>
   <var-swipe-item :class="classes(n(), [!current, n('--inactive')])" var-tab-item-cover>
-    <slot v-if="initSlot" />
+    <slot />
   </var-swipe-item>
 </template>
 
 <script lang="ts">
+import { computed, defineComponent, ref } from 'vue'
 import VarSwipeItem from '../swipe-item'
-import { defineComponent, ref, computed } from 'vue'
-import { useTabsItems } from './provide'
-import { props } from './props'
-import type { Ref, ComputedRef } from 'vue'
-import type { TabItemProvider } from './provide'
 import { createNamespace } from '../utils/components'
+import { props } from './props'
+import { useLists, useTabsItems, type TabItemProvider } from './provide'
 
-const { n, classes } = createNamespace('tab-item')
+const { name, n, classes } = createNamespace('tab-item')
 
 export default defineComponent({
-  name: 'VarTabItem',
-  components: {
-    VarSwipeItem,
-  },
+  name,
+  components: { VarSwipeItem },
   props,
   setup(props) {
-    const current: Ref<boolean> = ref(false)
-    const initSlot: Ref<boolean> = ref(false)
-    const name: ComputedRef<string | number | undefined> = computed(() => props.name)
+    const current = ref(false)
+    const name = computed(() => props.name)
     const { index, bindTabsItems } = useTabsItems()
-
-    const setCurrent = (value: boolean) => {
-      if (!initSlot.value && value) {
-        initSlot.value = true
-      }
-
-      current.value = value
-    }
+    const { bindLists } = useLists()
 
     const tabItemProvider: TabItemProvider = {
       index,
       name,
+      current: computed(() => current.value),
       setCurrent,
     }
 
     bindTabsItems(tabItemProvider)
+    bindLists(tabItemProvider)
+
+    function setCurrent(value: boolean) {
+      current.value = value
+    }
 
     return {
+      current,
       n,
       classes,
-      current,
-      initSlot,
     }
   },
 })

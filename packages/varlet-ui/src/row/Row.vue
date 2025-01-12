@@ -1,53 +1,49 @@
 <template>
   <div
-    :class="classes(n(), 'var--box')"
+    :class="classes(n(), n('$--box'))"
     :style="{
-      justifyContent: justify,
-      alignItems: align,
-      margin: average ? `0 -${average}px` : undefined,
+      justifyContent: padStartFlex(justify),
+      alignItems: padStartFlex(align),
+      margin: `${-average[0]}px ${-average[1]}px`,
     }"
-    @click="onClick"
+    @click="handleClick"
   >
     <slot />
   </div>
 </template>
 
 <script lang="ts">
-import { defineComponent, computed, watch } from 'vue'
+import { computed, defineComponent } from 'vue'
+import { call, isArray } from '@varlet/shared'
+import { createNamespace } from '../utils/components'
+import { padStartFlex, toPxNum } from '../utils/elements'
 import { props } from './props'
 import { useCols } from './provide'
-import { toPxNum } from '../utils/elements'
-import type { ComputedRef } from 'vue'
-import type { RowProvider } from './provide'
-import { createNamespace } from '../utils/components'
 
-const { n, classes } = createNamespace('row')
+const { name, n, classes } = createNamespace('row')
 
 export default defineComponent({
-  name: 'VarRow',
+  name,
   props,
   setup(props) {
-    const { cols, bindCols, length } = useCols()
+    const average = computed(() =>
+      isArray(props.gutter) ? props.gutter.map((numeric) => toPxNum(numeric) / 2) : [0, toPxNum(props.gutter) / 2],
+    )
+    const { bindCols } = useCols()
 
-    const average: ComputedRef<number> = computed(() => {
-      const gutter: number = toPxNum(props.gutter)
-      return gutter / 2
-    })
+    bindCols({ average })
 
-    const computePadding = () => {
-      cols.forEach((col) => {
-        col.setPadding({ left: average.value, right: average.value })
-      })
+    function handleClick(e: Event) {
+      call(props.onClick, e)
     }
 
-    const rowProvider: RowProvider = { computePadding }
-
-    watch(() => length.value, computePadding)
-    watch(() => props.gutter, computePadding)
-
-    bindCols(rowProvider)
-
-    return { n, classes, average }
+    return {
+      average,
+      n,
+      classes,
+      handleClick,
+      padStartFlex,
+    }
   },
 })
 </script>

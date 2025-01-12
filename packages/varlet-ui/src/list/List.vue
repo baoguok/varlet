@@ -1,98 +1,115 @@
 <template>
-  <div :class="classes(n(), 'var--box')" ref="listEl">
+  <div ref="listEl" :class="classes(n(), n('$--box'))">
     <slot />
 
-    <slot name="loading" v-if="loading">
+    <slot v-if="loading" name="loading">
       <div :class="n('loading')">
-        <div :class="n('loading-text')">{{ dt(loadingText, pack.listLoadingText) }}</div>
+        <div :class="n('loading-text')">{{ loadingText ?? (pt ? pt : t)('listLoadingText') }}</div>
         <var-loading size="mini" :radius="10" />
       </div>
     </slot>
 
-    <slot name="finished" v-if="finished">
-      <div :class="n('finished')">{{ dt(finishedText, pack.listFinishedText) }}</div>
+    <slot v-if="finished" name="finished">
+      <div :class="n('finished')">{{ finishedText ?? (pt ? pt : t)('listFinishedText') }}</div>
     </slot>
 
-    <slot name="error" v-if="error">
-      <div :class="n('error')" v-ripple @click="load">
-        {{ dt(errorText, pack.listErrorText) }}
+    <slot v-if="error" name="error">
+      <div v-ripple :class="n('error')" @click="load">
+        {{ errorText ?? (pt ? pt : t)('listErrorText') }}
       </div>
     </slot>
 
-    <div :class="n('detector')" ref="detectorEl"></div>
+    <div ref="detectorEl" :class="n('detector')"></div>
   </div>
 </template>
 
 <script lang="ts">
+import { defineComponent, nextTick, ref, watch } from 'vue'
+import { call, getRect, isNumber } from '@varlet/shared'
+import { onSmartMounted, onSmartUnmounted } from '@varlet/use'
 import VarLoading from '../loading'
+import { t } from '../locale'
+import { injectLocaleProvider } from '../locale-provider/provide'
 import Ripple from '../ripple'
-import { defineComponent, onMounted, onUnmounted, ref, nextTick } from 'vue'
+import { createNamespace } from '../utils/components'
 import { getParentScroller, toPxNum } from '../utils/elements'
 import { props } from './props'
-import { isNumber, dt } from '../utils/shared'
-import { createNamespace, call } from '../utils/components'
-import { pack } from '../locale'
-import type { Ref } from 'vue'
+import { useTabItem } from './provide'
 
-const { n, classes } = createNamespace('list')
+const { name, n, classes } = createNamespace('list')
 
 export default defineComponent({
-  name: 'VarList',
+  name,
   directives: { Ripple },
-  components: {
-    VarLoading,
-  },
+  components: { VarLoading },
   props,
   setup(props) {
-    const listEl: Ref<HTMLElement | null> = ref(null)
-    const detectorEl: Ref<HTMLElement | null> = ref(null)
+    const listEl = ref<HTMLElement | null>(null)
+    const detectorEl = ref<HTMLElement | null>(null)
+    const { tabItem, bindTabItem } = useTabItem()
+    const { t: pt } = injectLocaleProvider()
+
     let scroller: HTMLElement | Window
 
-    const load = () => {
+    call(bindTabItem, {})
+
+    if (tabItem) {
+      watch(() => tabItem.current.value, check)
+    }
+
+    watch(() => [props.loading, props.error, props.finished], check)
+
+    onSmartMounted(() => {
+      scroller = getParentScroller(listEl.value!)
+      scroller.addEventListener('scroll', check)
+
+      if (props.immediateCheck) {
+        check()
+      }
+    })
+
+    onSmartUnmounted(removeScrollerListener)
+
+    function load() {
       call(props['onUpdate:error'], false)
       call(props['onUpdate:loading'], true)
       call(props.onLoad)
     }
 
-    const isReachBottom = () => {
-      const containerBottom =
-        scroller === window ? window.innerHeight : (scroller as HTMLElement).getBoundingClientRect().bottom
-
-      const { bottom: detectorBottom } = (detectorEl.value as HTMLElement).getBoundingClientRect()
+    function isReachBottom() {
+      const { bottom: containerBottom } = getRect(scroller)
+      const { bottom: detectorBottom } = getRect(detectorEl.value!)
 
       // The fractional part of the detectorBottom when bottoming out overflows
       // https://github.com/varletjs/varlet/issues/310
       return Math.floor(detectorBottom) - toPxNum(props.offset) <= containerBottom
     }
 
-    // expose
-    const check = async () => {
-      await nextTick()
-
-      const { loading, finished, error } = props
-
-      if (!loading && !finished && !error && isReachBottom()) {
-        load()
+    function removeScrollerListener() {
+      if (!scroller) {
+        // may be null in nuxt
+        return
       }
+
+      scroller.removeEventListener('scroll', check)
     }
 
-    onMounted(() => {
-      scroller = getParentScroller(listEl.value as HTMLElement)
+    // expose
+    async function check() {
+      await nextTick()
 
-      props.immediateCheck && check()
+      if (props.loading || props.finished || props.error || tabItem?.current.value === false || !isReachBottom()) {
+        return
+      }
 
-      scroller.addEventListener('scroll', check)
-    })
-
-    onUnmounted(() => {
-      scroller.removeEventListener('scroll', check)
-    })
+      load()
+    }
 
     return {
-      pack,
       listEl,
       detectorEl,
-      dt,
+      pt,
+      t,
       isNumber,
       load,
       check,

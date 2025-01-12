@@ -1,99 +1,99 @@
 <template>
   <div class="varlet-site-sidebar var-elevation--3">
-    <var-site-cell
-      class="varlet-site-sidebar__item"
-      :id="item.doc"
-      :class="{
-        'varlet-site-sidebar__item--active': item.doc === menuName,
-        'varlet-site-sidebar__link': item.type !== menuTypes.TITLE,
-        'varlet-site-sidebar__title': item.type === menuTypes.TITLE,
-      }"
-      :key="index"
+    <a
+      class="varlet-site-sidebar__link"
       v-for="(item, index) in menu"
-      v-ripple="{
-        touchmoveForbid: false,
-        disabled: item.type === menuTypes.TITLE,
-        color: themes['color-side-bar']
-      }"
-      @click="changeRoute(item)"
+      :key="index"
+      :href="item.type !== MenuTypes.TITLE ? `#/${language}/${item.doc}` : undefined"
+      @click.prevent
     >
-      <span class="varlet-site-sidebar__item--title" v-if="item.type === menuTypes.TITLE">{{ item.text[language] }}</span>
-      <span v-else>{{ item.text[language] }}</span>
-    </var-site-cell>
+      <var-cell
+        class="varlet-site-sidebar__item"
+        :id="item.doc"
+        :class="{
+          'varlet-site-sidebar__item--active': item.doc === menuName,
+          'varlet-site-sidebar__cell': item.type !== menuTypes.TITLE,
+          'varlet-site-sidebar__title': item.type === menuTypes.TITLE,
+        }"
+        v-ripple="{
+          disabled: item.type === menuTypes.TITLE,
+        }"
+        @click="changeRoute(item)"
+      >
+        <span class="varlet-site-sidebar__indicator"></span>
+        <span class="varlet-site-sidebar__item--title" v-if="item.type === menuTypes.TITLE">{{
+          item.text[language]
+        }}</span>
+        <span v-else>{{ item.text[language] }}</span>
+      </var-cell>
+    </a>
   </div>
 </template>
 
-<script lang="ts">
-import config from '@config'
-import { MenuTypes } from '../../utils'
-import { reactive, ref, defineComponent } from 'vue'
-import type { PropType } from 'vue'
-import type { Menu } from '../App.vue'
-import { get } from 'lodash-es'
+<script setup lang="ts">
+import { reactive } from 'vue'
+import { MenuTypes, type Menu } from '../../utils'
 
-export default defineComponent({
-  name: 'AppSidebar',
-  props: {
-    menu: {
-      type: Array as PropType<Menu[]>
-    },
-    menuName: {
-      type: String
-    },
-    language: {
-      type: String
-    }
-  },
-  emits: ['change'],
-  setup(props, { emit }) {
-    const menuTypes = reactive(MenuTypes)
-    const themes = ref(get(config, 'themes'))
+const props = defineProps<{ menu: Menu[]; menuName: string; language: string }>()
+const emit = defineEmits(['change'])
+const menuTypes = reactive(MenuTypes)
 
-    const changeRoute = (item: Menu) => {
-      if (item.type === MenuTypes.TITLE || props.menuName === item.doc) {
-        return
-      }
-
-      emit('change', item)
-    }
-
-    return {
-      menuTypes,
-      themes,
-      changeRoute
-    }
+const changeRoute = (item: Menu) => {
+  if (item.type === MenuTypes.TITLE || props.menuName === item.doc) {
+    return
   }
-})
+
+  emit('change', item)
+}
 </script>
 
-<style scoped lang="less">
+<style lang="less">
+@keyframes indicator-fade-in {
+  from {
+    transform: scaleY(0);
+    opacity: 0.3;
+  }
+
+  to {
+    transform: scaleY(1);
+    opacity: 1;
+  }
+}
+
 .varlet-site-sidebar {
   padding: 0 0 15px;
-  position: fixed;
-  width: 240px;
+  position: sticky;
+  width: 246px;
+  height: calc(100vh - 60px - 15px);
   top: 60px;
-  bottom: 0;
-  left: 0;
-  z-index: 99;
+  z-index: 6;
   overflow-y: scroll;
   box-shadow: 0 8px 12px var(--site-config-color-shadow);
   background: var(--site-config-color-bar);
+  scrollbar-width: none;
 
   &::-webkit-scrollbar {
     display: none;
   }
 
+  &__link {
+    display: block;
+    color: initial;
+    text-decoration: none;
+    outline: none;
+  }
+
   &__item {
-    margin: 0;
-    user-select: none;
-    padding: 10px 28px;
+    margin: 0 !important;
+    user-select: none !important;
+    padding: 10px 28px !important;
 
     &--title {
-      font-size: 16px;
-      font-weight: 600;
-      color: var(--site-config-color-text);
-      line-height: 28px;
-      padding: 8px 0 8px;
+      font-size: 16px !important;
+      font-weight: 600 !important;
+      color: var(--site-config-color-text) !important;
+      line-height: 28px !important;
+      padding: 8px 0 8px !important;
     }
 
     &--active {
@@ -112,23 +112,25 @@ export default defineComponent({
         height: 40px;
         position: absolute;
         left: 0;
+        animation: indicator-fade-in 0.25s;
       }
     }
   }
 
-  &__link {
-    cursor: pointer;
-    font-size: 14px;
-    color: var(--site-config-color-text);
-    transition: color 0.2s;
+  &__cell {
+    cursor: pointer !important;
+    font-size: 14px !important;
+    color: var(--site-config-color-text) !important;
+    transition: color 0.2s !important;
 
     &:hover {
-      color: var(--site-config-color-side-bar);
+      color: var(--site-config-color-side-bar) !important;
     }
   }
 
   &__title {
-    margin-top: 10px;
+    margin-top: 10px !important;
+    cursor: default;
   }
 }
 </style>

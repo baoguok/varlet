@@ -1,6 +1,7 @@
 # Uploader
 
 ### Intro
+
 It provides the ability to read files and preview pictures and videos.
 Get the file upload server by listening for `after-read` events.
 
@@ -11,7 +12,10 @@ Get the file upload server by listening for `after-read` events.
 import { ref } from 'vue'
 
 const files = ref([])
-const handleAfterRead = file => console.log(file)
+
+function handleAfterRead(file) {
+  console.log(file)
+}
 </script>
 
 <template>
@@ -29,18 +33,45 @@ import { ref } from 'vue'
 
 const files = ref([
   {
-    url: 'https://varlet-varletjs.vercel.app/cat.jpg',
-    cover: 'https://varlet-varletjs.vercel.app/cat.jpg'
+    url: 'https://varletjs.org/cat.jpg',
+    cover: 'https://varletjs.org/cat.jpg'
   },
   {
     url: 'https://www.runoob.com/try/demo_source/mov_bbb.mp4',
-    cover: 'https://varlet-varletjs.vercel.app/cover.jpg'
+    cover: 'https://varletjs.org/cover.jpg'
   }
 ])
 </script>
 
 <template>
   <var-uploader v-model="files"/>
+</template>
+```
+
+### Custom Preview
+
+```html
+<script setup>
+import { ref } from 'vue'
+import { Dialog } from '@varlet/ui'
+
+const files = ref([
+  {
+    url: 'https://varletjs.org/cat.jpg',
+    cover: 'https://varletjs.org/cat.jpg'
+  }
+])
+
+function handlePreview(file) {
+  Dialog({
+    title: 'Custom Preview',
+    message: file.url.slice(0, 100),
+  })
+}
+</script>
+
+<template>
+  <var-uploader v-model="files" prevent-default-preview @preview="handlePreview"/>
 </template>
 ```
 
@@ -54,29 +85,62 @@ import { ref } from 'vue'
 
 const files = ref([
   {
-    url: 'https://varlet-varletjs.vercel.app/cat.jpg',
-    cover: 'https://varlet-varletjs.vercel.app/cat.jpg',
+    url: 'https://varletjs.org/cat.jpg',
+    cover: 'https://varletjs.org/cat.jpg',
     state: 'loading'
   },
   {
-    url: 'https://varlet-varletjs.vercel.app/cat.jpg',
-    cover: 'https://varlet-varletjs.vercel.app/cat.jpg',
+    url: 'https://varletjs.org/cat.jpg',
+    cover: 'https://varletjs.org/cat.jpg',
     state: 'success'
   },
   {
-    url: 'https://varlet-varletjs.vercel.app/cat.jpg',
-    cover: 'https://varlet-varletjs.vercel.app/cat.jpg',
+    url: 'https://varletjs.org/cat.jpg',
+    cover: 'https://varletjs.org/cat.jpg',
     state: 'error'
   }
 ])
 
-const handleAfterRead = (file) => {
+function handleAfterRead(file) {
   file.state = 'loading'
 
   setTimeout(() => {
     file.state = 'success'
   }, 1000)
 }
+</script>
+
+<template>
+  <var-uploader v-model="files" @after-read="handleAfterRead"/>
+</template>
+```
+
+### Use Progress
+
+```html
+<script setup>
+import { ref, onUnmounted } from 'vue'
+
+const files = ref([])
+let timer
+
+function handleAfterRead(file) {
+  file.state = 'loading'
+
+  timer = window.setInterval(() => {
+    if (file.progress === 100) {
+      window.clearInterval(timer)
+      file.state = 'success'
+      return
+    }
+
+    file.progress += 10
+  }, 250)
+}
+
+onUnmounted(() => {
+  window.clearInterval(timer)
+})
 </script>
 
 <template>
@@ -108,15 +172,32 @@ import { ref } from 'vue'
 import { Snackbar } from '@varlet/ui'
 
 const files = ref([])
+</script>
 
-const handleOversize = () => {
-  Snackbar.warning('file size exceeds limit')
+<template>
+  <var-uploader v-model="files" :maxsize="1024" @oversize="Snackbar.warning('file size exceeds limit')" />
+</template>
+```
+
+### File List Filter
+
+Filter files through the `before-filter` event, and return a `VarFile` array after filtering.
+
+```html
+<script setup>
+import { ref } from 'vue'
+
+const files = ref([])
+
+function handleBeforeFilter(files) {
+  return files.filter(file => file.name.endsWith('png'))
 }
 </script>
 
 <template>
-  <var-uploader v-model="files" :maxsize="1024" @oversize="handleOversize" />
+  <var-uploader v-model="files" multiple @before-filter="handleBeforeFilter" />
 </template>
+
 ```
 
 ### Upload Preprocessing
@@ -130,7 +211,7 @@ import { Snackbar } from '@varlet/ui'
 
 const files = ref([])
 
-const handleBeforeRead = (file) => {
+function handleBeforeRead(file) {
   if (file.file.size <= 1 * 1024 * 1024) {
     Snackbar.success('the file is less than 1M, the upload is successful')
     return true
@@ -143,6 +224,32 @@ const handleBeforeRead = (file) => {
 
 <template>
   <var-uploader v-model="files" @before-read="handleBeforeRead"/>
+</template>
+```
+
+### Upload Button Click Event
+
+By listen the `click-action` event, you can intercept the click behavior of the upload button, and manually trigger the browser to select the file through the `chooseFile` method in the callback.
+
+```html
+<script setup>
+import { ref } from 'vue'
+import { Snackbar } from '@varlet/ui'
+
+const files = ref([])
+
+function handleClickAction(chooseFile) {
+  Snackbar.loading('delay 1s')
+
+  window.setTimeout(() => {
+    Snackbar.clear()
+    chooseFile()
+  }, 1000)
+}
+</script>
+
+<template>
+  <var-uploader v-model="files" @click-action="handleClickAction" />
 </template>
 ```
 
@@ -185,12 +292,12 @@ import { Dialog } from '@varlet/ui'
 
 const files = ref([
   {
-    url: 'https://varlet-varletjs.vercel.app/cat.jpg',
-    cover: 'https://varlet-varletjs.vercel.app/cat.jpg'
+    url: 'https://varletjs.org/cat.jpg',
+    cover: 'https://varletjs.org/cat.jpg'
   }
 ])
 
-const handleBeforeRemove = async () => {
+async function handleBeforeRemove() {
   const action = await Dialog({
     title: 'Delete or not?',
     message: 'Cannot be withdrawn after deletion'
@@ -205,7 +312,7 @@ const handleBeforeRemove = async () => {
 </template>
 ```
 
-### Customize upload styles
+### Customize Upload Styles
 
 ```html
 <script setup>
@@ -233,8 +340,8 @@ import { ref } from 'vue'
 
 const files = ref([
   {
-    url: 'https://varlet-varletjs.vercel.app/cat.jpg',
-    cover: 'https://varlet-varletjs.vercel.app/cat.jpg',
+    url: 'https://varletjs.org/cat.jpg',
+    cover: 'https://varletjs.org/cat.jpg',
     state: 'error',
   },
 ])
@@ -242,13 +349,39 @@ const files = ref([
 
 <template>
   <var-uploader
-    :rules="[(v, u) => u.getError().length === 0 || 'There is a file that failed to upload']"
+    :rules="(v, u) => u.getError().length === 0 || 'There is a file that failed to upload'"
     v-model="files"
   />
 </template>
 ```
 
-### Custom render file list
+### Validate with Zod
+
+```html
+<script setup>
+import { ref } from 'vue'
+import { z } from 'zod'
+
+const files = ref([
+  {
+    url: 'https://varletjs.org/cat.jpg',
+    cover: 'https://varletjs.org/cat.jpg',
+    state: 'error',
+  },
+])
+</script>
+
+<template>
+  <var-uploader
+    :rules="
+      z.array(z.any()).refine(v => v.filter(file => file.state === 'error').length === 0, 'There is a file that failed to upload')
+    "
+    v-model="files"
+  />
+</template>
+```
+
+### Custom Render File List
 
 You can use the `hide-list` to hide component files list, then you can render this list by custom.
 
@@ -258,18 +391,18 @@ import { ref } from 'vue'
 
 const files = ref([
   {
-    url: 'https://varlet-varletjs.vercel.app/cat.jpg',
-    cover: 'https://varlet-varletjs.vercel.app/cat.jpg',
+    url: 'https://varletjs.org/cat.jpg',
+    cover: 'https://varletjs.org/cat.jpg',
     state: 'loading',
   },
   {
-    url: 'https://varlet-varletjs.vercel.app/cat.jpg',
-    cover: 'https://varlet-varletjs.vercel.app/cat.jpg',
+    url: 'https://varletjs.org/cat.jpg',
+    cover: 'https://varletjs.org/cat.jpg',
     state: 'success',
   },
   {
-    url: 'https://varlet-varletjs.vercel.app/cat.jpg',
-    cover: 'https://varlet-varletjs.vercel.app/cat.jpg',
+    url: 'https://varletjs.org/cat.jpg',
+    cover: 'https://varletjs.org/cat.jpg',
     state: 'error',
   },
 ])
@@ -302,26 +435,67 @@ const files = ref([
 </style>
 ```
 
+### Custom Remove Button
+
+```html
+<script setup>
+import { ref } from 'vue'
+
+const files = ref([
+  {
+    url: 'https://varletjs.org/cat.jpg',
+    cover: 'https://varletjs.org/cat.jpg'
+  },
+  {
+    url: 'https://www.runoob.com/try/demo_source/mov_bbb.mp4',
+    cover: 'https://varletjs.org/cover.jpg'
+  }
+])
+</script>
+
+<template>
+  <var-uploader v-model="files">
+    <template #remove-button="{ remove }">
+      <div class="custom-remove-button">
+        <var-icon color="#fff" name="window-close" @click.stop="remove"></var-icon>
+      </div>
+    </template>
+  </var-uploader>
+</template>
+
+<style>
+.custom-remove-button {
+  position: absolute;
+  top: 0;
+  right: 0;
+  z-index: 3;
+}
+</style>
+```
+
 ## API
 
 ### Props
 
 | Prop | Description | Type | Default |
-| --- | --- | --- | --- |
-| `v-model` | File list | _VarFile[]_ | `[]` |
-| `accept` | Accepted file type, consistent with the native attribute | _string_ | `image/*` |
-| `capture` | Get the file, the same as the native property | _string_ | `-` |
+| --- | ----------------------------------------------------------------------- | --- | --- |
+| `v-model`  | File list | _VarFile[]_ | `[]` |
+| `accept`   | Accepted file type, consistent with the native attribute | _string_ | `image/*` |
+| `capture`  | Get the file, the same as the native property | _string_ | `-` |
 | `multiple` | Whether to select multiple files | _boolean_ | `false` |
 | `readonly` | Whether the readonly | _boolean_ | `false` |
 | `disabled` | Whether the disabled | _boolean_ | `false` |
+| `elevation`| Elevation level, options `true` `false` and level of `0-24`, not in simple mode | _string \| number \| boolean_|  `true` |
 | `removable` | Whether the removable | _boolean_ | `true` |
 | `maxlength` | Maximum number of files | _string \| number_ | `-` |
-| `maxsize` | Maximum file size | _string \| number_ | `-` |
+| `maxsize`   | Maximum file size, the unit is `byte` | _string \| number_ | `-` |
 | `previewed` | Whether to allow preview | _boolean_ | `true` |
-| `ripple` | Whether to open ripple | _boolean_ | `true` |
+| `prevent-default-preview` | Prevent default preview behavior | _boolean_ | `false` |
+| `ripple`    | Whether to open ripple | _boolean_ | `true` |
 | `hide-list` | Whether to hide the file list | _boolean_ | `false` |
-| `validate-trigger` | Timing to trigger validation， The optional value is `onChange` `onRemove` | _ValidateTriggers[]_ | `['onChange', 'onRemove']` |
-| `rules` | The validation rules，Returns `true` to indicate that the validation passed，The remaining values are converted to text as user prompts | _Array<(v: VarFile, u: VarFileUtils) => any>_ | `-` |
+| `resolve-type` | The file preprocessing type, can be set to `default` `file` `data-url` (`default`, the image type contains dataURL and File object, other types contain only File object. `file`, which contains only File object. `data-url`, all file types contain dataURL and File object) | _string_ | `default` |
+| `validate-trigger` | Timing to trigger validation. The optional value is `onChange` `onRemove` | _UploaderValidateTrigger[]_ | `['onChange', 'onRemove']` |
+| `rules` | Validation rules, return `true` to indicate verification passes, other types of values ​​will be converted into text as user prompts. [Zod validation](#/en-US/zodValidation) is supported since `3.5.0` | _((v: VarFile[]) => any) \| ZodType \| Array<((v: VarFile[]) => any) \| ZodType>_ | `-` |
 
 ### VarFile
 
@@ -333,6 +507,7 @@ const files = ref([
 | `cover` | File cover image | _string_ | `-` |
 | `fit` | Cover image fill mode, Optional value is `fill` `contain` `cover` `none` `scale-down` | _string_ | `-` |
 | `state` | File upload state, Optional value is `loading` `success` `error` | _string_ | `-` |
+| `state` | File upload progress, range [0, 100] | _number_ | `-` |
 
 ### VarFileUtils
 
@@ -346,6 +521,8 @@ const files = ref([
 
 | Method | Description | Arguments | Return |
 | --- | --- | --- | --- |
+| `chooseFile` | Trigger the file selection action and display the file list | `-` | `-` |
+| `closePreview` | Close preview file popup | `-` | `-` |
 | `getLoading` | Gets a collection of files for `state` is `loading` | `-` | `VarFile[]` |
 | `getSuccess` | Gets a collection of files for `state` is `success` | `-` | `VarFile[]` |
 | `getError` |  Gets a collection of files for `state` is `error` | `-` | `VarFile[]` |
@@ -357,21 +534,26 @@ const files = ref([
 
 | Event | Description | Arguments |
 | --- | --- | --- |
-| `before-read` | Trigger returns a false value before a file is read to prevent the file from being read(support promise) | `file: VarFile` |
+| `before-filter` | Triggered before the event `before-read` to filter the file list | `files: VarFile[]` |
+| `before-read` | Triggered returns a false value before a file is read to prevent the file from being read(support promise) | `file: VarFile` |
 | `after-read` | Triggered after the file is read | `file: VarFile` |
 | `oversize` | Triggered when the file size limit is exceeded | `file: VarFile` |
 | `before-remove` | Triggered before file deletion, return false value to prevent file deletion (support promise) | `file: VarFile` |
 | `remove` | Triggered when deleting a file. There is a true value to prevent deleting a file (support promise) | `file: VarFile` |
+| `preview` | Triggered when a file is previewed | `file: VarFile` |
+| `click-action`| Intercept click behavior of upload button | `chooseFile: () => void, event: Event` |
 
 ### Slots
 
-| Slot | Description | Arguments |
+| Name | Description | SlotProps |
 | --- | --- | --- |
 | `default` | Upload action content | `-` |
+| `extra-message` | Extra message | `-` |
+| `remove-button` ***3.8.0*** | Remove button | `remove: () => void` |
 
 ### Style Variables
 
-Here are the CSS variables used by the component, Styles can be customized using [StyleProvider](#/en-US/style-provider)
+Here are the CSS variables used by the component. Styles can be customized using [StyleProvider](#/en-US/style-provider).
 
 | Variable | Default |
 | --- | --- |
@@ -385,6 +567,7 @@ Here are the CSS variables used by the component, Styles can be customized using
 | `--uploader-file-name-color`              | `#888`                                                                                       |
 | `--uploader-file-name-font-size`          | `12px`                                                                                       |
 | `--uploader-file-name-padding`            | `10px`                                                                                       |
+| `--uploader-file-border-radius`            | `0`                                                                                       |
 | `--uploader-file-text-align`              | `center`                                                                                     |
 | `--uploader-file-close-background`        | `rgba(0, 0, 0, 0.3)`                                                                         |
 | `--uploader-file-close-size`              | `24px`                                                                                       |
@@ -398,6 +581,7 @@ Here are the CSS variables used by the component, Styles can be customized using
 | `--uploader-file-indicator-normal-color`  | `var(--color-disabled)`                                                                      |
 | `--uploader-file-indicator-success-color` | `var(--color-success)`                                                                       |
 | `--uploader-file-indicator-error-color`   | `var(--color-danger)`                                                                        |
-| `--uploader-disabled-color`               | `#ddd`              
+| `--uploader-file-progress-color`   | `var(--color-primary)`                                                                        |
+| `--uploader-disabled-color`               | `#ddd`              |
 | `--uploader-disabled-text-color`          | `var(--color-text-disabled)`      |
 | `--uploader-loading-background`           | `linear-gradient(90deg, hsla(0, 0%, 100%, 0), hsla(0, 0%, 100%, 0.3), hsla(0, 0%, 100%, 0))` |

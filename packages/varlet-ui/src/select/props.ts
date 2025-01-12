@@ -1,94 +1,77 @@
-import type { PropType } from 'vue'
+import { VNode, VNodeChild, type PropType } from 'vue'
+import { fieldDecoratorProps } from '../field-decorator'
+import { defineListenerProp, pickProps } from '../utils/components'
 
-export function textAlignValidator(textAlign: string) {
-  return ['left', 'right', 'center'].includes(textAlign)
+export type SelectValidateTrigger = 'onFocus' | 'onBlur' | 'onChange' | 'onClick' | 'onClear' | 'onClose'
+
+export type SelectTextAlign = 'left' | 'right' | 'center'
+
+export type SelectOptionLabelRender = (option: SelectOption, checked: boolean) => VNodeChild
+
+export type SelectOptionLabel = string | VNode | SelectOptionLabelRender
+
+export interface SelectOption {
+  label?: SelectOptionLabel
+  value?: any
+  disabled?: boolean
+
+  [key: PropertyKey]: any
 }
-
-export type ValidateTriggers = 'onFocus' | 'onBlur' | 'onChange' | 'onClick' | 'onClear' | 'onClose'
 
 export const props = {
   modelValue: {
+    type: [String, Number, Boolean, Array] as PropType<any>,
     default: undefined,
   },
-  placeholder: {
+  options: {
+    type: Array as PropType<SelectOption[]>,
+    default: () => [],
+  },
+  labelKey: {
     type: String,
+    default: 'label',
   },
-  multiple: {
-    type: Boolean,
-    default: false,
+  valueKey: {
+    type: String,
+    default: 'value',
   },
+  multiple: Boolean,
   offsetY: {
     type: [String, Number],
     default: 0,
   },
-  chip: {
-    type: Boolean,
-    default: false,
-  },
-  line: {
-    type: Boolean,
-    default: true,
-  },
-  hint: {
-    type: Boolean,
-    default: true,
-  },
-  textColor: {
-    type: String,
-  },
-  focusColor: {
-    type: String,
-  },
-  blurColor: {
-    type: String,
-  },
-  disabled: {
-    type: Boolean,
-    default: false,
-  },
-  readonly: {
-    type: Boolean,
-    default: false,
-  },
-  clearable: {
-    type: Boolean,
-    default: false,
-  },
+  chip: Boolean,
+  readonly: Boolean,
   separator: {
     type: String,
     default: ',',
   },
   textAlign: {
-    type: String as PropType<'left' | 'right' | 'center'>,
+    type: String as PropType<SelectTextAlign>,
     default: 'left',
-    validator: textAlignValidator,
   },
   validateTrigger: {
-    type: Array as PropType<Array<ValidateTriggers>>,
+    type: Array as PropType<Array<SelectValidateTrigger>>,
     default: () => ['onChange', 'onClear', 'onClose'],
   },
-  rules: {
-    type: Array as PropType<Array<(v: any) => any>>,
-  },
-  onFocus: {
-    type: Function as PropType<() => void>,
-  },
-  onBlur: {
-    type: Function as PropType<() => void>,
-  },
-  onClick: {
-    type: Function as PropType<(e: Event) => void>,
-  },
-  onClear: {
-    type: Function as PropType<(value: any) => void>,
-  },
-  onClose: {
-    type: Function as PropType<(value: any) => void>,
-  },
-  onChange: {
-    type: Function as PropType<(value: any) => void>,
-  },
-  'onUpdate:modelValue': {
-    type: Function as PropType<(value: any) => void>,
-  },
+  rules: [Array, Function, Object] as PropType<any>,
+  onFocus: defineListenerProp<() => void>(),
+  onBlur: defineListenerProp<() => void>(),
+  onClose: defineListenerProp<(value: any) => void>(),
+  onChange: defineListenerProp<(value: any) => void>(),
+  onClear: defineListenerProp<(value: any) => void>(),
+  'onUpdate:modelValue': defineListenerProp<(value: any) => void>(),
+  ...pickProps(fieldDecoratorProps, [
+    'size',
+    'variant',
+    'placeholder',
+    'line',
+    'hint',
+    'textColor',
+    'focusColor',
+    'blurColor',
+    'disabled',
+    'clearable',
+    'onClick',
+  ]),
 }

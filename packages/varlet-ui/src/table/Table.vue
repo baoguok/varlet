@@ -1,11 +1,11 @@
 <template>
-  <div :class="classes(n(), 'var-elevation--1 var--box')">
-    <div :class="n('main')">
+  <div :class="classes(n(), formatElevation(elevation, 1), n('$--box'))">
+    <div :class="n('main')" :style="{ height: toSizeUnit(scrollerHeight) }">
       <table :class="n('table')" :style="{ width: toSizeUnit(fullWidth) }">
         <slot />
       </table>
     </div>
-    <div :class="n('footer')" v-if="$slots.footer">
+    <div v-if="$slots.footer" :class="n('footer')">
       <slot name="footer" />
     </div>
   </div>
@@ -13,26 +13,21 @@
 
 <script lang="ts">
 import { defineComponent } from 'vue'
+import { createNamespace, formatElevation } from '../utils/components'
 import { toSizeUnit } from '../utils/elements'
-import { createNamespace } from '../utils/components'
+import { props } from './props'
 
-const { n, classes } = createNamespace('table')
+const { name, n, classes } = createNamespace('table')
 
 export default defineComponent({
-  name: 'VarTable',
-  props: {
-    fullWidth: {
-      type: [Number, String],
-      default: '100%',
-    },
-  },
-  setup() {
-    return {
-      toSizeUnit,
-      n,
-      classes,
-    }
-  },
+  name,
+  props,
+  setup: () => ({
+    toSizeUnit,
+    n,
+    classes,
+    formatElevation,
+  }),
 })
 </script>
 

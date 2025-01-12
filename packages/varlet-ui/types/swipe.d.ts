@@ -1,6 +1,15 @@
-import { VarComponent } from './varComponent'
+import { VNode } from 'vue'
+import { BasicAttributes, ListenerProp, SetPropsDefaults, VarComponent } from './varComponent'
 
-export interface SwipeProps {
+export declare const swipeProps: Record<keyof SwipeProps, any>
+
+export interface SwipeToOptions {
+  event?: boolean
+}
+
+export type SwipeNavigation = 'hover'
+
+export interface SwipeProps extends BasicAttributes {
   loop?: boolean
   autoplay?: string | number
   duration?: string | number
@@ -9,19 +18,44 @@ export interface SwipeProps {
   indicatorColor?: string
   vertical?: boolean
   touchable?: boolean
-  onChange?: (index: number) => void
+  navigation?: boolean | SwipeNavigation
+  onChange?: ListenerProp<(index: number) => void>
+}
+
+export type SwipePrev = (options?: SwipeToOptions) => void
+
+export type SwipeNext = (options?: SwipeToOptions) => void
+
+export type SwipeTo = (index: number, options?: SwipeToOptions) => void
+
+export interface SwipeIndicatorData {
+  index: number
+  length: number
+  hovering: boolean
+  prev: SwipePrev
+  next: SwipeNext
+  to: SwipeTo
 }
 
 export class Swipe extends VarComponent {
+  static setPropsDefaults: SetPropsDefaults<SwipeProps>
+
   $props: SwipeProps
+
+  $slots: {
+    default(): VNode[]
+    prev(data: SwipeIndicatorData): VNode[]
+    next(data: SwipeIndicatorData): VNode[]
+    indicator(data: SwipeIndicatorData): VNode[]
+  }
 
   resize(): void
 
-  prev(): void
+  prev: SwipePrev
 
-  next(): void
+  next: SwipeNext
 
-  to(index: number): void
+  to: SwipeTo
 }
 
 export class _SwipeComponent extends Swipe {}

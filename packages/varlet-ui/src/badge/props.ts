@@ -1,49 +1,36 @@
-function typeValidator(type: string): boolean {
-  return ['default', 'primary', 'info', 'success', 'warning', 'danger'].includes(type)
-}
+import { type PropType } from 'vue'
+import { iconProps } from '../icon'
+import { pickProps } from '../utils/components'
 
-function positionValidator(position: string): boolean {
-  return ['right-top', 'right-bottom', 'left-top', 'left-bottom'].includes(position)
-}
+export type BadgeType = 'default' | 'primary' | 'info' | 'success' | 'warning' | 'danger'
+
+export type BadgePosition = 'right-top' | 'right-bottom' | 'left-top' | 'left-bottom'
 
 export const props = {
-  // 徽标类型
   type: {
-    type: String,
+    type: String as PropType<BadgeType>,
     default: 'default',
-    validator: typeValidator,
   },
-  // 是否隐藏徽标
-  hidden: {
-    type: Boolean,
-    default: false,
+  position: {
+    type: String as PropType<BadgePosition>,
+    default: 'right-top',
   },
-  // 是否是小圆点
-  dot: {
-    type: Boolean,
-    default: false,
-  },
-  // 显示的值
+  hidden: Boolean,
   value: {
     type: [String, Number],
     default: 0,
   },
-  // 显示最大值
-  maxValue: {
+  maxValue: [String, Number],
+  dot: Boolean,
+  icon: pickProps(iconProps, 'name'),
+  namespace: pickProps(iconProps, 'namespace'),
+  color: String,
+  offsetX: {
     type: [String, Number],
+    default: 0,
   },
-  // 自定义徽标颜色
-  color: {
-    type: String,
-  },
-  // 定位位置
-  position: {
-    type: String,
-    default: 'right-top',
-    validator: positionValidator,
-  },
-  // 图标
-  icon: {
-    type: String,
+  offsetY: {
+    type: [String, Number],
+    default: 0,
   },
 }

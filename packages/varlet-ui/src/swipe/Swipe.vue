@@ -1,12 +1,12 @@
 <template>
-  <div :class="n()" ref="swipeEl">
+  <div ref="swipeEl" v-hover="handleHovering" :class="n()">
     <div
       :class="classes(n('track'), [vertical, n('--vertical')])"
       :style="{
-        width: !vertical ? `${trackSize}px` : undefined,
-        height: vertical ? `${trackSize}px` : undefined,
-        transform: `translate${vertical ? 'Y' : 'X'}(${translate}px)`,
-        transitionDuration: lockDuration ? `0ms` : `${toNumber(duration)}ms`,
+        width: !vertical ? toSizeUnit(trackSize) : undefined,
+        height: vertical ? toSizeUnit(trackSize) : undefined,
+        transform: `translate${vertical ? 'Y' : 'X'}(${toSizeUnit(trackTranslate)})`,
+        transitionDuration: lockDuration ? '0ms' : `${toNumber(duration)}ms`,
       }"
       @touchstart="handleTouchstart"
       @touchmove="handleTouchmove"
@@ -15,15 +15,91 @@
       <slot />
     </div>
 
-    <slot name="indicator" :index="index" :length="length">
-      <div :class="classes(n('indicators'), [vertical, n('--indicators-vertical')])" v-if="indicator && length">
+    <slot
+      v-if="navigation"
+      name="prev"
+      v-bind="{
+        index,
+        length,
+        prev,
+        next,
+        to,
+        hovering,
+      }"
+    >
+      <transition :name="getNavigationAnimation('prev')">
         <div
+          v-if="navigation === true || hovering"
+          :class="classes(n('navigation'), n('navigation-prev'), [vertical, n('--navigation-vertical-prev')])"
+        >
+          <var-button
+            var-swipe-cover
+            :disabled="!loop && index === 0"
+            :class="n('navigation-prev-button')"
+            @click="prev()"
+          >
+            <var-icon
+              var-swipe-cover
+              :class="n('navigation-prev-button-icon')"
+              :name="vertical ? 'chevron-up' : 'chevron-left'"
+            />
+          </var-button>
+        </div>
+      </transition>
+    </slot>
+
+    <slot
+      v-if="navigation"
+      name="next"
+      v-bind="{
+        index,
+        length,
+        hovering,
+        prev,
+        next,
+        to,
+      }"
+    >
+      <transition :name="getNavigationAnimation('next')">
+        <div
+          v-if="navigation === true || hovering"
+          :class="classes(n('navigation'), n('navigation-next'), [vertical, n('--navigation-vertical-next')])"
+        >
+          <var-button
+            var-swipe-cover
+            :class="n('navigation-next-button')"
+            :disabled="!loop && index === length - 1"
+            @click="next()"
+          >
+            <var-icon
+              var-swipe-cover
+              :class="n('navigation-next-button-icon')"
+              :name="vertical ? 'chevron-down' : 'chevron-right'"
+            />
+          </var-button>
+        </div>
+      </transition>
+    </slot>
+
+    <slot
+      name="indicator"
+      v-bind="{
+        index,
+        length,
+        hovering,
+        prev,
+        next,
+        to,
+      }"
+    >
+      <div v-if="indicator && length" :class="classes(n('indicators'), [vertical, n('--indicators-vertical')])">
+        <div
+          v-for="(l, idx) in length"
+          :key="l"
           :class="
             classes(n('indicator'), [index === idx, n('--indicator-active')], [vertical, n('--indicator-vertical')])
           "
           :style="{ background: indicatorColor }"
-          :key="l"
-          v-for="(l, idx) in length"
           @click="to(idx)"
         ></div>
       </div>
@@ -32,66 +108,130 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, computed, watch, onMounted, onUnmounted } from 'vue'
-import { useSwipeItems } from './provide'
-import { doubleRaf, nextTickFrame } from '../utils/elements'
-import { props } from './props'
-import { isNumber, toNumber } from '../utils/shared'
-import type { Ref, ComputedRef } from 'vue'
-import type { SwipeProvider } from './provide'
-import type { SwipeItemProvider } from '../swipe-item/provide'
-import { call, createNamespace } from '../utils/components'
+import { computed, defineComponent, onActivated, ref, watch } from 'vue'
+import { call, clamp, doubleRaf, isNumber, preventDefault, toNumber } from '@varlet/shared'
+import { onSmartUnmounted, onWindowResize, useEventListener, useTouch } from '@varlet/use'
+import VarButton from '../button'
+import Hover from '../hover'
+import VarIcon from '../icon'
+import { usePopup } from '../popup/provide'
+import { type SwipeItemProvider } from '../swipe-item/provide'
+import { createNamespace } from '../utils/components'
+import { toSizeUnit } from '../utils/elements'
+import { props, type SwipeToOptions } from './props'
+import { useSwipeItems, useSwipeResizeListeners, type SwipeProvider } from './provide'
 
 const SWIPE_DELAY = 250
-const SWIPE_DISTANCE = 20
+const SWIPE_OFFSET = 20
 
-const { n, classes } = createNamespace('swipe')
+const { name, n, classes } = createNamespace('swipe')
 
 export default defineComponent({
-  name: 'VarSwipe',
+  name,
+  directives: { Hover },
+  components: { VarButton, VarIcon },
   props,
   setup(props) {
-    const swipeEl: Ref<HTMLElement | null> = ref(null)
-    const size: Ref<number> = ref(0)
-    const vertical: ComputedRef<boolean> = computed(() => props.vertical)
-    const trackSize: Ref<number> = ref(0)
-    const translate: Ref<number> = ref(0)
-    const lockDuration: Ref<boolean> = ref(false)
-    const index: Ref<number> = ref(0)
+    const swipeEl = ref<HTMLElement | null>(null)
+    const size = ref(0)
+    const vertical = computed(() => props.vertical)
+    const trackSize = ref(0)
+    const trackTranslate = ref(0)
+    const lockDuration = ref(false)
+    const index = ref(0)
+    const hovering = ref(false)
     const { swipeItems, bindSwipeItems, length } = useSwipeItems()
-    let touching = false
+    const { swipeResizeListeners, bindSwipeResizeListeners } = useSwipeResizeListeners()
+    const { popup, bindPopup } = usePopup()
+    const {
+      deltaX,
+      deltaY,
+      moveX,
+      moveY,
+      offsetX,
+      offsetY,
+      touching,
+      direction,
+      startTime,
+      startTouch,
+      moveTouch,
+      endTouch,
+    } = useTouch()
+    const isExpectDirection = computed(() => direction.value === (props.vertical ? 'vertical' : 'horizontal'))
+
+    let initializedIndex = false
     let timer = -1
-    let startX: number
-    let startY: number
-    let startTime: number
-    let prevX: number | undefined
-    let prevY: number | undefined
+    const swipeProvider: SwipeProvider = {
+      size,
+      currentIndex: index,
+      vertical,
+    }
 
-    const findSwipeItem = (idx: number) => swipeItems.find(({ index }) => index.value === idx) as SwipeItemProvider
+    bindSwipeItems(swipeProvider)
 
-    const dispatchBorrower = () => {
+    useEventListener(() => window, 'keydown', handleKeydown)
+
+    call(bindPopup, null)
+    call(bindSwipeResizeListeners, null)
+
+    watch(
+      () => length.value,
+      async () => {
+        // In nuxt, the size of the swipe cannot got when the route is change, need double raf
+        await doubleRaf()
+
+        initialIndex()
+        resize()
+      },
+    )
+
+    if (popup) {
+      // watch popup show again
+      watch(
+        () => popup.show.value,
+        async (show) => {
+          if (show) {
+            await doubleRaf()
+            resize()
+          } else {
+            stopAutoplay()
+          }
+        },
+      )
+    }
+
+    onActivated(resize)
+    onSmartUnmounted(stopAutoplay)
+    onWindowResize(resize)
+
+    function findSwipeItem(idx: number) {
+      return swipeItems.find(({ index }) => index.value === idx) as SwipeItemProvider
+    }
+
+    function dispatchSwipeItems() {
       if (!props.loop) {
         return
       }
-      // track越左边界
-      if (translate.value >= 0) {
+
+      // track out of bounds from left
+      if (trackTranslate.value >= 0) {
         findSwipeItem(length.value - 1).setTranslate(-trackSize.value)
       }
-      // track越右边界
-      if (translate.value <= -(trackSize.value - size.value)) {
+      // track out of bounds from right
+      if (trackTranslate.value <= -(trackSize.value - size.value)) {
         findSwipeItem(0).setTranslate(trackSize.value)
       }
-      // track没越界
-      if (translate.value > -(trackSize.value - size.value) && translate.value < 0) {
+      // track not out of bounds
+      if (trackTranslate.value > -(trackSize.value - size.value) && trackTranslate.value < 0) {
         findSwipeItem(length.value - 1).setTranslate(0)
         findSwipeItem(0).setTranslate(0)
       }
     }
 
-    const getSwipeIndex = (targetSwipeIndex?: number) => {
+    function getSwipeIndex(targetSwipeIndex?: number) {
       const swipeIndex = isNumber(targetSwipeIndex)
         ? targetSwipeIndex
-        : Math.floor((translate.value - size.value / 2) / -size.value)
+        : Math.floor((trackTranslate.value - size.value / 2) / -size.value)
 
       const { loop } = props
 
@@ -106,7 +246,7 @@ export default defineComponent({
       return swipeIndex
     }
 
-    const swipeIndexToIndex = (swipeIndex: number) => {
+    function swipeIndexToIndex(swipeIndex: number) {
       const { loop } = props
 
       if (swipeIndex === -1) {
@@ -120,46 +260,51 @@ export default defineComponent({
       return swipeIndex
     }
 
-    const boundaryIndex = (index: number) => {
-      const { loop } = props
+    function clampIndex(index: number) {
+      if (props.loop) {
+        if (index < 0) {
+          return length.value + index
+        }
 
-      if (index < 0) {
-        return loop ? length.value - 1 : 0
+        if (index >= length.value) {
+          return index - length.value
+        }
+
+        return index
       }
 
-      if (index > length.value - 1) {
-        return loop ? 0 : length.value - 1
-      }
-
-      return index
+      return clamp(index, 0, length.value - 1)
     }
 
-    const fixPosition = (fn?: () => void) => {
-      const overLeft = translate.value >= size.value
-      const overRight = translate.value <= -trackSize.value
+    async function fixPosition() {
+      const overLeft = trackTranslate.value >= size.value
+      const overRight = trackTranslate.value <= -trackSize.value
       const leftTranslate = 0
       const rightTranslate = -(trackSize.value - size.value)
 
       lockDuration.value = true
-      // 检测是否有越界情况 越界修正
+
       if (overLeft || overRight) {
         lockDuration.value = true
-        translate.value = overRight ? leftTranslate : rightTranslate
+        trackTranslate.value = overRight ? leftTranslate : rightTranslate
         findSwipeItem(0).setTranslate(0)
         findSwipeItem(length.value - 1).setTranslate(0)
       }
 
-      nextTickFrame(() => {
-        lockDuration.value = false
-        call(fn)
-      })
+      await doubleRaf()
+      lockDuration.value = false
     }
 
-    const initialIndex = () => {
-      index.value = boundaryIndex(toNumber(props.initialIndex))
+    function initialIndex() {
+      if (initializedIndex) {
+        return
+      }
+
+      index.value = clampIndex(toNumber(props.initialIndex))
+      initializedIndex = true
     }
 
-    const startAutoplay = () => {
+    function startAutoplay() {
       const { autoplay } = props
 
       if (!autoplay || length.value <= 1) {
@@ -174,101 +319,121 @@ export default defineComponent({
       }, toNumber(autoplay))
     }
 
-    const stopAutoplay = () => {
+    function stopAutoplay() {
       timer && clearTimeout(timer)
     }
 
-    const getDirection = (x: number, y: number) => {
-      if (x > y && x > 10) {
-        return 'horizontal'
-      }
-      if (y > x && y > 10) {
-        return 'vertical'
-      }
-    }
-
-    const handleTouchstart = (event: TouchEvent) => {
+    async function handleTouchstart(event: TouchEvent) {
       if (length.value <= 1 || !props.touchable) {
         return
       }
 
-      const { clientX, clientY } = event.touches[0]
-      startX = clientX
-      startY = clientY
-      startTime = performance.now()
-      touching = true
+      startTouch(event)
       stopAutoplay()
-
-      fixPosition(() => {
-        lockDuration.value = true
-      })
+      await fixPosition()
+      lockDuration.value = true
     }
 
-    const handleTouchmove = (event: TouchEvent) => {
+    function handleTouchmove(event: TouchEvent) {
       const { touchable, vertical } = props
 
-      if (!touching || !touchable) {
+      if (!touching.value || !touchable) {
         return
       }
 
-      const { clientX, clientY } = event.touches[0]
-      const deltaX = Math.abs(clientX - startX)
-      const deltaY = Math.abs(clientY - startY)
-      const direction = getDirection(deltaX, deltaY)
-      const expectDirection = vertical ? 'vertical' : 'horizontal'
+      moveTouch(event)
 
-      if (direction === expectDirection) {
-        event.preventDefault()
-
-        const moveX = prevX !== undefined ? clientX - prevX : 0
-        const moveY = prevY !== undefined ? clientY - prevY : 0
-        prevX = clientX
-        prevY = clientY
-
-        translate.value += vertical ? moveY : moveX
-
-        dispatchBorrower()
+      if (!isExpectDirection.value) {
+        return
       }
+
+      preventDefault(event)
+      trackTranslate.value += vertical ? moveY.value : moveX.value
+      dispatchSwipeItems()
     }
 
-    const handleTouchend = () => {
-      if (!touching) {
+    function handleTouchend() {
+      if (!touching.value) {
+        return
+      }
+
+      endTouch()
+
+      if (!isExpectDirection.value) {
         return
       }
 
       const { vertical, onChange } = props
 
-      const positive = vertical ? (prevY as number) < startY : (prevX as number) < startX
-      const distance = vertical ? Math.abs(startY - (prevY as number)) : Math.abs(startX - (prevX as number))
-      const quickSwiping = performance.now() - startTime <= SWIPE_DELAY && distance >= SWIPE_DISTANCE
+      const positive = vertical ? deltaY.value < 0 : deltaX.value < 0
+      const offset = vertical ? offsetY.value : offsetX.value
+      const quickSwiping = performance.now() - startTime.value <= SWIPE_DELAY && offset >= SWIPE_OFFSET
       const swipeIndex = quickSwiping
         ? positive
           ? getSwipeIndex(index.value + 1)
           : getSwipeIndex(index.value - 1)
         : getSwipeIndex()
 
-      touching = false
       lockDuration.value = false
-      prevX = undefined
-      prevY = undefined
+      trackTranslate.value = swipeIndex * -size.value
 
-      translate.value = swipeIndex * -size.value
       const prevIndex = index.value
       index.value = swipeIndexToIndex(swipeIndex)
       startAutoplay()
 
-      prevIndex !== index.value && call(onChange, index.value)
+      if (prevIndex !== index.value) {
+        call(onChange, index.value)
+      }
+    }
+
+    function handleHovering(value: boolean) {
+      if (props.navigation === 'hover') {
+        hovering.value = value
+      }
+    }
+
+    function getNavigationAnimation(type: 'prev' | 'next') {
+      if (props.navigation !== 'hover') {
+        return ''
+      }
+
+      return n(`--navigation${props.vertical ? '-vertical' : ''}-${type}-animation`)
+    }
+
+    function handleKeydown(event: KeyboardEvent) {
+      if (!swipeItems.length) {
+        return
+      }
+
+      const focusingSwipeItemIndex = swipeItems.findIndex(({ isFocusing }) => isFocusing.value)
+      if (focusingSwipeItemIndex === -1) {
+        return
+      }
+
+      const { key } = event
+
+      preventDefault(event)
+
+      if (key === 'ArrowLeft') {
+        prev()
+      }
+
+      if (key === 'ArrowRight') {
+        next()
+      }
     }
 
     // expose
-    const resize = () => {
+    function resize() {
+      if (!swipeEl.value) {
+        return
+      }
+
       lockDuration.value = true
 
-      size.value = props.vertical
-        ? (swipeEl.value as HTMLElement).offsetHeight
-        : (swipeEl.value as HTMLElement).offsetWidth
+      size.value = props.vertical ? swipeEl.value.offsetHeight : swipeEl.value.offsetWidth
       trackSize.value = size.value * length.value
-      translate.value = index.value * -size.value
+      trackTranslate.value = index.value * -size.value
 
       swipeItems.forEach((swipeItem) => {
         swipeItem.setTranslate(0)
@@ -279,57 +444,72 @@ export default defineComponent({
       setTimeout(() => {
         lockDuration.value = false
       })
+
+      swipeResizeListeners.forEach(({ onResize }) => {
+        onResize()
+      })
     }
+
     // expose
-    const next = () => {
+    async function next(options?: SwipeToOptions) {
       if (length.value <= 1) {
         return
       }
 
+      initialIndex()
+
       const { loop, onChange } = props
-
       const currentIndex = index.value
-      index.value = boundaryIndex(currentIndex + 1)
-      call(onChange, index.value)
+      index.value = clampIndex(currentIndex + 1)
 
-      fixPosition(() => {
-        if (currentIndex === length.value - 1 && loop) {
-          findSwipeItem(0).setTranslate(trackSize.value)
-          translate.value = length.value * -size.value
-          return
-        }
+      if (options?.event !== false) {
+        call(onChange, index.value)
+      }
 
-        if (currentIndex !== length.value - 1) {
-          translate.value = index.value * -size.value
-        }
-      })
+      await fixPosition()
+
+      if (currentIndex === length.value - 1 && loop) {
+        findSwipeItem(0).setTranslate(trackSize.value)
+        trackTranslate.value = length.value * -size.value
+        return
+      }
+
+      if (currentIndex !== length.value - 1) {
+        trackTranslate.value = index.value * -size.value
+      }
     }
+
     // expose
-    const prev = () => {
+    async function prev(options?: SwipeToOptions) {
       if (length.value <= 1) {
         return
       }
 
+      initialIndex()
+
       const { loop, onChange } = props
-
       const currentIndex = index.value
-      index.value = boundaryIndex(currentIndex - 1)
-      call(onChange, index.value)
+      index.value = clampIndex(currentIndex - 1)
 
-      fixPosition(() => {
-        if (currentIndex === 0 && loop) {
-          findSwipeItem(length.value - 1).setTranslate(-trackSize.value)
-          translate.value = size.value
-          return
-        }
+      if (options?.event !== false) {
+        call(onChange, index.value)
+      }
 
-        if (currentIndex !== 0) {
-          translate.value = index.value * -size.value
-        }
-      })
+      await fixPosition()
+
+      if (currentIndex === 0 && loop) {
+        findSwipeItem(length.value - 1).setTranslate(-trackSize.value)
+        trackTranslate.value = size.value
+        return
+      }
+
+      if (currentIndex !== 0) {
+        trackTranslate.value = index.value * -size.value
+      }
     }
+
     // expose
-    const to = (idx: number) => {
+    function to(idx: number, options?: SwipeToOptions) {
       if (length.value <= 1 || idx === index.value) {
         return
       }
@@ -338,45 +518,24 @@ export default defineComponent({
       idx = idx >= length.value ? length.value : idx
 
       const task = idx > index.value ? next : prev
+      const count = Math.abs(idx - index.value)
 
-      Array.from({ length: Math.abs(idx - index.value) }).forEach(task)
+      Array.from({ length: count }).forEach((_, index) => {
+        task({ event: index === count - 1 ? options?.event : false })
+      })
     }
-
-    const swipeProvider: SwipeProvider = {
-      size,
-      vertical,
-    }
-
-    bindSwipeItems(swipeProvider)
-
-    watch(
-      () => length.value,
-      async () => {
-        // In nuxt, the size of the swipe cannot got when the route is change, need double raf
-        await doubleRaf()
-        initialIndex()
-        resize()
-      }
-    )
-
-    onMounted(() => {
-      window.addEventListener('resize', resize)
-    })
-
-    onUnmounted(() => {
-      window.removeEventListener('resize', resize)
-      stopAutoplay()
-    })
 
     return {
-      n,
-      classes,
       length,
       index,
       swipeEl,
       trackSize,
-      translate,
+      trackTranslate,
       lockDuration,
+      hovering,
+      n,
+      toSizeUnit,
+      classes,
       handleTouchstart,
       handleTouchmove,
       handleTouchend,
@@ -385,6 +544,8 @@ export default defineComponent({
       to,
       resize,
       toNumber,
+      handleHovering,
+      getNavigationAnimation,
     }
   },
 })
@@ -392,5 +553,10 @@ export default defineComponent({
 
 <style lang="less">
 @import '../styles/common';
+@import '../styles/elevation';
+@import '../hover-overlay/hoverOverlay';
+@import '../ripple/ripple';
+@import '../loading/loading';
+@import '../icon/icon';
 @import './swipe';
 </style>

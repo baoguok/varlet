@@ -17,7 +17,7 @@ const show = ref(false)
 
 <template>
   <var-button type="primary" block @click="show = !show">基本使用</var-button>
-  <var-snackbar v-model:show="show"> 这是一个消息条！！ </var-snackbar>
+  <var-snackbar v-model:show="show">这是一个消息条！！</var-snackbar>
 </template>
 ```
 
@@ -36,10 +36,10 @@ const show = ref(false)
   <var-snackbar v-model:show="show" :vertical="true">
     这是一个消息条！！
     <template #action>
-      <var-button type="primary" @click="show = !show">关闭</var-button>
+      <var-button type="primary" :elevation="false" size="small" @click="show = !show">关闭</var-button>
     </template>
   </var-snackbar>
-  <var-button type="primary" block @click="show = true">垂直排列</var-button>
+  <var-button type="primary" block @click="show = !show">垂直排列</var-button>
 </template>
 ```
 
@@ -58,10 +58,10 @@ const show = ref(false)
   <var-snackbar v-model:show="show" position="bottom">
     这是一个消息条！！
     <template #action>
-      <var-button type="primary" @click="show = false">关闭</var-button>
+      <var-button type="primary" :elevation="false" size="small" @click="show = false">关闭</var-button>
     </template>
   </var-snackbar>
-  <var-button type="primary" block @click="show = true">底部显示</var-button>
+  <var-button type="primary" block @click="show = !show">底部显示</var-button>
 </template>
 ```
 
@@ -78,8 +78,32 @@ const show = ref(false)
 
 <template>
   <var-snackbar v-model:show="show" :duration="1000"> 这是一个消息条！！</var-snackbar>
-  <var-button type="primary" block @click="show = true">
+  <var-button type="primary" block @click="show = !show">
     显示时长
+  </var-button>
+</template>
+```
+
+### 自定义图标
+
+通过 `icon` 插槽实现自定义图标。
+
+```html
+<script setup>
+import { ref } from 'vue'
+
+const show = ref(false)
+</script>
+
+<template>
+  <var-snackbar v-model:show="show">
+    这是一个消息条！！
+    <template #icon>
+      <var-icon name="heart-outline" />
+    </template>
+  </var-snackbar>
+  <var-button type="primary" block @click="show = !show">
+    自定义图标
   </var-button>
 </template>
 ```
@@ -112,14 +136,10 @@ const show = ref(false)
 ```html
 <script setup>
 import { Snackbar } from '@varlet/ui'
-
-const createSnackbar = () => {
-  Snackbar("这是一个消息条")
-}
 </script>
 
 <template>
-  <var-button type="warning" block @click="createSnackbar()">基本使用</var-button>
+  <var-button type="warning" block @click="Snackbar("这是一个消息条！！")">基本使用</var-button>
 </template>
 ```
 
@@ -129,16 +149,16 @@ const createSnackbar = () => {
 <script setup>
 import { Snackbar } from '@varlet/ui'
 
-const createSnackbar = () => {
+function createSnackbar() {
   Snackbar({
-    content: "这是一个消息条!!",
-    duration: 1000
+    content: "这是一个消息条！！",
+    duration: 1000,
   })
 }
 </script>
 
 <template>
-  <var-button type="warning" block @click="createSnackbar()">显示时长</var-button>
+  <var-button type="warning" block @click="createSnackbar">显示时长</var-button>
 </template>
 ```
 
@@ -148,7 +168,7 @@ const createSnackbar = () => {
 <script setup>
 import { Snackbar } from '@varlet/ui'
 
-const createSnackbar = () => {
+function createSnackbar() {
   Snackbar({
     content: "这是一个消息条！！",
     position: 'bottom'
@@ -157,7 +177,41 @@ const createSnackbar = () => {
 </script>
 
 <template>
-  <var-button type="warning" block @click="createSnackbar()">底部显示</var-button>
+  <var-button type="warning" block @click="createSnackbar">底部显示</var-button>
+</template>
+```
+
+### 自定义
+
+```html
+<script setup>
+import { h } from 'vue'
+import { Snackbar, Icon, Button } from '@varlet/ui'
+
+function createSnackbar() {
+  const customSnackbar = Snackbar({
+  content: 'Hello, Varlet',
+  icon: () =>
+    h(Icon, {
+      name: 'heart',
+      style: { paddingRight: '12px' },
+    }),
+  action: () =>
+    h(
+      Button,
+      {
+        size: 'small',
+        type: 'primary',
+        onClick: () => customSnackbar.clear(),
+      },
+      { default: () => '关闭' }
+    )
+  })
+}
+</script>
+
+<template>
+  <var-button type="warning" block @click="createSnackbar">自定义</var-button>
 </template>
 ```
 
@@ -167,7 +221,7 @@ const createSnackbar = () => {
 <script setup>
 import { Snackbar } from '@varlet/ui'
 
-const createSnackbar = (type) => {
+function createSnackbar(type) {
   Snackbar[type]("这是一个消息条")
   if (type === 'loading') {
     setTimeout(() => {
@@ -220,13 +274,13 @@ const createSnackbar = (type) => {
 
 ### 多例模式
 
-使用函数式调用时，Snackbar 默认采用单例模式，即同一时间只会存在一个 Snackbar，如果需要在同一时间弹出多个 Snackbar，可以参考下面的示例
+使用函数式调用时，Snackbar 默认采用单例模式，即同一时间只会存在一个 Snackbar，如果需要在同一时间弹出多个 Snackbar，可以参考下面的示例:
 
 ```html
 <script setup>
 import { Snackbar } from '@varlet/ui'
 
-const openMultiple = () => {
+function openMultiple() {
   Snackbar.allowMultiple(true)
 
   const snackbar1 = Snackbar('Snackbar 1');
@@ -247,20 +301,23 @@ const openMultiple = () => {
 
 ### 属性
 
-| 参数 | 说明 | 类型 | 默认值 |
-| ----- | -------------- | -------- | ---------- |
-| `v-model:show` | 是否显示 `Snackbar` | _boolean_ | `false` |
-| `type`| `Snackbar` 类型，可选值为 `success warning info error loading` | _string_ | `-` |
-| `position`| `Snackbar`  位置，可选值为 `top center bottom` | _string_ | `top` |
-| `duration`| 显示时长 | _number_ | `3000` |
-| `content` | 自定义内容 | _string_ | `-` |
-| `content-class` | 自定义内容的类名 | _string_ | `-` |
-| `vertical` | 是否启用竖直排列方式 | _boolean_ | `false` |
-| `loading-type` | 加载动画类型(见 `Loading` 组件) | _string_ | `circle` |
-| `loading-size` | 加载动画大小(见 `Loading` 组件) | _string_ | `normal` |
-| `lock-scroll`| 是否禁止滚动穿透 | _boolean_  | `false` |
-| `forbid-click`| 是否禁止穿透点击 | _boolean_  | `false` |
-| `teleport`| 弹出层挂载的位置 | _TeleportProps['to']_  | `body` |
+| 参数               | 说明                                                      | 类型 | 默认值 |
+|------------------|---------------------------------------------------------| -------- | ---------- |
+| `v-model:show`   | 是否显示 `Snackbar`                                         | _boolean_ | `false` |
+| `type`           | `Snackbar` 类型，可选值为 `success warning info error loading` | _string_ | `-` |
+| `position`       | `Snackbar`  位置，可选值为 `top center bottom`                 | _string_ | `top` |
+| `duration`       | 显示时长                                                    | _number_ | `3000` |
+| `elevation` ***3.3.0***  | 海拔高度，可选值为 `true` `false` 和 `0-24` 的等级 | _string \| number \| boolean_|   `true`    |
+| `content`        | 自定义内容                                                   | _string_ | `-` |
+| `content-class`  | 自定义内容的类名                                                | _string_ | `-` |
+| `vertical`       | 是否启用竖直排列方式                                              | _boolean_ | `false` |
+| `loading-type`   | Loading类型(见 `Loading` 组件)                               | _string_ | `circle`       |
+| `loading-size`   | Loading大小(见 `Loading` 组件)                               | _string_ | `normal`       |
+| `loading-color`  | loading颜色(见 `loading`组件)                                |_string_|`currentColor`|
+| `loading-radius` | Loading半径大小(见 `Loading` 组件)                             | _string \| number_  | `-` |
+| `lock-scroll`    | 是否禁止滚动穿透                                                | _boolean_  | `false` |
+| `forbid-click`   | 是否禁止穿透点击                                                | _boolean_  | `false` |
+| `teleport`       | 弹出层挂载的位置                                                | _TeleportProps['to'] \| false_  | `body` |
 
 ### 事件
 
@@ -276,6 +333,7 @@ const openMultiple = () => {
 | 插槽名 | 说明 | 参数 |
 | --- | --- | --- |
 | `default` | `Snackbar` 内容 | `-` |
+| `icon` | `Snackbar` 图标 | `-` |
 | `action` | `Snackbar` 右边动作区 | `-` |
 
 ### 方法
@@ -292,32 +350,38 @@ const openMultiple = () => {
 | `Snackbar.loading` | 显示加载消息条 | _options \| string_ | `snackbar 实例` |
 | `Snackbar.clear` | 关闭消息条 | _-_ | `-` |
 | `Snackbar.allowMultiple` | 是否允许多例模式 | _boolean_ | `-` |
+| `Snackbar.setDefaultOptions` | 设置默认的选项配置 | _options_ | `-` |
+| `Snackbar.resetDefaultOptions` | 重置默认的选项配置 | _-_ | `-` |
 
 ### Snackbar Options
 
 #### 函数式调用时传入的选项
 
-| 参数 | 说明 | 类型 | 默认值 |
-| ----- | -------------- | -------- | ---------- |
-| `show` | 是否显示 `Snackbar` | _boolean_ | `false` |
-| `type`| `Snackbar` 类型，可选值为 `success warning info error loading` | _string_ | `-` |
-| `position`| `Snackbar` 位置，可选值为 `top center bottom` | _string_ | `top` |
-| `duration`| 显示时长(当 `type` 属性为 `loading` 时，需要手动关闭) | _number_ | `3000` |
-| `content` | 自定义内容 | _string_ | `-` |
-| `contentClass` | 自定义内容的类名 | _string_ | `-` |
-| `vertical` | 是否启用竖直排列方式 | _boolean_ | `false` |
-| `loadingType` | 加载动画类型(见 `Loading` 组件) | _string_ | `circle` |
-| `loadingSize` | 加载动画大小(见 `Loading` 组件) | _string_ | `normal` |
-| `lockScroll`| 是否禁止滚动穿透 | _boolean_  | `false` |
-| `forbidClick`| 是否禁止穿透点击(当 `type` 属性为 `loading` 时，默认为 `true`) | _boolean_  | `false` |
-| `onOpen` | 打开 `Snackbar` 时触发 | _() => void_ | `-` |
-| `onOpened` | 打开 `Snackbar` 动画结束时触发 | _() => void_ | `-` |
-| `onClose` | 关闭 `Snackbar` 时触发 | _() => void_ | `-` |
-| `onClosed` | 关闭 `Snackbar` 动画结束时触发 | _() => void_ | `-` |
+| 参数              | 说明                                                      | 类型 | 默认值            |
+|-----------------|---------------------------------------------------------| -------- |----------------|
+| `type`          | `Snackbar` 类型，可选值为 `success warning info error loading` | _string_ | `-`            |
+| `position`      | `Snackbar` 位置，可选值为 `top center bottom`                  | _string_ | `top`          |
+| `duration`      | 显示时长(当 `type` 属性为 `loading` 时，需要手动关闭)                   | _number_ | `3000`         |
+| `elevation` ***3.3.0*** | 海拔高度，可选值为 `true` `false` 和 `0-24` 的等级 | _string \| number \| boolean_|   `true`    |
+| `content`       | 自定义内容                                                   | _string \| VNode \| (() => VNode)_ | `-`            |
+| `icon`          | 自定义图标                                                   | _string \| VNode \| (() => VNode)_ | `-`            |
+| `action`        | 自定义右边动作区                                                   | _string \| VNode \| (() => VNode)_ | `-`            |
+| `contentClass`  | 自定义内容的类名                                                | _string_ | `-`            |
+| `vertical`      | 是否启用竖直排列方式                                              | _boolean_ | `false`        |
+| `loadingType`   | Loading类型(见 `Loading` 组件)                               | _string_ | `circle`       |
+| `loadingSize`   | Loading大小(见 `Loading` 组件)                               | _string_ | `normal`       |
+| `loadingColor`  | Loading颜色(见 `Loading` 组件)                               | _string_ | `currentColor` |
+| `loadingRadius` | Loading半径大小(见 `Loading` 组件)                                 | _string \| number_  | `-` |
+| `lockScroll`    | 是否禁止滚动穿透                                                | _boolean_  | `false`        |
+| `forbidClick`   | 是否禁止穿透点击(当 `type` 属性为 `loading` 时，默认为 `true`)           | _boolean_  | `false`        |
+| `onOpen`        | 打开 `Snackbar` 时触发                                       | _() => void_ | `-`            |
+| `onOpened`      | 打开 `Snackbar` 动画结束时触发                                   | _() => void_ | `-`            |
+| `onClose`       | 关闭 `Snackbar` 时触发                                       | _() => void_ | `-`            |
+| `onClosed`      | 关闭 `Snackbar` 动画结束时触发                                   | _() => void_ | `-`            |
 
 ### 样式变量
 
-以下为组件使用的 css 变量，可以使用 [StyleProvider 组件](#/zh-CN/style-provider) 进行样式定制
+以下为组件使用的 css 变量，可以使用 [StyleProvider 组件](#/zh-CN/style-provider) 进行样式定制。
 
 | 变量名 | 默认值 |
 | --- | --- |
@@ -333,4 +397,6 @@ const openMultiple = () => {
 | `--snackbar-error-background` | `var(--color-danger)` |
 | `--snackbar-warning-background` | `var(--color-warning)` |
 | `--snackbar-content-padding` | `14px 16px` |
-| `--snackbar-action-margin` | `0 16px 0 0` |
+| `--snackbar-action-margin` | `0 8px` |
+| `--snackbar-icon-margin` | `0 8px` |
+| `--snackbar-vertical-action-margin` | `0 8px 8px 0` |

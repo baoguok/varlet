@@ -1,19 +1,19 @@
-import type { ComputedRef } from 'vue'
+import { type ComputedRef } from 'vue'
+import { useChildren } from '@varlet/use'
 import { Validation } from '../form/provide'
-import { useAtChildrenCounter, useChildren } from '../utils/components'
 import { RadioProvider } from '../radio/provide'
 
 export interface RadioGroupProvider extends Validation {
-  onToggle(value: any): void
   errorMessage: ComputedRef<string>
+  onToggle(value: any): void
 }
 
 export const RADIO_GROUP_BIND_RADIO_KEY = Symbol('RADIO_GROUP_BIND_RADIO_KEY')
-export const RADIO_GROUP_COUNT_RADIO_KEY = Symbol('RADIO_GROUP_COUNT_RADIO_KEY')
 
 export function useRadios() {
-  const { bindChildren, childProviders } = useChildren<RadioGroupProvider, RadioProvider>(RADIO_GROUP_BIND_RADIO_KEY)
-  const { length } = useAtChildrenCounter(RADIO_GROUP_COUNT_RADIO_KEY)
+  const { bindChildren, childProviders, length } = useChildren<RadioGroupProvider, RadioProvider>(
+    RADIO_GROUP_BIND_RADIO_KEY,
+  )
 
   return {
     length,

@@ -59,23 +59,24 @@ Use `slot` to set custom countdown style.
 ```html
 <template>
   <var-countdown :time="108000000">
-    <template #default="timeData">
-      <span class="countdown-example-block">{{ timeData.hours }}</span>
+    <template #default="{ hours, minutes, seconds }">
+      <span class="countdown-example-block">{{ hours }}</span>
       <span class="countdown-example-colon">:</span>
-      <span class="countdown-example-block">{{ timeData.minutes }}</span>
+      <span class="countdown-example-block">{{ minutes }}</span>
       <span class="countdown-example-colon">:</span>
-      <span class="countdown-example-block">{{ timeData.seconds }}</span>
+      <span class="countdown-example-block">{{ seconds }}</span>
      </template>
   </var-countdown>
 </template>
 
 <style>
 .countdown-example-block {
-  background: #ff9f00;
-  color: white;
+  background: var(--color-primary);
+  color: var(--color-on-primary);
   width: 30px;
   height: 30px;
   border-radius: 50%;
+  padding: 18px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -100,11 +101,11 @@ import { Snackbar } from '@varlet/ui'
 
 const countdown = ref(null)
 
-const end = () => {
+function end() {
   Snackbar.info('end!')
 }
 
-const change = () => {
+function change() {
   console.log('change')
 }
 </script>
@@ -113,15 +114,15 @@ const change = () => {
   <var-countdown
     time="3000"
     ref="countdown"
-    :auto-start="false"
     format="ss : SSS"
+    :auto-start="false"
     @end="end"
     @change="change"
   />
   <var-row justify="space-between" align="center" style="margin-top: 10px">
-    <var-button type="primary" @click="$refs.countdown.start()">start</var-button>
-    <var-button @click="$refs.countdown.pause()">pause</var-button>
-    <var-button @click="$refs.countdown.reset()">reset</var-button>
+    <var-button type="primary" @click="countdown.start()">Start</var-button>
+    <var-button @click="countdown.pause()">Pause</var-button>
+    <var-button @click="countdown.reset()">Reset</var-button>
   </var-row>
 </template>
 ```
@@ -150,7 +151,7 @@ const change = () => {
 
 ### Events
 
-| Event    | Description                     | arguments            |
+| Event    | Description                     | Arguments            |
 | -------- | ------------------------------- | -------------------- |
 | `end`    | Emitted after countdown ended   | `-`                  |
 | `change` | Emitted after countdown changed | `timeData: TimeData` |
@@ -175,8 +176,16 @@ const change = () => {
 
 Use ref to get CountDown instance and call instance methods.
 
-| Method  | Description     | arguments |
-| ------- | --------------- | --------- |
-| `start` | Start countdown | `-`       |
-| `pause` | Pause countdown | `-`       |
-| `reset` | Reset countdown | `-`       |
+| Method | Description	 | Arguments | Return |
+| ---- | ------- | -------- |--------|
+| `start` | Start countdown | `-`       | `-` |
+| `pause` | Pause countdown | `-`       | `-` |
+| `reset` | Reset countdown | `-`       | `-` |
+
+### Style Variables
+Here are the CSS variables used by the component. Styles can be customized using [StyleProvider](#/en-US/style-provider).
+
+| Variable | Default |
+| --- | --- |
+| `--countdown-text-color`     | `var(--color-text)`   |
+| `--countdown-text-font-size` | `var(--font-size-lg)` |

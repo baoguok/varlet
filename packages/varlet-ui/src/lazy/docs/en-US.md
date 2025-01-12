@@ -2,13 +2,13 @@
 
 ### Intro
 
-Load when the image is visible
+Load when the image is visible.
 
-### Basic Use
+### Basic Usage
 
 ```html
 <template>
-  <img class="lazy-example-cat" v-lazy="'https://varlet-varletjs.vercel.app/cat.jpg'">
+  <img class="lazy-example-cat" v-lazy="'https://varletjs.org/cat.jpg'">
 </template>
 
 <style>
@@ -28,7 +28,7 @@ Load when the image is visible
 <template>
   <div 
     class="lazy-example-cat"
-    v-lazy:background-image="'https://varlet-varletjs.vercel.app/cat.jpg'"
+    v-lazy:background-image="'https://varletjs.org/cat.jpg'"
   ></div>
 </template>
 
@@ -50,7 +50,7 @@ You can modify the `loading`, `error` image, and `reload attempts` by using inli
 ```html
 <template>
   <img class="lazy-example-cat" 
-    v-lazy="'https://varlet-varletjs.vercel.app/cat.jpg'"
+    v-lazy="'https://varletjs.org/cat.jpg'"
     lazy-loading="https://xxx.cn/loading.png"
     lazy-error="https://xxx.cn/error.png"
     lazy-attempt="3"

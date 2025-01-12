@@ -2,7 +2,7 @@
 
 ### 介绍
 
-按钮组件，用于触发操作
+按钮组件，用于触发操作。
 
 ### 主题色按钮
 
@@ -92,9 +92,9 @@
 ```html
 <template>
   <var-space :size="[10, 10]">
-    <var-button color="#69dbaa" text-color="#eee">背景/文字</var-button>
+    <var-button color="#66bb6a" text-color="#fff">背景/文字</var-button>
     <var-button
-      color="linear-gradient(to right, #69dbaa, #3a7afe)"
+      color="linear-gradient(to right bottom, #6750A4, #D0BCFF)"
       text-color="#fff"
     >
       使用渐变
@@ -108,19 +108,19 @@
 ```html
 <template>
   <var-space :size="[10, 10]">
-    <var-button type="primary" round>
+    <var-button type="primary" round icon-container>
       <var-icon name="plus" />
     </var-button>
-    <var-button type="info" round>
+    <var-button type="info" round icon-container>
       <var-icon name="information" />
     </var-button>
-    <var-button type="success" round>
+    <var-button type="success" round icon-container>
       <var-icon name="check" />
     </var-button>
-    <var-button type="warning" round>
+    <var-button type="warning" round icon-container>
       <var-icon name="warning" />
     </var-button>
-    <var-button type="danger" round>
+    <var-button type="danger" round icon-container>
       <var-icon name="window-close" />
     </var-button>
   </var-space>
@@ -133,15 +133,15 @@
 <script setup>
 import { Snackbar } from '@varlet/ui'
 
-const handleClick = () => {
+function handleClick() {
   Snackbar.success('点击成功')
 }
 
-const handleTouchstart = () => {
+function handleTouchstart() {
   Snackbar.success('触摸成功')
 }
 
-const handleAutoLoadingClick = () => {   
+function handleAutoLoadingClick() {   
   return new Promise((resolve) => {
     setTimeout(resolve, 2000)
   })
@@ -163,29 +163,199 @@ const handleAutoLoadingClick = () => {
 </template>
 ```
 
+### 按钮组主题色
+
+```html
+<template>
+  <var-space :size="[10, 10]">
+    <var-button-group type="default">
+      <var-button>按钮</var-button>
+      <var-button>按钮</var-button>
+      <var-button>按钮</var-button>
+    </var-button-group>
+  
+    <var-button-group type="primary">
+      <var-button type="primary">按钮</var-button>
+      <var-button type="primary">按钮</var-button>
+      <var-button type="primary">按钮</var-button>
+    </var-button-group>
+  </var-space>
+</template>
+```
+
+### 按钮组尺寸
+
+```html
+<template>
+  <var-space :size="[10, 10]">
+    <var-button-group type="primary" size="normal">
+      <var-button>按钮</var-button>
+      <var-button>按钮</var-button>
+      <var-button>按钮</var-button>
+    </var-button-group>
+  
+    <var-button-group type="primary" size="large">
+      <var-button>按钮</var-button>
+      <var-button>按钮</var-button>
+      <var-button>按钮</var-button>
+    </var-button-group>
+  </var-space>
+</template>
+```
+
+### 按钮拆分
+
+```html
+<template>
+  <var-menu placement="bottom" same-width :offset-y="6">
+    <var-button-group type="primary">
+      <var-button @click.stop>按钮拆分</var-button>
+      <var-button style="padding: 0 6px;">
+        <var-icon name="menu-down" :size="24" />
+      </var-button>
+    </var-button-group>
+
+    <template #menu>
+      <var-cell ripple>按钮拆分</var-cell>
+      <var-cell ripple>按钮拆分</var-cell>
+      <var-cell ripple>按钮拆分</var-cell>
+    </template>
+  </var-menu>
+</template>
+```
+
+### 按钮组模式
+
+```html
+<template>
+  <var-space :size="[10, 10]">
+    <var-button-group type="primary" mode="text">
+      <var-button>按钮</var-button>
+      <var-button>按钮</var-button>
+      <var-button>按钮</var-button>
+    </var-button-group>
+  
+    <var-button-group type="primary" mode="outline">
+      <var-button>按钮</var-button>
+      <var-button>按钮</var-button>
+      <var-button>按钮</var-button>
+    </var-button-group>
+
+    <var-button-group mode="icon-container">
+      <var-button type="warning">
+        <var-icon name="warning" />
+      </var-button>
+      <var-button type="info">
+        <var-icon name="information" />
+      </var-button>
+      <var-button type="success">
+        <var-icon name="check" />
+      </var-button>
+    </var-button-group>
+  
+    <var-button-group type="primary">
+      <var-button>按钮</var-button>
+      <var-button>按钮</var-button>
+      <var-button>按钮</var-button>
+    </var-button-group>
+  </var-space>
+</template>
+```
+
+### 自定义按钮组颜色
+
+```html
+<template>
+  <var-button-group type="primary" color="linear-gradient(to bottom right, #6750A4, #D0BCFF)">
+    <var-button>按钮</var-button>
+    <var-button>按钮</var-button>
+    <var-button>按钮</var-button>
+  </var-button-group>
+</template>
+```
+
+### 按钮组竖直排列
+
+```html
+<template>
+  <var-space :size="[10, 10]">
+    <var-button-group type="primary" mode="text" vertical>
+      <var-button>按钮</var-button>
+      <var-button>按钮</var-button>
+      <var-button>按钮</var-button>
+    </var-button-group>
+  
+    <var-button-group type="primary" mode="outline" vertical>
+      <var-button>按钮</var-button>
+      <var-button>按钮</var-button>
+      <var-button>按钮</var-button>
+    </var-button-group>
+
+    <var-button-group mode="icon-container" vertical>
+      <var-button type="warning">
+        <var-icon name="warning" />
+      </var-button>
+      <var-button type="info">
+        <var-icon name="information" />
+      </var-button>
+      <var-button type="success">
+        <var-icon name="check" />
+      </var-button>
+    </var-button-group>
+  
+    <var-button-group type="primary" vertical>
+      <var-button>按钮</var-button>
+      <var-button>按钮</var-button>
+      <var-button>按钮</var-button>
+    </var-button-group>
+  </var-space>
+</template>
+```
+
 ## API
 
 ### 属性
 
-| 参数               | 说明                                                                              | 类型        | 默认值       |
-|------------------|---------------------------------------------------------------------------------|-----------|-----------|
-| `type`           | 类型，可选值为 `default` `primary` `info` `success` `warning` `danger`                 | _string_  | `default` |
-| `size`           | 尺寸，可选值为 `normal` `mini` `small` `large`                                         | _string_  | `normal`  |
-| `loading`        | 加载状态                                                                            | _boolean_ | `false`   |
-| `loading-radius` | loading 的半径，只作用于 `loading-type="circle"` 时                                      | _string \| number_   | `12` |
-| `loading-type`   | loading 的类型，可选值为 `circle` `wave` `cube` `rect` `disappear`                      | _string_  | `circle`  |
-| `loading-size`   | loading 的尺寸，可选值为 `large` `normal` `small` `mini` 不作用于 `loading-type="circle"` 时 | _string_  | `normal`  |
-| `auto-loading`   | 自动 loading 模式，方便处理异步任务                                                          | _boolean_ | `false`   |
-| `round`          | 是否是圆形按钮                                                                         | _boolean_ | `false`   |
-| `block`          | 是否是块级元素                                                                         | _boolean_ | `false`   |
-| `text`           | 是否是文字按钮                                                                         | _boolean_ | `false`   |
-| `outline`        | 是否使用外边框                                                                         | _boolean_ | `false`   |
-| `disabled`       | 禁用状态                                                                            | _boolean_ | `false`   |
-| `ripple`         | 是否使用水波纹                                                                         | _boolean_ | `true`    |
-| `text-color`     | 文字颜色                                                                            | _string_  | `-`       |
-| `color`          | 背景颜色                                                                            | _string_  | `-`       |
+#### Button Props
+
+| 参数               | 说明                                                              | 类型       | 默认值            |
+|------------------|-----------------------------------------------------------------|----------|----------------|
+| `type`           | 类型，可选值为 `default` `primary` `info` `success` `warning` `danger` | _string_ | `default`      |
+| `native-type`    | 原生类型，可选值为 `button` `submit` `reset`                             | _string_ | `button`       |
+| `size`           | 尺寸，可选值为 `normal` `mini` `small` `large`                         | _string_ | `normal`       |
+| `loading`        | 加载状态                                                            | _boolean_ | `false`        |
+| `loading-radius` | loading 的半径，只作用于 `loading-type="circle"` 时                      | _string \| number_        | `-` |
+| `loading-type`   | loading 的类型，可选值为 `circle` `wave` `cube` `rect` `disappear`      | _string_ | `circle`       |
+| `loading-size`   | loading 的尺寸，可选值为 `large` `normal` `small` `mini`                | _string_ | `-`       |
+| `loading-color`  | loading 的颜色                                                     | _string_ | `currentColor` |
+| `auto-loading`   | 自动 loading 模式，方便处理异步任务                                          | _boolean_ | `false`        |
+| `round`          | 是否是圆形按钮                                                         | _boolean_ | `false`        |
+| `block`          | 是否是块级元素                                                         | _boolean_ | `false`        |
+| `text`           | 是否是文字按钮                                                         | _boolean_ | `false`        |
+| `icon-container` | 是否作为图标容器                                                        | _boolean_ | `false`        |
+| `outline`        | 是否使用外边框                                                         | _boolean_ | `false`        |
+| `disabled`       | 禁用状态                                                            | _boolean_ | `false`        |
+| `ripple`         | 是否使用水波纹                                                         | _boolean_ | `true`         |
+| `focusable` ***3.3.13***  | 是否可以被聚焦                                                         | _boolean_ | `true`         |
+| `text-color`     | 文字颜色                                                            | _string_ | `-`            |
+| `color`          | 背景颜色                                                            | _string_ | `-`            |
+| `elevation`      | 海拔高度，可选值为 `true`、`false` 和 `0-24` 的等级                                                            | _string \| number \| boolean_ | `true`            |
+
+#### ButtonGroup Props
+
+| 参数          | 说明                                                               | 类型       | 默认值       |
+|-------------|------------------------------------------------------------------|----------|-----------|
+| `type`      | 按钮组类型，可选值为 `default` `primary` `info` `success` `warning` `danger` | _string_ | `default` |
+| `size`      | 按钮组尺寸，可选值为 `normal` `mini` `small` `large`                       | _string_ | `normal`  |
+| `mode`      | 按钮组模式，可选值为 `normal` `text` `outline` `icon-container`                               | _string_ | `normal`       |
+| `vertical`  | 按钮组是否竖直排列                                                        | _boolean_ | `false`   |
+| `elevation`      | 按钮组海拔高度，可选值为 `true`、`false` 和 `0-24` 的等级 | _string \| number \| boolean_ | `true`            |
+| `color`     | 按钮组背景颜色                                                          | _string_ | `-`       |
+| `text-color` | 按钮组文字颜色                                                          | _string_ | `-`       |
 
 ### 事件
+
+#### Button Events
 
 | 事件名 | 说明 | 参数 |
 | --- | --- | --- |
@@ -194,21 +364,49 @@ const handleAutoLoadingClick = () => {
 
 ### 插槽
 
+#### Button Slots
+
 | 插槽名 | 说明 | 参数 |
 | --- | --- | --- |
 | `default` | 按钮内容 | `-` |
 
+#### ButtonGroup Slots
+
+| 插槽名 | 说明 | 参数 |
+| --- | --- | --- |
+| `default` | 按钮组内容 | `-` |
+
 ### 样式变量
-以下为组件使用的 css 变量，可以使用 [StyleProvider 组件](#/zh-CN/style-provider) 进行样式定制
+以下为组件使用的 css 变量，可以使用 [StyleProvider 组件](#/zh-CN/style-provider) 进行样式定制。
+
+#### Button Variables
 
 | 变量名 | 默认值 |
 | --- | --- |
+| `--button-default-text-color` | `#555` |
+| `--button-primary-text-color` | `var(--color-on-primary)` |
+| `--button-danger-text-color` | `var(--color-on-danger)` |
+| `--button-success-text-color` | `var(--color-on-success)` |
+| `--button-warning-text-color` | `var(--color-on-warning)` |
+| `--button-info-text-color` | `var(--color-on-info)` |
 | `--button-default-color` | `#f5f5f5` |
 | `--button-primary-color` | `var(--color-primary)`|
 | `--button-danger-color` |  `var(--color-danger)`|
 | `--button-success-color` | `var(--color-success)`|
 | `--button-warning-color` |  `var(--color-warning)`|
 | `--button-info-color` | `var(--color-info)`|
+| `--button-default-icon-color` | `#555` |
+| `--button-primary-icon-color` | `var(--color-on-primary-container)` |
+| `--button-danger-icon-color` | `var(--color-on-danger-container)` |
+| `--button-success-icon-color` | `var(--color-on-success-container)` |
+| `--button-warning-icon-color` | `var(--color-on-warning-container)` |
+| `--button-info-icon-color` | `var(--color-on-info-container)` |
+| `--button-default-icon-container-color` | `#f5f5f5` |
+| `--button-primary-icon-container-color` | `var(--color-primary-container)` |
+| `--button-danger-icon-container-color` | `var(--color-danger-container)` |
+| `--button-success-icon-container-color` | `var(--color-success-container)` |
+| `--button-warning-icon-container-color` | `var(--color-warning-container)` |
+| `--button-info-icon-container-color` | `var(--color-info-container)` |
 | `--button-disabled-color` | `var(--color-disabled)`|
 | `--button-disabled-text-color` | `var(--color-text-disabled)` |
 | `--button-border-radius` | `4px` |
@@ -221,3 +419,7 @@ const handleAutoLoadingClick = () => {
 | `--button-small-height` | `28px` |
 | `--button-normal-height` | `36px` |
 | `--button-large-height` | `44px` |
+| `--button-mini-font-size` | `var(--font-size-xs)` |
+| `--button-small-font-size` | `var(--font-size-sm)` |
+| `--button-normal-font-size` | `var(--font-size-md)` |
+| `--button-large-font-size` | `var(--font-size-lg)` |

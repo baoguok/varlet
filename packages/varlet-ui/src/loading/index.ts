@@ -1,9 +1,11 @@
-import type { App } from 'vue'
+import { withInstall, withPropsDefaultsSetter } from '../utils/components'
 import Loading from './Loading.vue'
+import { props as loadingProps } from './props'
 
-Loading.install = function (app: App) {
-  app.component(Loading.name, Loading)
-}
+withInstall(Loading)
+withPropsDefaultsSetter(Loading, loadingProps)
+
+export { loadingProps }
 
 export const _LoadingComponent = Loading
 

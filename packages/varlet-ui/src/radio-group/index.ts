@@ -1,9 +1,11 @@
-import type { App } from 'vue'
+import { withInstall, withPropsDefaultsSetter } from '../utils/components'
+import { props as radioGroupProps } from './props'
 import RadioGroup from './RadioGroup.vue'
 
-RadioGroup.install = function (app: App) {
-  app.component(RadioGroup.name, RadioGroup)
-}
+withInstall(RadioGroup)
+withPropsDefaultsSetter(RadioGroup, radioGroupProps)
+
+export { radioGroupProps }
 
 export const _RadioGroupComponent = RadioGroup
 

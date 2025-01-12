@@ -1,9 +1,11 @@
-import type { App } from 'vue'
+import { withInstall, withPropsDefaultsSetter } from '../utils/components'
 import Checkbox from './Checkbox.vue'
+import { props as checkboxProps } from './props'
 
-Checkbox.install = function (app: App) {
-  app.component(Checkbox.name, Checkbox)
-}
+withInstall(Checkbox)
+withPropsDefaultsSetter(Checkbox, checkboxProps)
+
+export { checkboxProps }
 
 export const _CheckboxComponent = Checkbox
 

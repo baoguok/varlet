@@ -1,9 +1,11 @@
-import type { App } from 'vue'
+import { withInstall, withPropsDefaultsSetter } from '../utils/components'
 import FormDetails from './FormDetails.vue'
+import { props as formDetailsProps } from './props'
 
-FormDetails.install = function (app: App) {
-  app.component(FormDetails.name, FormDetails)
-}
+withInstall(FormDetails)
+withPropsDefaultsSetter(FormDetails, formDetailsProps)
+
+export { formDetailsProps }
 
 export const _FormDetailsComponent = FormDetails
 

@@ -1,25 +1,16 @@
-import App from './App.vue'
-import '@varlet/touch-emulator'
-import routes from '@pc-routes'
-import config from '@config'
-
-import Icon from '../components/icon'
-import Cell from '../components/cell'
-import Ripple from '../components/ripple'
-import CodeExample from '../components/code-example'
-import Snackbar from '../components/snackbar'
-
-import '../components/styles/common.less'
-import '../components/styles/elevation.less'
-
 import { createApp } from 'vue'
+import config from '@config'
+import routes from '@pc-routes'
+import Varlet, { Snackbar } from '@varlet/ui'
 import { createRouter, createWebHashHistory } from 'vue-router'
-import { get } from 'lodash-es'
-import { useProgress } from '../useProgress'
+import App from './App.vue'
+import CodeExample from './components/code-example'
+import '@varlet/ui/es/style'
+import '@varlet/touch-emulator'
 
-const defaultLanguage = get(config, 'defaultLanguage')
-const redirect = get(config, 'pc.redirect')
-const mobileRedirect = get(config, 'mobile.redirect')
+const defaultLanguage = config?.defaultLanguage
+const redirect = config?.pc?.redirect
+const mobileRedirect = config?.mobile?.redirect
 
 Snackbar.allowMultiple(true)
 
@@ -31,20 +22,24 @@ redirect &&
 
 const router = createRouter({
   history: createWebHashHistory(),
-  scrollBehavior: () => ({ top: 0 }),
   routes,
+  scrollBehavior(to: any) {
+    if (to.hash) {
+      return {
+        el: to.hash,
+        behavior: 'smooth',
+        top: 100,
+      }
+    }
+
+    return { top: 0 }
+  },
 })
 
-let isEnd = true
-const { start, end } = useProgress()
-
 router.beforeEach((to: any, from: any) => {
-  if (to.path === from.path) {
+  if (to.fullPath === from.fullPath) {
     return false
   }
-
-  isEnd = false
-  setTimeout(() => !isEnd && start(), 200)
 
   // @ts-ignore
   if (window._hmt) {
@@ -55,20 +50,15 @@ router.beforeEach((to: any, from: any) => {
   }
 })
 
-router.afterEach(() => {
-  isEnd = true
-  end()
-})
-
 Object.defineProperty(window, 'onMobileRouteChange', {
-  value: (path: string, language: string, replace: string) => {
+  value: (path: string, language: string, replace: string, hash: string) => {
     if (path === mobileRedirect) {
-      router.replace(`/${language}/${replace}`)
+      router.replace(`/${language}/${replace}${hash}`)
       return
     }
 
-    router.replace(`/${language}${path}`)
-  }
+    router.replace(`/${language}${path}${hash}`)
+  },
 })
 
 Object.defineProperty(window, 'scrollToMenu', {
@@ -78,17 +68,12 @@ Object.defineProperty(window, 'scrollToMenu', {
       const scroller = cell.parentNode as HTMLElement
       scroller.scrollTo({ top: cell.offsetTop - scroller.offsetHeight / 2 })
     })
-  }
+  },
 })
 
 createApp(App)
+  .use(Varlet)
   .use(router)
   // @ts-ignore
-  .use(Cell)
-  .use(Ripple)
-  // @ts-ignore
-  .use(Icon)
-  // @ts-ignore
   .use(CodeExample)
-  .use(Snackbar)
   .mount('#app')

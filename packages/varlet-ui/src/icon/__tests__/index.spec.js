@@ -1,8 +1,9 @@
-import Icon from '..'
-import VarIcon from '../Icon'
-import { mount } from '@vue/test-utils'
 import { createApp } from 'vue'
-import { delay } from '../../utils/jest'
+import { mount } from '@vue/test-utils'
+import { describe, expect, test, vi } from 'vitest'
+import Icon from '..'
+import { delay } from '../../utils/test'
+import VarIcon from '../Icon'
 
 test('test icon plugin', () => {
   const app = createApp({}).use(Icon)
@@ -10,7 +11,7 @@ test('test icon plugin', () => {
 })
 
 test('test icon onClick', () => {
-  const onClick = jest.fn()
+  const onClick = vi.fn()
   const wrapper = mount(VarIcon, {
     props: {
       onClick,
@@ -78,16 +79,33 @@ describe('test icon component props', () => {
     })
 
     expect(wrapper.find('.var-icon-check').exists()).toBeTruthy()
-    expect(wrapper.element.style.transition).toEqual('transform 0ms')
+    expect(wrapper.element.style['transition-duration']).toEqual('0ms')
 
     await wrapper.setProps({
       transition: 300,
       name: 'error',
     })
+
+    await delay(150)
+    expect(wrapper.find('i').classes()).toContain('var-icon--shrinking')
     await delay(400)
 
     expect(wrapper.find('.var-icon-error').exists()).toBeTruthy()
-    expect(wrapper.element.style.transition).toEqual('transform 300ms')
+    expect(wrapper.element.style['transition-duration']).toEqual('300ms')
+
+    await wrapper.setProps({
+      animationClass: 'fade',
+      transition: 300,
+      name: 'check',
+    })
+
+    await delay(150)
+    expect(wrapper.find('i').classes()).toContain('fade')
+    await delay(400)
+
+    expect(wrapper.find('.var-icon-check').exists()).toBeTruthy()
+    expect(wrapper.element.style['transition-duration']).toEqual('300ms')
+
     wrapper.unmount()
   })
 })

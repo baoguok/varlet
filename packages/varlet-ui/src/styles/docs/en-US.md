@@ -8,10 +8,7 @@ specification to represent the dimensionality of an element.
 
 ```js
 // playground-ignore
-// css
 import '@varlet/ui/es/styles/elevation.css'
-// less
-import '@varlet/ui/es/styles/elevation.less'
 ```
 
 ### Basic Usage
@@ -19,7 +16,7 @@ Shadows are divided into `0-24` levels, and the higher the level, the higher the
 
 ```html
 <template>
-  <var-space class="elevation-example-list" :size="[16, 16]">
+  <var-space class="elevation-example-list" :size="[40, 0]" justify="space-between">
     <div
       class="elevation-example-item"
       :class="`var-elevation--${e - 1}`"
@@ -33,15 +30,16 @@ Shadows are divided into `0-24` levels, and the higher the level, the higher the
 
 <style>
 .elevation-example-list {
-  margin-top: 8px !important;
+  padding: 2vmin 4vmin;
 }
 
 .elevation-example-item {
   display: flex;
   justify-content: center;
   align-items: center;
-  width: 25vw;
-  height: 25vw;
+  width: 24vmin;
+  height: 24vmin;
+  border-radius: 4px;
 }
 </style>
 ```

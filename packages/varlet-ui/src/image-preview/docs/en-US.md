@@ -12,8 +12,8 @@ Image-Preview, Support double-click magnification, Support function call and com
 <script setup>
 import { ImagePreview } from '@varlet/ui'
 
-const preview = () => {
-  ImagePreview('https://varlet-varletjs.vercel.app/cat.jpg')
+function preview() {
+  ImagePreview('https://varletjs.org/cat.jpg')
 }
 </script>
 
@@ -25,16 +25,16 @@ const preview = () => {
 #### Call Back
 ```html
 <script setup>
-import { ImagePreview } from '@varlet/ui'
+import { ImagePreview, Snackbar } from '@varlet/ui'
 
-const preview = () => {
+function preview() {
   ImagePreview({
     images: [
-      'https://varlet-varletjs.vercel.app/cat.jpg',
-      'https://varlet-varletjs.vercel.app/cat2.jpg'
+      'https://varletjs.org/cat.jpg',
+      'https://varletjs.org/cat2.jpg'
     ],
     onChange(index) {
-      console.log(index)
+      Snackbar(String(index))
     }
   })
 }
@@ -56,8 +56,8 @@ import { ref } from 'vue'
 
 const show = ref(false)
 const images = ref([
-  'https://varlet-varletjs.vercel.app/cat.jpg',
-  'https://varlet-varletjs.vercel.app/cat2.jpg',
+  'https://varletjs.org/cat.jpg',
+  'https://varletjs.org/cat2.jpg',
 ])
 </script>
 
@@ -73,7 +73,7 @@ const images = ref([
 </template>
 ```
 
-### Specify initial position
+### Specify Initial Position
 
 ```html
 <script setup>
@@ -81,8 +81,8 @@ import { ref } from 'vue'
 
 const show = ref(false)
 const images = ref([
-  'https://varlet-varletjs.vercel.app/cat.jpg',
-  'https://varlet-varletjs.vercel.app/cat2.jpg',
+  'https://varletjs.org/cat.jpg',
+  'https://varletjs.org/cat2.jpg',
 ])
 </script>
 
@@ -95,14 +95,14 @@ const images = ref([
     Specify initial position
   </var-button>
   <var-image-preview
-    current="https://varlet-varletjs.vercel.app/cat2.jpg"
+    :initial-index="1"
     :images="images"
     v-model:show="show" 
   />
 </template>
 ```
 
-### Display the close button
+### Display The Close Button
 
 ```html
 <script setup>
@@ -110,8 +110,8 @@ import { ref } from 'vue'
 
 const show = ref(false)
 const images = ref([
-  'https://varlet-varletjs.vercel.app/cat.jpg',
-  'https://varlet-varletjs.vercel.app/cat2.jpg',
+  'https://varletjs.org/cat.jpg',
+  'https://varletjs.org/cat2.jpg',
 ])
 </script>
 
@@ -131,7 +131,7 @@ const images = ref([
 </template>
 ```
 
-### Listen for close event
+### Listen For Close Event
 
 ```html
 <script setup>
@@ -140,10 +140,9 @@ import { Snackbar } from '@varlet/ui'
 
 const show = ref(false)
 const images = ref([
-  'https://varlet-varletjs.vercel.app/cat.jpg',
-  'https://varlet-varletjs.vercel.app/cat2.jpg',
+  'https://varletjs.org/cat.jpg',
+  'https://varletjs.org/cat2.jpg',
 ])
-const handleCloseEvent = () => Snackbar('The shutdown event was triggered.');
 </script>
 
 <template>
@@ -157,12 +156,45 @@ const handleCloseEvent = () => Snackbar('The shutdown event was triggered.');
   <var-image-preview 
     :images="images"
     v-model:show="show"
-    @close="handleCloseEvent" 
+    @close="Snackbar('The shutdown event was triggered.')" 
   />
 </template>
 ```
 
-### Show extra slots
+### Listen For Long Press Event
+
+The `image-prevent-default` attribute prohibits the default behavior of images, and the `long-press` event can be customized to achieve long press requirements.
+
+```html
+<script setup>
+import { ref } from 'vue'
+import { Snackbar } from '@varlet/ui'
+
+const show = ref(false)
+const images = ref([
+  'https://varletjs.org/cat.jpg',
+  'https://varletjs.org/cat2.jpg',
+])
+</script>
+
+<template>
+  <var-button
+    block
+    type="warning"
+    @click="show = true"
+  >
+    Listen for long press event
+  </var-button>
+  <var-image-preview
+    image-prevent-default
+    :images="images"
+    v-model:show="show"
+    @long-press="Snackbar('Long press event is triggered')"
+  />
+</template>
+```
+
+### Show Extra Slots
 
 ```html
 <script setup>
@@ -171,8 +203,8 @@ import { ref } from 'vue'
 const show = ref(false)
 const menuShow = ref(false)
 const images = ref([
-  'https://varlet-varletjs.vercel.app/cat.jpg',
-  'https://varlet-varletjs.vercel.app/cat2.jpg',
+  'https://varletjs.org/cat.jpg',
+  'https://varletjs.org/cat2.jpg',
 ])
 const actions = [
   {
@@ -214,15 +246,17 @@ const actions = [
 
 | Prop         | Description   | Type  | Default  |
 | ------------ | ------------ | ------------------ | ------------ |
-| `show`       | Whether or display | _boolean_ | `false` |
+| `v-model:show` | Whether or display | _boolean_ | `false` |
 | `images`     | Need to preview the image URL | _string[]_ | `[]` |
-| `current`    | URL from which the image preview starts | _string_ | `-` |
+| `initial-index`   | Index from which the image preview starts | _string \| number_ | `0`     |
 | `zoom`       | Double-click to zoom in | _string \| number_ | `2` |
 | `closeable`  | Whether to show the close button | _boolean_ | `false` |
+| `close-on-key-escape` | Whether to support keyboard ESC to close the image-preview | _boolean_ | `true`  |
 | `loop`       | Whether to open loop playback | _boolean_ | `true` |
 | `indicator`  | Whether to show paging | _boolean_ | `true` |
 | `lock-scroll` | Lock scroll | _boolean_ | `true` |
-| `teleport`   | The location of the pop-up layer to mount | _TeleportProps['to']_ | `-` |
+| `teleport`   | The location of the pop-up layer to mount | _TeleportProps['to'] \| false_ | `body` |
+| `image-prevent-default` | Whether to disable the default behavior of images |  _boolean_ | `false` |
 
 ### Events
 
@@ -233,10 +267,25 @@ const actions = [
 | `opened` | Triggered at the end of the open image-preview animation | `-` |
 | `close`  | Triggered when Image-Preview is off | `-` |
 | `closed` | Triggered when the animation that closes the image-preview ends | `-` |
+| `long-press` | The callback function when long pressing an image, the callback parameter is the current index | `index: number` Image indexing | 
+| `key-escape` | Triggered when click keyboard ESC  | `-` |
 
-### Slot
+### Methods
 
-| Slot | Description | Arguments |
+| Method | Description | Arguments | Return |
+| --- | --- | --- | --- |
+| `ImagePreview` | Open image-preview | _options \| string \| string[]_ | `-` |
+| `ImagePreview.close` | Close image-preview | _-_ | `-` |
+| `ImagePreview.setDefaultOptions` | Set default option configuration | _options_ | `-` |
+| `ImagePreview.resetDefaultOptions` | Reset default option configuration | _-_ | `-` |
+| `prev`   | Previous page                                                        | `options?: SwipeToOptions`             | `-`    |
+| `next`   | Next page                                                            | `options?: SwipeToOptions`             | `-`    |
+| `to`     | To index page                                                        | `index: number, options?: SwipeToOptions` | `-`    |
+| `zoom` | Enlarge or reduce the picture | `ratio: number` | `-` |
+
+### Slots
+
+| Name | Description | SlotProps |
 | --- | --- | --- |
 | `indicator` | Paging indicator | `index: number` Image indexing <br> `length: number` Total number of image |
 | `close-icon` | Close button | `-` |
@@ -247,20 +296,24 @@ const actions = [
 | Prop   | Description  |  Type  | Default |
 | ------ | ----------- | ------ | -------- |
 | `images`     | The image URL array or the URL of a single image to be previewed | _string[] \| string_ | `[]` |
-| `current`    | URL from which the image preview starts | _string_ | `-` |
+| `initialIndex`   | Index from which the image preview starts | _string \| number_ | `0`     |
 | `zoom`       | Double-click to zoom in | _string \| number_ | `2` |
 | `closeable`  | Whether to show the close button | _boolean_ | `false` |
+| `closeOnKeyEscape` | Whether to support keyboard ESC to close the image-preview | _boolean_ | `true` |
 | `loop`       | Whether to open loop playback | _boolean_ | `true` |
 | `indicator`  | Whether to show paging | _boolean_ | `true` |
 | `lockScroll` | Lock scroll | _boolean_ | `true` |
+| `imagePreventDefault` | Whether to disable the default behavior of images |  _boolean_ | `false` |
 | `onChange`   | The callback function when switching images, the callback parameter is the current index | _(index: number) => void_  |  `-` |
 | `onOpen`   | Callback when image-preview is turned on |  _() => void_ | `-` |
 | `onOpened` | Callback at the end of the animation that opened image-preview |   _() => void_ | `-` |
 | `onClose`  | Callback when image-preview is closed |  _() => void_ |  `-` |
 | `onClosed` | Callback at the end of the animation that closes the image-preview |  _() => void_ | `-` |
+| `onLongPress` | The callback function when long pressing an image, the callback parameter is the current index | _(index: number) => void_  |  `-` |
+| `onKeyEscape` | Triggered when click keyboard ESC | _() => void_ | `-` |
 
 ### Style Variables
-Here are the CSS variables used by the component, Styles can be customized using [StyleProvider](#/en-US/style-provider)
+Here are the CSS variables used by the component. Styles can be customized using [StyleProvider](#/en-US/style-provider).
 
 | Variable | Default |
 | ------ | -------- |

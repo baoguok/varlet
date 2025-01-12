@@ -7,15 +7,13 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, watch } from 'vue'
-import { props } from './props'
-import { requestAnimationFrame, cancelAnimationFrame } from '../utils/elements'
-import { toNumber, parseFormat } from '../utils/shared'
-import type { Ref } from 'vue'
-import type { TimeData } from './props'
-import { call, createNamespace } from '../utils/components'
+import { defineComponent, onActivated, onDeactivated, onMounted, onUnmounted, ref, watch } from 'vue'
+import { call, cancelAnimationFrame, requestAnimationFrame, toNumber } from '@varlet/shared'
+import { createNamespace } from '../utils/components'
+import { padStart } from '../utils/shared'
+import { props, type TimeData } from './props'
 
-const { n } = createNamespace('countdown')
+const { name, n } = createNamespace('countdown')
 
 const SECOND = 1000
 const MINUTE = 60 * SECOND
@@ -23,15 +21,11 @@ const HOUR = 60 * MINUTE
 const DAY = 24 * HOUR
 
 export default defineComponent({
-  name: 'VarCountdown',
+  name,
   props,
   setup(props) {
-    const endTime: Ref<number> = ref(0)
-    const isStart: Ref<boolean> = ref(false)
-    const showTime: Ref<string> = ref('')
-    const handle: Ref<number> = ref(0)
-    const pauseTime: Ref<number> = ref(0)
-    const timeData: Ref<TimeData> = ref({
+    const showTime = ref('')
+    const timeData = ref<TimeData>({
       days: 0,
       hours: 0,
       minutes: 0,
@@ -39,7 +33,78 @@ export default defineComponent({
       milliseconds: 0,
     })
 
-    const formatTime = (durationTime: number) => {
+    let endTime = 0
+    let isStart = false
+    let handle = 0
+    let remainingTime = 0
+    let cacheIsStart: boolean
+
+    watch(
+      () => props.time,
+      () => {
+        reset()
+
+        if (props.autoStart) {
+          start()
+        }
+      },
+    )
+
+    onMounted(() => {
+      countdown()
+      if (props.autoStart) {
+        start()
+      }
+    })
+
+    onActivated(() => {
+      if (cacheIsStart == null) {
+        return
+      }
+
+      isStart = cacheIsStart
+
+      if (isStart === true) {
+        start(true)
+      }
+    })
+
+    onDeactivated(() => {
+      cacheIsStart = isStart
+      pause()
+    })
+
+    onUnmounted(pause)
+
+    function parseFormat(format: string, time: TimeData): string {
+      const scannedTimes = Object.values(time)
+      const scannedFormats = ['DD', 'HH', 'mm', 'ss']
+      const padValues = [24, 60, 60, 1000]
+
+      scannedFormats.forEach((scannedFormat, index) => {
+        if (!format.includes(scannedFormat)) {
+          scannedTimes[index + 1] += scannedTimes[index] * padValues[index]
+        } else {
+          format = format.replace(scannedFormat, padStart(`${scannedTimes[index]}`, 2, '0'))
+        }
+      })
+
+      if (format.includes('S')) {
+        const ms = padStart(`${scannedTimes[scannedTimes.length - 1]}`, 3, '0')
+
+        if (format.includes('SSS')) {
+          format = format.replace('SSS', ms)
+        } else if (format.includes('SS')) {
+          format = format.replace('SS', ms.slice(0, 2))
+        } else {
+          format = format.replace('S', ms.slice(0, 1))
+        }
+      }
+
+      return format
+    }
+
+    function displayTime(durationTime: number) {
       const days = Math.floor(durationTime / DAY)
       const hours = Math.floor((durationTime % DAY) / HOUR)
       const minutes = Math.floor((durationTime % HOUR) / MINUTE)
@@ -59,53 +124,55 @@ export default defineComponent({
       showTime.value = parseFormat(props.format, time)
     }
 
-    const countdown = () => {
-      const { time, onEnd, autoStart } = props
-      const now = Date.now()
+    function countdown() {
+      const { time, onEnd } = props
+      const now = performance.now()
 
-      if (!endTime.value) endTime.value = now + toNumber(time)
+      if (!endTime) {
+        endTime = now + toNumber(time)
+      }
 
-      let durationTime = endTime.value - now
-      if (durationTime < 0) durationTime = 0
-      pauseTime.value = durationTime
+      remainingTime = endTime - now
+      if (remainingTime < 0) {
+        remainingTime = 0
+      }
 
-      formatTime(durationTime)
+      displayTime(remainingTime)
 
-      if (durationTime === 0) {
+      if (remainingTime === 0) {
         call(onEnd)
         return
       }
 
-      if (autoStart || isStart.value) handle.value = requestAnimationFrame(countdown)
+      if (isStart) {
+        handle = requestAnimationFrame(countdown)
+      }
     }
 
     // expose
-    const start = () => {
-      if (isStart.value) return
+    function start(resume = false) {
+      if (isStart && !resume) {
+        return
+      }
 
-      isStart.value = true
-      endTime.value = Date.now() + (pauseTime.value || toNumber(props.time))
+      isStart = true
+      endTime = performance.now() + (remainingTime || toNumber(props.time))
       countdown()
     }
 
     // expose
-    const pause = () => {
-      isStart.value = false
+    function pause() {
+      isStart = false
+      cancelAnimationFrame(handle)
     }
 
     // expose
-    const reset = () => {
-      endTime.value = 0
-      isStart.value = false
-      cancelAnimationFrame(handle.value)
+    function reset() {
+      endTime = 0
+      isStart = false
+      cancelAnimationFrame(handle)
       countdown()
     }
-
-    watch(
-      () => props.time,
-      () => reset(),
-      { immediate: true }
-    )
 
     return {
       showTime,
@@ -121,4 +188,5 @@ export default defineComponent({
 
 <style lang="less">
 @import '../styles/common';
+@import './countdown';
 </style>

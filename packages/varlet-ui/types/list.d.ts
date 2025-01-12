@@ -1,6 +1,9 @@
-import { VarComponent } from './varComponent'
+import { VNode } from 'vue'
+import { BasicAttributes, ListenerProp, SetPropsDefaults, VarComponent } from './varComponent'
 
-export interface ListProps {
+export declare const listProps: Record<keyof ListProps, any>
+
+export interface ListProps extends BasicAttributes {
   loading?: boolean
   immediateCheck?: boolean
   finished?: boolean
@@ -9,13 +12,22 @@ export interface ListProps {
   loadingText?: string
   finishedText?: string
   errorText?: string
-  onLoad?: () => void
-  'onUpdate:loading'?: (loading: boolean) => void
-  'onUpdate:error'?: (error: boolean) => void
+  onLoad?: ListenerProp<() => void>
+  'onUpdate:loading'?: ListenerProp<(loading: boolean) => void>
+  'onUpdate:error'?: ListenerProp<(error: boolean) => void>
 }
 
 export class List extends VarComponent {
+  static setPropsDefaults: SetPropsDefaults<ListProps>
+
   $props: ListProps
+
+  $slots: {
+    default(): VNode[]
+    loading(): VNode[]
+    error(): VNode[]
+    finished(): VNode[]
+  }
 }
 
 export class _ListComponent extends List {}

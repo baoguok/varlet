@@ -7,7 +7,7 @@ Support custom loading state, error state, data loading completed state.
 
 ### Basic Use
 
-The `load` event is emitted when a scroll container is detected scrolling to the bottom，and will be set `loading` to `true`,
+The `load` event is emitted when a scroll container is detected scrolling to the bottom, and will be set `loading` to `true`,
 you need to manually set `loading` to `false` at the end of loading, that's the end of the load.
 
 ```html
@@ -18,7 +18,7 @@ const loading = ref(false)
 const finished = ref(false)
 const list = ref([])
     
-const load = () => {
+function load() {
   setTimeout(() => {
     for (let i = 0; i < 20; i++) {
       list.value.push(list.value.length + 1)
@@ -59,7 +59,7 @@ const loading = ref(false)
 const error = ref(false)
 const list = ref([])
     
-const load = () => {
+function load() {
   setTimeout(() => {
     if (list.value.length === 40) {
       error.value = true
@@ -99,7 +99,7 @@ const loading = ref(false)
 const finished = ref(false)
 const list = ref([])
 
-const load = () => {
+function load() {
   setTimeout(() => {
     for (let i = 0; i < 20; i++) {
       list.value.push(list.value.length + 1)
@@ -130,6 +130,45 @@ const load = () => {
 </template>
 ```
 
+### Combine
+
+Combined with the `PullRefresh` component to implement the function of pull-up loading and pull-down refresh, ensuring the height of the `PullRefresh` is not `0`.
+
+```html
+<script setup>
+import { ref } from 'vue'
+
+const refreshing = ref(false)
+const loading = ref(false)
+const list = ref([])
+
+function refresh() {
+  setTimeout(() => {
+    console.log('refresh')
+    refreshing.value = false
+  }, 2000)
+}
+
+function load() {
+  setTimeout(() => {
+    for (let i = 0; i < 20; i++) {
+      list.value.push(list.value.length + 1)
+    }
+    
+    loading.value = false
+  }, 1000)
+}
+</script>
+
+<template>
+  <var-pull-refresh v-model="refreshing" @refresh="refresh">
+    <var-list v-model:loading="loading" @load="load">
+      <var-cell :key="d" v-for="d in list">ListItem {{ d }}</var-cell>
+    </var-list>
+  </var-pull-refresh>
+</template>
+```
+
 ### Be Careful
 
 We detect bottoming by listening for the scroll event of the scroll container and perform the load.
@@ -143,8 +182,8 @@ This can be mistaken for a scroll container, so avoid it.
 
 | Prop              | Description                                                               | Type               | Default     |
 | ----------------- | ------------------------------------------------------------------------- | ------------------ | ----------- |
-| `v-model:loading` | loading state                                                             | _boolean_          | `false`     |
-| `v-model:error`   | error state                                                               | _boolean_          | `false`     |
+| `v-model:loading` | Loading state                                                             | _boolean_          | `false`     |
+| `v-model:error`   | Error state                                                               | _boolean_          | `false`     |
 | `immediate-check` | Whether the location is detected immediately when the List is initialized | _boolean_          | `true`      |
 | `finished`        | Whether the load is complete                                              | _boolean_          | `false`     |
 | `offset`          | Trigger distance from the bottom                                          | _string \| number_ | `0`         |
@@ -154,9 +193,9 @@ This can be mistaken for a scroll container, so avoid it.
 
 ### Methods
 
-| Method  | Description                                             | Arguments |
-| ------- | ------------------------------------------------------- | --------- |
-| `check` | Trigger position check, touch bottom trigger load event | `-`       |
+| Method  | Description                                             | Arguments | Return |
+| ------- | ------------------------------------------------------- | --------- | --- |
+| `check` | Trigger position check, touch bottom trigger load event | `-`       | `-` |
 
 ### Events
 
@@ -166,7 +205,7 @@ This can be mistaken for a scroll container, so avoid it.
 
 ### Slots
 
-| Slot       | Description      | Arguments |
+| Name | Description | SlotProps |
 | ---------- | ---------------- | --------- |
 | `default`  | List content     | `-`       |
 | `loading`  | Loading content  | `-`       |
@@ -175,7 +214,7 @@ This can be mistaken for a scroll container, so avoid it.
 
 ### Style Variables
 
-Here are the CSS variables used by the component, Styles can be customized using [StyleProvider](#/en-US/style-provider)
+Here are the CSS variables used by the component. Styles can be customized using [StyleProvider](#/en-US/style-provider).
 
 | Variable                    | Default               |
 | --------------------------- | --------------------- |

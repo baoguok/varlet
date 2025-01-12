@@ -1,22 +1,21 @@
 <script setup>
+import { AppType, watchLang } from '@varlet/cli/client'
 import vLazy from '..'
-import AppType from '@varlet/cli/site/mobile/components/AppType'
-import { use, pack } from './locale'
-import { watchLang } from '@varlet/cli/site/utils'
+import { t, use } from './locale'
 
 watchLang(use)
 </script>
 
 <template>
-  <app-type>{{ pack.basicUsage }}</app-type>
-  <img class="lazy-example-cat" v-lazy="'https://varlet-varletjs.vercel.app/cat.jpg'" />
-  <img class="lazy-example-cat" v-lazy="'https://varlet-varletjs.vercel.app/cat.jpg'" />
-  <img class="lazy-example-cat" v-lazy="'https://varlet-varletjs.vercel.app/cat.jpg'" />
-  <img class="lazy-example-cat" v-lazy="'https://varlet-varletjs.vercel.app/cat.jpg'" />
-  <img class="lazy-example-cat" v-lazy="'https://varlet-varletjs.vercel.app/cat.jpg'" />
+  <app-type>{{ t('basicUsage') }}</app-type>
+  <img v-lazy="'cat.jpg'" class="lazy-example-cat" />
+  <img v-lazy="'cat.jpg'" class="lazy-example-cat" />
+  <img v-lazy="'cat.jpg'" class="lazy-example-cat" />
+  <img v-lazy="'cat.jpg'" class="lazy-example-cat" />
+  <img v-lazy="'cat.jpg'" class="lazy-example-cat" />
 
-  <app-type>{{ pack.backgroundImageLazyLoad }}</app-type>
-  <div class="lazy-example-cat" v-lazy:background-image="'https://varlet-varletjs.vercel.app/cat.jpg'"></div>
+  <app-type>{{ t('backgroundImageLazyLoad') }}</app-type>
+  <div v-lazy:background-image="'cat.jpg'" class="lazy-example-cat"></div>
 </template>
 
 <style scoped lang="less">

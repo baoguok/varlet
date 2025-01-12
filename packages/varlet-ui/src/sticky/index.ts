@@ -1,9 +1,11 @@
-import type { App } from 'vue'
+import { withInstall, withPropsDefaultsSetter } from '../utils/components'
+import { props as stickyProps } from './props'
 import Sticky from './Sticky.vue'
 
-Sticky.install = function (app: App) {
-  app.component(Sticky.name, Sticky)
-}
+withInstall(Sticky)
+withPropsDefaultsSetter(Sticky, stickyProps)
+
+export { stickyProps }
 
 export const _StickyComponent = Sticky
 

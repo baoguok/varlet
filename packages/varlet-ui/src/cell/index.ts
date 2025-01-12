@@ -1,9 +1,11 @@
-import type { App } from 'vue'
+import { withInstall, withPropsDefaultsSetter } from '../utils/components'
 import Cell from './Cell.vue'
+import { props as cellProps } from './props'
 
-Cell.install = function (app: App) {
-  app.component(Cell.name, Cell)
-}
+withInstall(Cell)
+withPropsDefaultsSetter(Cell, cellProps)
+
+export { cellProps }
 
 export const _CellComponent = Cell
 

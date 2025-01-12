@@ -1,50 +1,34 @@
-import type { PropType } from 'vue'
-import { pickProps } from '../utils/components'
-import { props as iconProps } from '../icon/props'
+import { type PropType } from 'vue'
+import { iconProps } from '../icon'
+import { defineListenerProp, pickProps } from '../utils/components'
 
-function typeValidator(type: string): boolean {
-  return ['default', 'primary', 'info', 'success', 'warning', 'danger'].includes(type)
-}
+export type ChipType = 'default' | 'primary' | 'info' | 'success' | 'warning' | 'danger'
 
-function sizeValidator(size: string): boolean {
-  return ['normal', 'mini', 'small', 'large'].includes(size)
-}
+export type ChipSize = 'normal' | 'mini' | 'small' | 'large'
 
 export const props = {
   type: {
-    type: String,
+    type: String as PropType<ChipType>,
     default: 'default',
-    validator: typeValidator,
   },
   size: {
-    type: String,
+    type: String as PropType<ChipSize>,
     default: 'normal',
-    validator: sizeValidator,
   },
-  color: {
-    type: String,
-  },
-  textColor: {
-    type: String,
-  },
+  color: String,
+  textColor: String,
   iconName: pickProps(iconProps, 'name'),
-  plain: {
-    type: Boolean,
-    default: false,
-  },
+  namespace: pickProps(iconProps, 'namespace'),
+  plain: Boolean,
   round: {
     type: Boolean,
     default: true,
   },
-  block: {
-    type: Boolean,
+  elevation: {
+    type: [Boolean, Number, String],
     default: false,
   },
-  closable: {
-    type: Boolean,
-    default: false,
-  },
-  onClose: {
-    type: Function as PropType<(e: Event) => void>,
-  },
+  block: Boolean,
+  closeable: Boolean,
+  onClose: defineListenerProp<(e: Event) => void>(),
 }

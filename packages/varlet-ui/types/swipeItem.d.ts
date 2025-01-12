@@ -1,5 +1,14 @@
-import { VarComponent } from './varComponent'
+import { VNode } from 'vue'
+import { BasicAttributes, VarComponent } from './varComponent'
 
-export class SwipeItem extends VarComponent {}
+export interface SwipeItemProps extends BasicAttributes {}
+
+export class SwipeItem extends VarComponent {
+  $props: SwipeItemProps
+
+  $slots: {
+    default(): VNode[]
+  }
+}
 
 export class _SwipeItemComponent extends SwipeItem {}

@@ -1,100 +1,59 @@
-import { defineComponent, VNodeChild, Fragment, VNode, Comment } from 'vue'
-import { internalSizeValidator, props } from './props'
-import type { SpaceInternalSize, SpaceSize } from './props'
-import { toPxNum } from '../utils/elements'
-import { isArray } from '../utils/shared'
+import { defineComponent, VNodeChild } from 'vue'
+import { call, isArray } from '@varlet/shared'
+import { createNamespace, flatFragment } from '../utils/components'
+import { padStartFlex, toSizeUnit } from '../utils/elements'
+import { computeMargin } from './margin'
+import { props, type SpaceSize } from './props'
 import '../styles/common.less'
 import './space.less'
-import { call, createNamespace } from '../utils/components'
 
-const { n, classes } = createNamespace('space')
+const isInternalSize = (size: any) => ['mini', 'small', 'normal', 'large'].includes(size)
 
-const internalSizes: Record<SpaceInternalSize, number[]> = {
-  mini: [4, 4],
-  small: [6, 6],
-  normal: [8, 12],
-  large: [12, 20],
+const { name, n, classes } = createNamespace('space')
+
+function getSize(size: SpaceSize, isInternalSize: boolean): string[] {
+  return isInternalSize
+    ? [`var(--space-size-${size}-y)`, `var(--space-size-${size}-x)`]
+    : isArray(size)
+      ? (size.map(toSizeUnit) as string[])
+      : ([toSizeUnit(size), toSizeUnit(size)] as string[])
 }
 
 export default defineComponent({
-  name: 'VarSpace',
+  name,
   props,
   setup(props, { slots }) {
-    const getSize = (size: SpaceSize, isInternalSize: boolean) => {
-      return isInternalSize
-        ? internalSizes[size as SpaceInternalSize]
-        : isArray(size)
-        ? size.map(toPxNum)
-        : [toPxNum(size), toPxNum(size)]
-    }
-
     return () => {
       const { inline, justify, align, wrap, direction, size } = props
-      let children: VNodeChild[] = call(slots.default) ?? []
-      const isInternalSize = internalSizeValidator(size)
-      const [y, x] = getSize(size, isInternalSize)
+      const _children: VNodeChild[] = call(slots.default) ?? []
+      const [y, x] = getSize(size, isInternalSize(size))
 
-      const flatten = (vNodes: any) => {
-        const result: VNode[] = []
-
-        vNodes.forEach((vNode: any) => {
-          if (vNode.type === Comment) return
-
-          if (vNode.type === Fragment && isArray(vNode.children)) {
-            vNode.children.forEach((item: VNode) => {
-              result.push(item)
-            })
-            return
-          }
-
-          result.push(vNode)
-        })
-
-        return result
-      }
-
-      children = flatten(children)
-
+      const children = flatFragment(_children)
       const lastIndex = children.length - 1
       const spacers = children.map((child, index) => {
-        let margin = '0'
+        const margin = computeMargin(y, x, {
+          direction,
+          justify,
+          index,
+          lastIndex,
+        })
 
-        if (direction === 'row') {
-          if (justify === 'start' || justify === 'center' || justify === 'end') {
-            if (index !== lastIndex) {
-              margin = `${y / 2}px ${x}px ${y / 2}px 0`
-            } else {
-              margin = `${y / 2}px 0`
-            }
-          } else if (justify === 'space-around') {
-            margin = `${y / 2}px ${x / 2}px`
-          } else if (justify === 'space-between') {
-            if (index === 0) {
-              margin = `${y / 2}px ${x / 2}px ${y / 2}px 0`
-            } else if (index === lastIndex) {
-              margin = `${y / 2}px 0 ${y / 2}px ${x / 2}px`
-            } else {
-              margin = `${y / 2}px ${x / 2}px`
-            }
-          }
-        }
-
-        if (direction === 'column' && index !== lastIndex) {
-          margin = `0 0 ${y}px 0`
-        }
-
-        return <div style={{ margin }}>{child}</div>
+        return (
+          <div class={classes([direction === 'column', n('--auto')])} key={child.key ?? undefined} style={{ margin }}>
+            {child}
+          </div>
+        )
       })
 
       return (
         <div
-          class={classes(n(), 'var--box', [inline, n('--inline')])}
+          class={classes(n(), n('$--box'), [inline, n('--inline')])}
           style={{
             flexDirection: direction,
-            justifyContent: justify,
-            alignItems: align,
+            justifyContent: padStartFlex(justify),
+            alignItems: padStartFlex(align),
             flexWrap: wrap ? 'wrap' : 'nowrap',
-            margin: direction === 'row' ? `-${y / 2}px 0` : undefined,
+            margin: direction === 'row' ? `calc(-1 * ${y} / 2) 0` : undefined,
           }}
         >
           {spacers}

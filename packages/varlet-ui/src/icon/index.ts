@@ -1,9 +1,11 @@
-import type { App } from 'vue'
+import { withInstall, withPropsDefaultsSetter } from '../utils/components'
 import Icon from './Icon.vue'
+import { props as iconProps } from './props'
 
-Icon.install = function (app: App) {
-  app.component(Icon.name, Icon)
-}
+withInstall(Icon)
+withPropsDefaultsSetter(Icon, iconProps)
+
+export { iconProps }
 
 export const _IconComponent = Icon
 

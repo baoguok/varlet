@@ -1,5 +1,9 @@
 # BottomNavigation
 
+### Intro
+
+Display navigation and key actions at the bottom of the page.
+
 ### Basic Usage
 
 ```html
@@ -19,7 +23,7 @@ const active = ref(0)
 </template>
 ```
 
-### Match by name
+### Match By Name
 
 ```html
 <script setup>
@@ -71,7 +75,7 @@ const active = ref(0)
 </script>
 
 <template>
-  <var-bottom-navigation active-color="#ba68c8" v-model:active="active">
+  <var-bottom-navigation active-color="var(--color-warning)" v-model:active="active">
     <var-bottom-navigation-item label="label" icon="home" />
     <var-bottom-navigation-item label="label" icon="magnify" />
     <var-bottom-navigation-item label="label" icon="heart" />
@@ -88,7 +92,8 @@ import { ref } from 'vue'
 import { Snackbar } from '@varlet/ui'
 
 const active = ref(0)
-const handleChange = (active) => {
+
+function handleChange(active) {
   Snackbar.info(`changed to ${active}`)
 }
 </script>
@@ -111,17 +116,18 @@ import { ref } from 'vue'
 import { Snackbar } from '@varlet/ui'
 
 const active = ref(0)
-const handleClick = (active) => {
+
+function handleClick(active) {
   Snackbar.success(`clicked ${active}`)
 }
 </script>
 
 <template>
   <var-bottom-navigation v-model:active="active">
-    <var-bottom-navigation-item @click="handleClick" label="label" icon="home" />
-    <var-bottom-navigation-item @click="handleClick" label="label" icon="magnify" />
-    <var-bottom-navigation-item @click="handleClick" label="label" icon="heart" />
-    <var-bottom-navigation-item @click="handleClick" label="label" icon="account-circle" />
+    <var-bottom-navigation-item label="label" icon="home" @click="handleClick" />
+    <var-bottom-navigation-item label="label" icon="magnify" @click="handleClick" />
+    <var-bottom-navigation-item label="label" icon="heart" @click="handleClick"/>
+    <var-bottom-navigation-item label="label" icon="account-circle" @click="handleClick"/>
   </var-bottom-navigation>
 </template>
 ```
@@ -142,14 +148,15 @@ const isEven = ref(true)
     v-model:active="active"
     @fab-click="isEven = !isEven"
   >
-    <template #fab>
-      <var-icon name="heart" />
-    </template>
     <var-bottom-navigation-item label="label" icon="home" />
     <var-bottom-navigation-item label="label" icon="magnify" />
     <var-bottom-navigation-item label="label" icon="heart" />
     <var-bottom-navigation-item label="label" icon="bell" />
     <var-bottom-navigation-item v-if="!isEven" label="label" icon="account-circle" />
+
+    <template #fab>
+      <var-icon name="heart" />
+    </template>
   </var-bottom-navigation>
 </template>
 
@@ -158,6 +165,25 @@ const isEven = ref(true)
   margin-top: 40px;
 }
 </style>
+```
+
+### Variant
+
+```html
+<script setup>
+import { ref } from 'vue'
+
+const active = ref(0)
+</script>
+
+<template>
+  <var-bottom-navigation variant v-model:active="active">
+    <var-bottom-navigation-item label="label" icon="home" />
+    <var-bottom-navigation-item label="label" icon="magnify" />
+    <var-bottom-navigation-item label="label" icon="heart" />
+    <var-bottom-navigation-item label="label" icon="account-circle" />
+  </var-bottom-navigation>
+</template>
 ```
 
 ## API
@@ -169,22 +195,24 @@ const isEven = ref(true)
 | Prop            | Description                                         | Type | Default |
 |-----------------|-----------------------------------------------------| ---- | ---- |
 | `v-model:active` | Identifier of current tab                           | _number \| string_ | `0` |
-| `fixed`         | 	Whether to fixed bottom                            | _boolean_ | `false` |
+| `fixed`         |  Whether to fixed bottom                            | _boolean_ | `false` |
 | `border`        | Whether to show border                              | _boolean_ | `false` |
 | `safe-area`       | Whether to enable bottom safe area adaptation | _boolean_ | `false` |
 | `z-index`       | Z-index                                             | _number \| string_ | `1` |
 | `active-color`  | Color of active tab item                            | _string_ | `-` |
 | `inactive-color` | Color of inactive tab item                          | _string_ | `-` |
-| `fab-props`     | Fab button props                                    | _ButtonProps_ | `{type: "primary"}` |
+| `placeholder` ***3.2.11***  | Whether to generate placeholder elements of the same height at the bottom (`fixed` required)  | _boolean_ | `false` |
+| `fab-props`     | Fab button props                                    | _ButtonProps_ | `{ type: 'primary' }` |
+| `variant` ***3.2.0***      | Variant mode | _boolean_ | `false` |
 
 #### BottomNavigationItem Props
 
 |Prop | Description | Type | Default |
 | ---- | ---- | ---- | ---- |
 | `name` | Identifier | _string_ | `-` |
-| `icon` | Icon name, equivalent to the [name](/#/en-US/icon) of Icon component | _string_ | `-` |
+| `icon` | Icon name, equivalent to the [name](#/en-US/icon) of Icon component | _string_ | `-` |
 | `label` | Label text content | _string_ | - |
-| `namespace` | Icon namespace, extensible custom icon library, equivalent to the [namespace](/#/en-US/icon)  of Icon component | _string_ | `var-icon` |
+| `namespace` | Icon namespace, extensible custom icon library, equivalent to the [namespace](#/en-US/icon)  of Icon component | _string_ | `var-icon` |
 | `badge` | Logo in the upper right corner of the icon | _boolean \| BadgeProps_ | `false` |
 
 ### Events
@@ -193,41 +221,45 @@ const isEven = ref(true)
 
 |Event | Description | Arguments |
 | ---- | ---- | ---- |
-| `before-change` | The callback function before switching labels, which returns false to prevent switching, supports the return of promise | `active: number \| string` |
+| `before-change` | The callback function before switching labels, which returns falsy value to prevent switching, supports the return of promise | `active: number \| string` |
 | `change` | Triggered when switching labels | `active: number \| string` |
-| `fab-click` | Triggered when fab button click | `-` |
+| `fab-click` | Triggered when clicking fab button | `-` |
 
 #### BottomNavigationItem Events
 
 |Event | Description | Arguments |
 | ---- | ---- | ---- |
-| `click` | Trigger on click | `active: number \| string` |
+| `click` | Triggered when clicking | `active: number \| string` |
 
 ### Slots
 
 #### BottomNavigation Slots
 
-| Slot | Description | Arguments |
-| ---- | ---- | ----|
+| Name | Description                                                | SlotProps |
+| ---- |------------------------------------------------------------| ----|
+| `default` | Content of bottom navigation                               | `-` |
 | `fab` | Support for inserting a custom Fab button into a component | `-` |
+
 #### BottomNavigationItem Slots
 
-| Slot | Description | Arguments |
+| Name | Description | SlotProps |
 | ---- | ---- | ----|
 | `default` | Custom label text content that overwrites the content of `label`  | `-` |
 | `icon` | Custom Icon | `active: boolean` |
 
 ### Style Variables
-Here are the CSS variables used by the component, Styles can be customized using [StyleProvider](#/en-US/style-provider)
+
+Here are the CSS variables used by the component. Styles can be customized using [StyleProvider](#/en-US/style-provider).
 
 #### BottomNavigation Variables
 
 | Variable | Default |
 | --- | --- |
 | `--bottom-navigation-height` | `50px` |
+| `--bottom-navigation-variant-height` | `66px` |
 | `--bottom-navigation-z-index` | `1` |
-| `--bottom-navigation-background-color` | `#fff` |
-| `--bottom-navigation-border-color` | `#bcc2cb` |
+| `--bottom-navigation-background-color` | `var(--color-surface-container-high)` |
+| `--bottom-navigation-border-color` | `var(--color-outline)` |
 | `--bottom-navigation-fab-offset` | `4px` |
 
 #### BottomNavigationItem Variables
@@ -237,7 +269,13 @@ Here are the CSS variables used by the component, Styles can be customized using
 | `--bottom-navigation-item-font-size` | `var(--font-size-sm)` |
 | `--bottom-navigation-item-inactive-color` | `#646566` |
 | `--bottom-navigation-item-active-color` | `var(--color-primary)` |
-| `--bottom-navigation-item-active-background-color` | `#fff` |
+| `--bottom-navigation-item-active-background-color` | `var(--color-surface-container-high)` |
 | `--bottom-navigation-item-line-height` | `1` |
 | `--bottom-navigation-item-icon-size` | `22px` |
 | `--bottom-navigation-item-icon-margin-bottom` | `5px` |
+| `--bottom-navigation-fab-border-radius` | `50%` |
+| `--bottom-navigation-item-variant-icon-container-height` | `30px` |
+| `--bottom-navigation-item-variant-icon-container-border-radius` | `100px` |
+| `--bottom-navigation-item-variant-icon-container-max-width` | `58px` |
+| `--bottom-navigation-item-variant-active-background-color` | `var(--color-primary-container)` |
+| `--bottom-navigation-item-variant-active-color` | `var(--color-on-primary-container)` |
