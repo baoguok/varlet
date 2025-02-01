@@ -3,85 +3,99 @@
     :class="
       classes(
         n(),
-        'var--box',
-        [span, n(`--span-${span}`)],
+        n('$--box'),
+        [span >= 0, n(`--span-${span}`)],
         [offset, n(`--offset-${offset}`)],
         ...getSize('xs', xs),
         ...getSize('sm', sm),
         ...getSize('md', md),
         ...getSize('lg', lg),
-        ...getSize('xl', xl)
+        ...getSize('xl', xl),
       )
     "
     :style="{
+      flexDirection: direction,
+      justifyContent: padStartFlex(justify),
+      alignItems: padStartFlex(align),
       paddingLeft: toSizeUnit(padding.left),
       paddingRight: toSizeUnit(padding.right),
+      paddingTop: toSizeUnit(padding.top),
+      paddingBottom: toSizeUnit(padding.bottom),
     }"
-    @click="onClick"
+    @click="handleClick"
   >
     <slot />
   </div>
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, computed, watch } from 'vue'
-import { isPlainObject, toNumber } from '../utils/shared'
+import { computed, defineComponent } from 'vue'
+import { call, isPlainObject, toNumber } from '@varlet/shared'
+import { createNamespace } from '../utils/components'
+import { padStartFlex, toSizeUnit } from '../utils/elements'
 import { props } from './props'
-import { useRow } from './provide'
-import { toSizeUnit } from '../utils/elements'
-import type { Ref, ComputedRef } from 'vue'
-import type { ColPadding, ColProvider, SizeDescriptor } from './provide'
-import { createNamespace, call } from '../utils/components'
+import { useRow, type ColPadding, type ColSizeDescriptor } from './provide'
 
-const { n, classes } = createNamespace('col')
+const { name, n, classes } = createNamespace('col')
 
 export default defineComponent({
-  name: 'VarCol',
+  name,
   props,
   setup(props) {
-    const padding: Ref<ColPadding> = ref({ left: 0, right: 0 })
-    const span: ComputedRef<number> = computed(() => toNumber(props.span))
-    const offset: ComputedRef<number> = computed(() => toNumber(props.offset))
+    const span = computed(() => toNumber(props.span))
+    const offset = computed(() => toNumber(props.offset))
+    const padding = computed<ColPadding>(() => {
+      const [y = 0, x = 0] = row?.average.value ?? []
+      return { left: x, right: x, top: y, bottom: y }
+    })
+
     const { row, bindRow } = useRow()
 
-    const colProvider: ColProvider = {
-      setPadding(pad: ColPadding) {
-        padding.value = pad
-      },
-    }
+    call(bindRow, null)
 
-    const getSize = (mode: string, size: string | number | SizeDescriptor | undefined) => {
+    function getSize(mode: string, size: string | number | ColSizeDescriptor | undefined) {
       const classes: string[] = []
 
-      if (!size) {
+      if (size == null) {
         return classes
       }
 
       if (isPlainObject(size)) {
-        const { span, offset } = size
-        span && classes.push(n(`--span-${mode}-${span}`))
-        offset && classes.push(n(`--offset-${mode}-${offset}`))
-      } else {
+        const { offset, span } = size
+
+        if (Number(span) >= 0) {
+          classes.push(n(`--span-${mode}-${span}`))
+        }
+
+        if (offset) {
+          classes.push(n(`--offset-${mode}-${offset}`))
+        }
+
+        return classes
+      }
+
+      if (Number(size) >= 0) {
         classes.push(n(`--span-${mode}-${size}`))
       }
 
       return classes
     }
 
-    watch([() => props.span, () => props.offset], () => {
-      row?.computePadding()
-    })
-    call(bindRow, colProvider)
+    function handleClick(e: Event) {
+      call(props.onClick, e)
+    }
 
     return {
+      span,
+      offset,
+      padding,
       n,
       classes,
-      padding,
       toNumber,
       toSizeUnit,
       getSize,
-      span,
-      offset,
+      handleClick,
+      padStartFlex,
     }
   },
 })

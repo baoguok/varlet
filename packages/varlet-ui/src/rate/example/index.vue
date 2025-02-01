@@ -1,11 +1,9 @@
 <script setup>
-import VarRate from '..'
-import VarSnackbar from '../../snackbar'
-import AppType from '@varlet/cli/site/mobile/components/AppType.vue'
-import dark from '../../themes/dark'
 import { reactive } from 'vue'
-import { pack, use } from './locale'
-import { watchLang, watchDarkMode } from '@varlet/cli/site/utils'
+import { AppType, onThemeChange, watchLang } from '@varlet/cli/client'
+import { Snackbar } from '@varlet/ui'
+import { z } from 'zod'
+import { t, use } from './locale'
 
 const scores = reactive({
   score: 3,
@@ -20,48 +18,42 @@ const scores = reactive({
   score9: 3,
   score10: 3,
   score11: 3,
+  score12: 3.5,
+  score13: 3,
 })
 
-const handleChange = (score) => {
-  VarSnackbar({
+function handleChange(score) {
+  Snackbar({
     content: `click ${score}`,
     position: 'top',
   })
 }
 
+onThemeChange()
 watchLang(use)
-watchDarkMode(dark)
 </script>
 
 <template>
-  <app-type>{{ pack.baseRating }}</app-type>
+  <app-type>{{ t('basicUsage') }}</app-type>
   <var-rate v-model="scores.score" />
+  <var-rate v-model="scores.score" icon="thumb-up" empty-icon="thumb-up-outline" />
 
-  <app-type>{{ pack.customizeTheTotalNumberOfRatingICONS }}</app-type>
+  <app-type>{{ t('customTotalRating') }}</app-type>
   <var-rate v-model="scores.score1" :count="8" />
 
-  <app-type>{{ pack.customizeTheIconColor }}</app-type>
-  <var-rate v-model="scores.score2" color="#9c27b0" empty-color="#d199da" />
-  <var-rate v-model="scores.score2" color="#e91e63" empty-color="#f48fb1" />
-  <var-rate v-model="scores.score2" color="#4caf50" empty-color="#a5d6a7" />
-  <var-rate v-model="scores.score2" color="#3f51b5" empty-color="#9fa8da" />
+  <app-type>{{ t('customRatingIconStyle') }}</app-type>
+  <var-rate
+    v-model="scores.score3"
+    icon="heart"
+    empty-icon="heart-outline"
+    color="var(--color-danger)"
+    empty-color="var(--color-danger)"
+  />
 
-  <app-type>{{ pack.customizeRatingIconStyles }}</app-type>
-  <var-rate v-model="scores.score3" icon="heart" empty-icon="heart-outline" color="red"></var-rate>
+  <app-type>{{ t('customRatingIconSizeAndGap') }}</app-type>
+  <var-rate v-model="scores.score4" size="8vmin" gap="1vmin" />
 
-  <app-type>{{ pack.customizeRatingIconSize }}</app-type>
-  <var-rate v-model="scores.score4" :size="16" />
-  <var-rate v-model="scores.score4" :size="18" />
-  <var-rate v-model="scores.score4" :size="20" />
-  <var-rate v-model="scores.score4" />
-
-  <app-type>{{ pack.customIconSpacing }}</app-type>
-  <var-rate v-model="scores.score5" :gap="2" />
-  <var-rate v-model="scores.score5" />
-  <var-rate v-model="scores.score5" :gap="6" />
-  <var-rate v-model="scores.score5" :gap="8" />
-
-  <app-type>{{ pack.useHalfAStar }}</app-type>
+  <app-type>{{ t('halfStar') }}</app-type>
   <var-rate v-model="scores.score6" :count="8" half />
   <var-rate
     v-model="scores.score6"
@@ -69,22 +61,24 @@ watchDarkMode(dark)
     icon="heart"
     half-icon="heart-half-full"
     empty-icon="heart-outline"
-    color="red"
+    color="var(--color-danger)"
     half
-  ></var-rate>
+    style="margin-top: 4px"
+  />
 
-  <app-type>{{ pack.disableTheRating }}</app-type>
+  <app-type>{{ t('disabledAndReadonly') }}</app-type>
   <var-rate v-model="scores.score7" disabled />
-
-  <app-type>{{ pack.readonlyRating }}</app-type>
   <var-rate v-model="scores.score8" readonly />
 
-  <app-type>{{ pack.waterRippleIsProhibited }}</app-type>
-  <var-rate v-model="scores.score9" :ripple="false" />
+  <app-type>{{ t('clearable') }}</app-type>
+  <var-rate v-model="scores.score12" clearable half />
 
-  <app-type>{{ pack.listeningForClickEvents }}</app-type>
+  <app-type>{{ t('listenEvent') }}</app-type>
   <var-rate v-model="scores.score10" @change="handleChange" />
 
-  <app-type>{{ pack.validate }}</app-type>
-  <var-rate :rules="[(v) => v >= 3 || pack.rateMessage]" v-model="scores.score11" />
+  <app-type>{{ t('validate') }}</app-type>
+  <var-rate v-model="scores.score11" :rules="[(v) => v >= 3 || t('errorMessage')]" />
+
+  <app-type>{{ t('validateWithZod') }}</app-type>
+  <var-rate v-model="scores.score13" :rules="z.number().min(3, t('errorMessage'))" />
 </template>

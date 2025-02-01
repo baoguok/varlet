@@ -1,77 +1,67 @@
 {
+  "version": "3.8.5",
   "private": true,
-  "version": "1.27.5",
+  "type": "module",
   "scripts": {
-    "preinstall": "npx only-allow pnpm",
     "bootstrap": "pnpm install && node scripts/bootstrap.mjs",
-    "lint": "varlet-cli lint",
+    "build": "pnpm --dir ./packages/varlet-ui build",
+    "build:play": "pnpm --dir ./packages/varlet-ui-playground build",
     "changelog": "varlet-cli changelog",
-    "release": "node scripts/publish.mjs && varlet-cli release"
+    "clean": "rimraf ./node_modules ./packages/*/node_modules",
+    "compile": "pnpm --dir ./packages/varlet-ui compile",
+    "compile:style-vars": "pnpm --dir ./packages/varlet-ui compile:style-vars",
+    "create": "pnpm --dir ./packages/varlet-ui run create",
+    "dev": "pnpm --dir ./packages/varlet-ui dev",
+    "dev:play": "pnpm --dir ./packages/varlet-ui-playground dev",
+    "format": "prettier --write .",
+    "format:cache": "prettier --write --cache .",
+    "preinstall": "npx only-allow pnpm",
+    "postinstall": "simple-git-hooks",
+    "lint": "eslint --fix .",
+    "lint:cache": "eslint --fix --cache .",
+    "preview": "pnpm --dir ./packages/varlet-ui preview",
+    "preview:play": "pnpm --dir ./packages/varlet-ui-playground preview",
+    "release": "node scripts/release.mjs",
+    "release:extension": "pnpm --dir ./packages/varlet-vscode-extension release",
+    "test": "pnpm --dir ./packages/varlet-ui test",
+    "test:coverage": "pnpm --dir ./packages/varlet-ui test:coverage",
+    "test:watch": "pnpm --dir ./packages/varlet-ui test:watch"
   },
   "simple-git-hooks": {
-    "pre-commit": "pnpm exec lint-staged --allow-empty --concurrent false",
-    "commit-msg": "npx --no-install varlet-cli commit-lint $1"
+    "pre-commit": "pnpm exec nano-staged --allow-empty",
+    "commit-msg": "pnpm exec varlet-cli commit-lint -p $1 && pnpm exec varlet-cli checklist $1"
   },
-  "lint-staged": {
+  "nano-staged": {
     "*.{ts,tsx,js,vue,less}": "prettier --write",
-    "*.{ts,tsx,js,vue}": "eslint --fix",
-    "*.{vue,css,less}": "stylelint --fix"
-  },
-  "eslintConfig": {
-    "root": true,
-    "ignorePatterns": [
-      "packages/varlet-cli/lib/**",
-      "packages/varlet-cli/site/**",
-      "packages/varlet-cli/generators/**",
-      "packages/varlet-vscode-extension/dist/**",
-      "packages/varlet-ui/lib/**",
-      "packages/varlet-ui/es/**",
-      "packages/varlet-ui/umd/**",
-      "packages/varlet-ui/site/**",
-      "packages/varlet-ui/public/**",
-      "packages/varlet-ui/src/*/__tests__/**",
-      "packages/varlet-ui/.varlet/**",
-      "packages/varlet-ui-playground/public/**",
-      "packages/varlet-ui-playground/dist/**"
-    ],
-    "extends": [
-      "@varlet"
-    ]
-  },
-  "stylelint": {
-    "extends": [
-      "@varlet/stylelint-config"
-    ],
-    "ignoreFiles": [
-      "packages/varlet-cli/lib/**",
-      "packages/varlet-cli/site/**",
-      "packages/varlet-cli/generators/**",
-      "packages/varlet-icons/dist/**",
-      "packages/varlet-ui/lib/**",
-      "packages/varlet-ui/es/**",
-      "packages/varlet-ui/umd/**",
-      "packages/varlet-ui/site/**",
-      "packages/varlet-ui/coverage/**",
-      "packages/varlet-ui/highlight/**",
-      "packages/varlet-ui/public/**",
-      "packages/varlet-ui/.varlet/**",
-      "packages/varlet-ui-playground/public/**",
-      "packages/varlet-ui-playground/dist/**"
-    ]
+    "*.{ts,tsx,js,vue}": "eslint --fix"
   },
   "devDependencies": {
+    "@configurajs/eslint": "^0.1.2",
+    "@configurajs/prettier": "^0.1.1",
     "@varlet/cli": "workspace:*",
-    "@varlet/eslint-config": "workspace:*",
     "@varlet/icons": "workspace:*",
-    "@varlet/stylelint-config": "workspace:*",
-    "eslint": "^7.30.0",
-    "execa": "^5.0.0",
-    "lint-staged": "^10.5.0",
-    "ora": "^5.4.0",
-    "prettier": "^2.3.2",
-    "simple-git-hooks": "^2.7.0",
-    "stylelint": "^13.13.1",
-    "typescript": "^4.4.4"
+    "eslint": "^9.17.0",
+    "nano-staged": "0.8.0",
+    "nanospinner": "^1.1.0",
+    "prettier": "^3.4.2",
+    "rimraf": "^5.0.1",
+    "simple-git-hooks": "^2.8.0",
+    "tinyexec": "^0.3.0",
+    "typescript": "5.3.3"
   },
-  "packageManager": "pnpm@6.24.3"
+  "packageManager": "pnpm@9.1.1",
+  "engines": {
+    "pnpm": ">=9.0"
+  },
+  "pnpm": {
+    "overrides": {
+      "array-includes": "npm:@nolyfill/array-includes@latest",
+      "array.prototype.flat": "npm:@nolyfill/array.prototype.flat@latest",
+      "array.prototype.flatmap": "npm:@nolyfill/array.prototype.flatmap@latest",
+      "object.assign": "npm:@nolyfill/object.assign@latest",
+      "object.entries": "npm:@nolyfill/object.entries@latest",
+      "object.values": "npm:@nolyfill/object.values@latest",
+      "tinyexec": "npm:tinyexec@^0.3.0"
+    }
+  }
 }

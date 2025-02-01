@@ -1,35 +1,39 @@
+import { createApp } from 'vue'
+import { mount } from '@vue/test-utils'
+import { expect, test, vi } from 'vitest'
 import Form from '..'
-import VarForm from '../Form'
-import VarInput from '../../input/Input'
-import VarSelect from '../../select/Select'
-import VarOption from '../../option/Option'
-import VarRadio from '../../radio/Radio'
+import VarAutoComplete from '../../auto-complete/AutoComplete.vue'
 import VarCheckbox from '../../checkbox/Checkbox'
 import VarCounter from '../../counter/Counter'
+import VarInput from '../../input/Input'
+import VarOption from '../../option/Option'
+import VarRadio from '../../radio/Radio'
 import VarRate from '../../rate/Rate'
-import VarUploader from '../../uploader/Uploader'
-import VarSwitch from '../../switch/Switch'
+import VarSelect from '../../select/Select'
 import VarSlider from '../../slider/Slider'
-import { mount } from '@vue/test-utils'
-import { createApp } from 'vue'
-import { delay, trigger } from '../../utils/jest'
+import VarSwitch from '../../switch/Switch'
+import VarUploader from '../../uploader/Uploader'
+import { delay, mockScrollTo, trigger } from '../../utils/test'
+import VarForm from '../Form'
 
-test('test form plugin', () => {
+mockScrollTo()
+
+test('form plugin', () => {
   const app = createApp({}).use(Form)
   expect(app.component(Form.name)).toBeTruthy()
 })
 
 const expectValidate = async (form, wrapper, message) => {
-  form.validate()
-  await delay(16)
-  expect(wrapper.find('.var-form-details__message').text()).toBe(message)
+  await form.validate()
+  await delay(10)
+  expect(wrapper.find('.var-form-details__error-message').text()).toBe(message)
   expect(wrapper.html()).toMatchSnapshot()
 }
 
 const expectReset = async (form, wrapper) => {
   form.reset()
   await delay(16)
-  expect(wrapper.find('.var-form-details__message').exists()).toBeFalsy()
+  expect(wrapper.find('.var-form-details__error-message').exists()).toBeFalsy()
   expect(wrapper.html()).toMatchSnapshot()
 }
 
@@ -46,13 +50,14 @@ const Wrapper = {
     [VarUploader.name]: VarUploader,
     [VarSwitch.name]: VarSwitch,
     [VarSlider.name]: VarSlider,
+    [VarAutoComplete.name]: VarAutoComplete,
   },
 }
 
-test('test form with input', async () => {
-  const onClick = jest.fn()
-  const onInput = jest.fn()
-  const onChange = jest.fn()
+test('form with input', async () => {
+  const onClick = vi.fn()
+  const onInput = vi.fn()
+  const onChange = vi.fn()
 
   const wrapper = mount({
     ...Wrapper,
@@ -67,10 +72,10 @@ test('test form with input', async () => {
       onChange,
     },
     template: `
-      <var-form ref="form" :disabled="disabled" :readonly="readonly">
+      <var-form ref="form" scroll-to-error="start" :disabled="disabled" :readonly="readonly">
         <var-input
           clearable
-          :rules="[v => !!v || '不能为空']"
+          :rules="[v => !!v || 'It can not be not empty']"
           v-model="value"
           @click="onClick"
           @input="onInput"
@@ -83,7 +88,7 @@ test('test form with input', async () => {
   const triggerEvents = async () => {
     await wrapper.find('.var-input__input').trigger('input')
     await wrapper.find('.var-input__input').trigger('change')
-    await wrapper.find('.var-input').trigger('click')
+    await wrapper.find('.var-field-decorator').trigger('click')
   }
 
   expect(wrapper.html()).toMatchSnapshot()
@@ -97,28 +102,28 @@ test('test form with input', async () => {
   expect(wrapper.html()).toMatchSnapshot()
 
   await triggerEvents()
-  expect(onInput).toHaveBeenCalledTimes(0)
+  expect(onInput).toHaveBeenCalledTimes(1)
   expect(onClick).toHaveBeenCalledTimes(1)
-  expect(onChange).toHaveBeenCalledTimes(0)
+  expect(onChange).toHaveBeenCalledTimes(1)
 
   const { form } = wrapper.vm.$refs
-  await expectValidate(form, wrapper, '不能为空')
+  await expectValidate(form, wrapper, 'It can not be not empty')
   await expectReset(form, wrapper)
 
   wrapper.unmount()
 })
 
-test('test form with select', async () => {
-  const onClear = jest.fn()
-  const onClick = jest.fn()
-  const onClose = jest.fn()
+test('form with select', async () => {
+  const onClear = vi.fn()
+  const onClick = vi.fn()
+  const onClose = vi.fn()
 
   const wrapper = mount({
     ...Wrapper,
     data: () => ({
       disabled: true,
       readonly: false,
-      value: ['选项1'],
+      value: ['option1'],
     }),
     methods: {
       onClear,
@@ -131,14 +136,14 @@ test('test form with select', async () => {
           clearable
           chip
           multiple
-          :rules="[v => v.length > 1 || '选择必须多于1个']"
+          :rules="[v => v.length > 1 || 'You must choose one option at least']"
           v-model="value"
           @click="onClick"
           @clear="onClear"
           @close="onClose"
         >
-          <var-option label="选项1"/>
-          <var-option label="选项2"/>
+          <var-option label="option1"/>
+          <var-option label="option2"/>
         </var-select>
       </var-form>
     `,
@@ -149,8 +154,8 @@ test('test form with select', async () => {
 
   const triggerEvents = async () => {
     await wrapper.find('.var-chip--close').trigger('click')
-    await wrapper.find('.var-select__clear-icon').trigger('click')
-    await wrapper.find('.var-select').trigger('click')
+    await wrapper.find('.var-field-decorator__clear-icon').trigger('click')
+    await wrapper.find('.var-field-decorator').trigger('click')
   }
 
   await triggerEvents()
@@ -167,15 +172,15 @@ test('test form with select', async () => {
   expect(onClose).toHaveBeenCalledTimes(0)
 
   const { form } = wrapper.vm.$refs
-  await expectValidate(form, wrapper, '选择必须多于1个')
+  await expectValidate(form, wrapper, 'You must choose one option at least')
   await expectReset(form, wrapper)
 
   wrapper.unmount()
 })
 
-test('test form with radio', async () => {
-  const onChange = jest.fn()
-  const onClick = jest.fn()
+test('form with radio', async () => {
+  const onChange = vi.fn()
+  const onClick = vi.fn()
 
   const wrapper = mount({
     ...Wrapper,
@@ -191,7 +196,7 @@ test('test form with radio', async () => {
     template: `
       <var-form ref="form" :disabled="disabled" :readonly="readonly">
         <var-radio
-          :rules="[v => !!v || '必须勾选']"
+          :rules="[v => !!v || 'You must choose one option']"
           v-model="value"
           @change="onChange"
           @click="onClick"
@@ -215,15 +220,15 @@ test('test form with radio', async () => {
   expect(onChange).toHaveBeenCalledTimes(0)
 
   const { form } = wrapper.vm.$refs
-  await expectValidate(form, wrapper, '必须勾选')
+  await expectValidate(form, wrapper, 'You must choose one option')
   await expectReset(form, wrapper)
 
   wrapper.unmount()
 })
 
-test('test form with checkbox', async () => {
-  const onChange = jest.fn()
-  const onClick = jest.fn()
+test('form with checkbox', async () => {
+  const onChange = vi.fn()
+  const onClick = vi.fn()
 
   const wrapper = mount({
     ...Wrapper,
@@ -239,7 +244,7 @@ test('test form with checkbox', async () => {
     template: `
       <var-form ref="form" :disabled="disabled" :readonly="readonly">
         <var-checkbox
-          :rules="[v => !!v || '必须勾选']"
+          :rules="[v => !!v || 'You must choose one option']"
           v-model="value"
           @change="onChange"
           @click="onClick"
@@ -264,16 +269,16 @@ test('test form with checkbox', async () => {
   expect(onChange).toHaveBeenCalledTimes(0)
 
   const { form } = wrapper.vm.$refs
-  await expectValidate(form, wrapper, '必须勾选')
+  await expectValidate(form, wrapper, 'You must choose one option')
   await expectReset(form, wrapper)
 
   wrapper.unmount()
 })
 
-test('test form with counter', async () => {
-  const onIncrement = jest.fn()
-  const onDecrement = jest.fn()
-  const onChange = jest.fn()
+test('form with counter', async () => {
+  const onIncrement = vi.fn()
+  const onDecrement = vi.fn()
+  const onChange = vi.fn()
 
   const wrapper = mount({
     ...Wrapper,
@@ -291,7 +296,7 @@ test('test form with counter', async () => {
       <var-form ref="form" :disabled="disabled" :readonly="readonly">
         <var-counter
           ref="counter"
-          :rules="[v => v > 0 || '必须大于0']"
+          :rules="[v => v > 0 || 'The value must be more than zero']"
           v-model="value"
           @change="onChange"
           @increment="onIncrement"
@@ -322,14 +327,14 @@ test('test form with counter', async () => {
   expect(wrapper.html()).toMatchSnapshot()
 
   const { form } = wrapper.vm.$refs
-  await expectValidate(form, wrapper, '必须大于0')
+  await expectValidate(form, wrapper, 'The value must be more than zero')
   await expectReset(form, wrapper)
 
   wrapper.unmount()
 })
 
-test('test form with rate', async () => {
-  const onChange = jest.fn()
+test('form with rate', async () => {
+  const onChange = vi.fn()
 
   const wrapper = mount({
     ...Wrapper,
@@ -344,7 +349,7 @@ test('test form with rate', async () => {
     template: `
       <var-form ref="form" :disabled="disabled" :readonly="readonly">
         <var-rate
-          :rules="[v => v > 0 || '必须大于0']"
+          :rules="[v => v > 0 || 'The value must be more than zero']"
           v-model="value"
           @change="onChange"
         />
@@ -365,22 +370,20 @@ test('test form with rate', async () => {
   expect(onChange).toHaveBeenCalledTimes(0)
 
   const { form } = wrapper.vm.$refs
-  await expectValidate(form, wrapper, '必须大于0')
+  await expectValidate(form, wrapper, 'The value must be more than zero')
   await expectReset(form, wrapper)
 
   wrapper.unmount()
 })
 
-test('test form with uploader', async () => {
-  const onAfterRead = jest.fn()
+test('form with uploader', async () => {
+  const onAfterRead = vi.fn()
 
-  const createEvent = (filename) => {
-    return {
-      target: {
-        files: [new File([], filename)],
-      },
-    }
-  }
+  const createEvent = (filename) => ({
+    target: {
+      files: [new File([], filename)],
+    },
+  })
 
   const wrapper = mount({
     ...Wrapper,
@@ -396,7 +399,7 @@ test('test form with uploader', async () => {
       <var-form ref="form" :disabled="disabled" :readonly="readonly">
         <var-uploader
           ref="uploader"
-          :rules="[v => v.length > 0 || '至少上传一个']"
+          :rules="[v => v.length > 0 || 'You must upload one file at least']"
           v-model="value"
           @after-read="onAfterRead"
         />
@@ -416,14 +419,14 @@ test('test form with uploader', async () => {
   expect(onAfterRead).toHaveBeenCalledTimes(0)
 
   const { form } = wrapper.vm.$refs
-  await expectValidate(form, wrapper, '至少上传一个')
+  await expectValidate(form, wrapper, 'You must upload one file at least')
   await expectReset(form, wrapper)
 
   wrapper.unmount()
 })
 
-test('test form with switch', async () => {
-  const onChange = jest.fn()
+test('form with switch', async () => {
+  const onChange = vi.fn()
 
   const wrapper = mount({
     ...Wrapper,
@@ -438,7 +441,7 @@ test('test form with switch', async () => {
     template: `
       <var-form ref="form" :disabled="disabled" :readonly="readonly">
         <var-switch
-          :rules="[v => v === true || '您必须开启']"
+          :rules="[v => v === true || 'It should be truthy']"
           v-model="value"
           @change="onChange"
         />
@@ -459,7 +462,7 @@ test('test form with switch', async () => {
   expect(onChange).toHaveBeenCalledTimes(0)
 
   const { form } = wrapper.vm.$refs
-  await expectValidate(form, wrapper, '您必须开启')
+  await expectValidate(form, wrapper, 'It should be truthy')
   await expectReset(form, wrapper)
 
   await wrapper.setData({ disabled: false, readonly: false })
@@ -471,10 +474,10 @@ test('test form with switch', async () => {
   wrapper.unmount()
 })
 
-test('test form with slider', async () => {
-  const onChange = jest.fn()
-  const onStart = jest.fn()
-  const onEnd = jest.fn()
+test('form with slider', async () => {
+  const onChange = vi.fn()
+  const onStart = vi.fn()
+  const onEnd = vi.fn()
 
   const wrapper = mount({
     ...Wrapper,
@@ -492,7 +495,7 @@ test('test form with slider', async () => {
       <var-form ref="form" :disabled="disabled" :readonly="readonly">
         <var-slider
           v-model="value"
-          :rules="[(v) => v > 10 || '必须大于10']"
+          :rules="[(v) => v > 10 || 'It must be more than ten']"
           @change="onChange"
           @start="onStart"
           @end="onEnd"
@@ -503,16 +506,16 @@ test('test form with slider', async () => {
 
   expect(wrapper.html()).toMatchSnapshot()
 
-  const el = wrapper.find('.var-slider__thumb-label')
+  const el = wrapper.find('.var-slider__horizontal-thumb-label')
   await trigger(el, 'touchstart', 0, 0)
-  await trigger(el, 'touchmove', 20, 0)
-  await trigger(el, 'touchend', 40, 0)
+  await trigger(document, 'touchmove', 20, 0)
+  await trigger(document, 'touchend', 40, 0)
   expect(wrapper.vm.value).toBe(5)
 
   await wrapper.setData({ disabled: false, readonly: true })
   await trigger(el, 'touchstart', 20, 0)
-  await trigger(el, 'touchmove', 10, 0)
-  await trigger(el, 'touchend', 70, 0)
+  await trigger(document, 'touchmove', 10, 0)
+  await trigger(document, 'touchend', 70, 0)
   expect(wrapper.vm.value).toBe(5)
 
   expect(onChange).toHaveBeenCalledTimes(0)
@@ -520,16 +523,83 @@ test('test form with slider', async () => {
   expect(onEnd).toHaveBeenCalledTimes(0)
 
   const { form } = wrapper.vm.$refs
-  await expectValidate(form, wrapper, '必须大于10')
+  await expectValidate(form, wrapper, 'It must be more than ten')
   await expectReset(form, wrapper)
 
   await wrapper.setData({ disabled: false, readonly: false })
   await trigger(el, 'touchstart', 20, 0)
-  await trigger(el, 'touchmove', 10, 0)
-  await trigger(el, 'touchend', 70, 0)
+  await trigger(document, 'touchmove', 10, 0)
+  await trigger(document, 'touchend', 70, 0)
   expect(wrapper.vm.value).not.toBe(5)
 
   expect(onChange).toHaveBeenCalled()
   expect(onStart).toHaveBeenCalledTimes(1)
   expect(onEnd).toHaveBeenCalledTimes(1)
+
+  wrapper.unmount()
+})
+
+test('form events', async () => {
+  const onSubmit = vi.fn()
+  const onReset = vi.fn()
+
+  const wrapper = mount({
+    ...Wrapper,
+    data: () => ({
+      value: undefined,
+    }),
+    methods: {
+      onSubmit,
+      onReset,
+    },
+    template: `
+      <var-form @submit="onSubmit" @reset="onReset">
+        <var-input
+          clearable
+          :rules="[v => !!v || 'It can not be not empty']"
+          v-model="value"
+        />
+      </var-form>
+    `,
+  })
+
+  await delay(16)
+
+  await wrapper.trigger('submit')
+  await delay(16)
+  expect(wrapper.html()).toMatchSnapshot()
+  expect(onSubmit).toHaveBeenCalledTimes(1)
+  expect(onSubmit).toHaveBeenLastCalledWith(false)
+
+  await wrapper.trigger('reset')
+  await delay(16)
+  expect(wrapper.html()).toMatchSnapshot()
+  expect(onReset).toHaveBeenCalledTimes(1)
+
+  wrapper.unmount()
+})
+
+test('form with auto-complete', async () => {
+  const wrapper = mount({
+    ...Wrapper,
+    data: () => ({
+      disabled: false,
+      readonly: false,
+      value: '',
+    }),
+    template: `
+      <var-form ref="form" scroll-to-error="start" :disabled="disabled" :readonly="readonly">
+        <var-auto-complete
+          :rules="[v => !!v || '不能为空']"
+          v-model="value"
+        />
+      </var-form>
+    `,
+  })
+  await delay(16)
+  const { form } = wrapper.vm.$refs
+  await expectValidate(form, wrapper, '不能为空')
+  await expectReset(form, wrapper)
+
+  wrapper.unmount()
 })

@@ -1,9 +1,11 @@
-import Popup from '..'
-import VarPopup from '../Popup'
-import { mount } from '@vue/test-utils'
 import { createApp } from 'vue'
+import { mount } from '@vue/test-utils'
+import { expect, test, vi } from 'vitest'
+import Popup from '..'
+import { triggerKeyboard } from '../../utils/test'
+import VarPopup from '../Popup'
 
-test('test popup plugin', () => {
+test('popup plugin', () => {
   const app = createApp({}).use(Popup)
   expect(app.component(Popup.name)).toBeTruthy()
 })
@@ -12,18 +14,18 @@ const Wrapper = {
   components: {
     [VarPopup.name]: VarPopup,
   },
-  props: ['closeOnClickOverlay', 'onOpen', 'onClose', 'onClickOverlay'],
+  props: ['closeOnClickOverlay', 'onOpen', 'onClose', 'onClickOverlay', 'defaultStyle'],
   data: () => ({
     show: false,
   }),
   template: `
-    <var-popup v-model:show="show" v-bind="$props">
+    <var-popup v-model:show="show" v-bind="$props" :teleport="null">
       default slot content
     </var-popup>
   `,
 }
 
-test('test popup show', async () => {
+test('popup show', async () => {
   const wrapper = mount(Wrapper)
   expect(wrapper.find('.var-popup').isVisible()).toBeFalsy()
   expect(wrapper.html()).toMatchSnapshot()
@@ -39,9 +41,9 @@ test('test popup show', async () => {
   wrapper.unmount()
 })
 
-test('test popup onOpen & onClose', async () => {
-  const onOpen = jest.fn()
-  const onClose = jest.fn()
+test('popup onOpen & onClose', async () => {
+  const onOpen = vi.fn()
+  const onClose = vi.fn()
 
   const wrapper = mount(Wrapper, {
     props: {
@@ -58,9 +60,24 @@ test('test popup onOpen & onClose', async () => {
   wrapper.unmount()
 })
 
-test('test popup close on clickOverlay', async () => {
-  const onClose = jest.fn()
-  const onClickOverlay = jest.fn()
+test('popup zIndex', async () => {
+  const wrapper = mount(Wrapper, {
+    props: {
+      zIndex: 40,
+    },
+  })
+
+  await wrapper.setData({ show: true })
+  expect(wrapper.find('.var-popup').attributes('style')).toContain('z-index: 38')
+  expect(wrapper.find('.var-popup__overlay').attributes('style')).toContain('z-index: 39')
+  expect(wrapper.find('.var-popup__content').attributes('style')).toContain('z-index: 40')
+
+  wrapper.unmount()
+})
+
+test('popup close on clickOverlay', async () => {
+  const onClose = vi.fn()
+  const onClickOverlay = vi.fn()
 
   const wrapper = mount(Wrapper, {
     props: {
@@ -84,20 +101,140 @@ test('test popup close on clickOverlay', async () => {
   wrapper.unmount()
 })
 
-test('test popup z-index', async () => {
-  const wrapper = mount(Wrapper)
+test('popup default style', async () => {
+  const wrapper = mount(Wrapper, {
+    props: {
+      show: true,
+      defaultStyle: true,
+    },
+  })
 
-  await wrapper.setData({ show: true })
+  expect(wrapper.find('.var-popup--content-background-color').exists()).toBe(true)
+  expect(wrapper.find('.var-elevation--3').exists()).toBe(true)
 
-  const prevPopupZIndex = window.getComputedStyle(wrapper.find('.var-popup').element).zIndex
-  const prevOverlayZIndex = window.getComputedStyle(wrapper.find('.var-popup__overlay').element).zIndex
+  await wrapper.setProps({
+    defaultStyle: false,
+  })
+  expect(wrapper.find('.var-popup--content-background-color').exists()).toBe(false)
+  expect(wrapper.find('.var-elevation--3').exists()).toBe(false)
 
-  await wrapper.setData({ show: false })
-  await wrapper.setData({ show: true })
-  expect(window.getComputedStyle(wrapper.find('.var-popup').element).zIndex).toBe(String(+prevPopupZIndex + 3))
-  expect(window.getComputedStyle(wrapper.find('.var-popup__overlay').element).zIndex).toBe(
-    String(+prevOverlayZIndex + 3)
-  )
+  wrapper.unmount()
+})
+
+test('popup safeArea prop', async () => {
+  const wrapper = mount(Wrapper, {
+    props: {
+      show: true,
+      safeArea: true,
+    },
+  })
+
+  expect(wrapper.find('.var-popup--safe-area').exists()).toBe(true)
+
+  await wrapper.setProps({
+    safeArea: false,
+  })
+  expect(wrapper.find('.var-popup--safe-area').exists()).toBe(false)
+
+  wrapper.unmount()
+})
+
+test('popup safeAreaTop prop', async () => {
+  const wrapper = mount(Wrapper, {
+    props: {
+      show: true,
+      safeAreaTop: true,
+    },
+  })
+
+  expect(wrapper.find('.var-popup--safe-area-top').exists()).toBe(true)
+
+  await wrapper.setProps({
+    safeAreaTop: false,
+  })
+  expect(wrapper.find('.var-popup--safe-area-top').exists()).toBe(false)
+
+  wrapper.unmount()
+})
+
+test('popup overlayClass prop', () => {
+  const wrapper = mount(Wrapper, {
+    props: {
+      show: true,
+      overlayClass: 'test-class',
+    },
+  })
+
+  expect(wrapper.find('.test-class').exists()).toBe(true)
+
+  wrapper.unmount()
+})
+
+test('popup overlayStyle prop', () => {
+  const wrapper = mount(Wrapper, {
+    props: {
+      show: true,
+      overlayStyle: {
+        background: 'red',
+      },
+    },
+  })
+
+  expect(wrapper.find('.var-popup__overlay').attributes('style')).toContain('background: red;')
+
+  wrapper.unmount()
+})
+
+test('popup position prop', () => {
+  ;['top', 'bottom', 'right', 'left', 'center'].forEach((position) => {
+    const wrapper = mount(Wrapper, {
+      props: {
+        show: true,
+        position,
+      },
+    })
+
+    expect(wrapper.find(`.var-popup--${position}`).exists()).toBe(true)
+
+    wrapper.unmount()
+  })
+})
+
+test('popup keyboard escape', async () => {
+  const onKeyEscape = vi.fn()
+  const onUpdateShow = vi.fn()
+
+  const wrapper = mount(Wrapper, {
+    props: {
+      show: true,
+      onKeyEscape,
+      'onUpdate:show': onUpdateShow,
+    },
+  })
+
+  await triggerKeyboard(window, 'keydown', { key: 'Escape' })
+  expect(onKeyEscape).toBeCalledTimes(1)
+  expect(onUpdateShow).toBeCalledWith(false)
+
+  wrapper.unmount()
+})
+
+test('popup keyboard escape and closeOnKeyEscape', async () => {
+  const onKeyEscape = vi.fn()
+  const onUpdateShow = vi.fn()
+
+  const wrapper = mount(Wrapper, {
+    props: {
+      show: true,
+      closeOnKeyEscape: false,
+      onKeyEscape,
+      'onUpdate:show': onUpdateShow,
+    },
+  })
+
+  await triggerKeyboard(window, 'keydown', { key: 'Escape' })
+  expect(onKeyEscape).toBeCalledTimes(1)
+  expect(onUpdateShow).toBeCalledTimes(0)
 
   wrapper.unmount()
 })

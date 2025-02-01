@@ -1,20 +1,21 @@
-import Image from '..'
-import VarImage from '../Image'
-import { mount } from '@vue/test-utils'
 import { createApp } from 'vue'
-import { delay, trigger } from '../../utils/jest'
+import { mount } from '@vue/test-utils'
+import { describe, expect, test, vi } from 'vitest'
+import Image from '..'
+import { delay, trigger } from '../../utils/test'
+import VarImage from '../Image'
 
-const SRC = 'https://varlet-varletjs.vercel.app/cat.png'
+const SRC = 'https://varletjs.org/varlet/cat.png'
 
-test('test image plugin', () => {
+test('image plugin', () => {
   const app = createApp({}).use(Image)
   expect(app.component(Image.name)).toBeTruthy()
 })
 
 describe('test image component event', () => {
-  test('test image onLoad & onError', () => {
-    const onLoad = jest.fn()
-    const onError = jest.fn()
+  test('image onLoad & onError', () => {
+    const onLoad = vi.fn()
+    const onError = vi.fn()
     const wrapper = mount(VarImage, {
       props: {
         onLoad,
@@ -30,9 +31,9 @@ describe('test image component event', () => {
     wrapper.unmount()
   })
 
-  test('test image onLoad & onError in lazy mode', () => {
-    const onLoad = jest.fn()
-    const onError = jest.fn()
+  test('image onLoad & onError in lazy mode', () => {
+    const onLoad = vi.fn()
+    const onError = vi.fn()
     const wrapper = mount(VarImage, {
       props: {
         lazy: true,
@@ -54,25 +55,49 @@ describe('test image component event', () => {
     wrapper.unmount()
   })
 
-  test('test image onLoad & onError null callback', async () => {
+  test('image onLoad & onError null callback', async () => {
+    const onLoad = vi.fn()
+    const onError = vi.fn()
+
     const wrapper = mount(VarImage)
     const img = wrapper.find('img')
     await img.trigger('load')
-    await img.trigger('error')
+    expect(onLoad).toHaveBeenCalledTimes(0)
 
     await wrapper.setProps({ lazy: true })
 
     const lazyImage = wrapper.find('img')
     lazyImage.element._lazy.state = 'success'
     await lazyImage.trigger('load')
+    expect(onLoad).toHaveBeenCalledTimes(0)
     lazyImage.element._lazy.state = 'error'
     await lazyImage.trigger('load')
+    expect(onError).toHaveBeenCalledTimes(0)
     wrapper.unmount()
+  })
+
+  test('image onClick', () => {
+    function expectOnClick(props = {}) {
+      const onClick = vi.fn()
+      const wrapper = mount(VarImage, {
+        props: {
+          onClick,
+          ...props,
+        },
+      })
+
+      wrapper.find('.var-image__image').trigger('click')
+      expect(onClick).toHaveBeenCalledTimes(1)
+      wrapper.unmount()
+    }
+
+    expectOnClick()
+    expectOnClick({ lazy: true })
   })
 })
 
 describe('test image component props', () => {
-  test('test image src', () => {
+  test('image src', () => {
     const wrapper = mount(VarImage, {
       props: {
         src: SRC,
@@ -83,7 +108,7 @@ describe('test image component props', () => {
     wrapper.unmount()
   })
 
-  test('test image fit', () => {
+  test('image fit', () => {
     ;['fill', 'contain', 'cover', 'none', 'scale-down'].forEach((fit) => {
       const wrapper = mount(VarImage, {
         props: { fit },
@@ -94,7 +119,7 @@ describe('test image component props', () => {
     })
   })
 
-  test('test image alt', () => {
+  test('image alt', () => {
     const wrapper = mount(VarImage, {
       props: {
         alt: 'This is alt',
@@ -105,7 +130,42 @@ describe('test image component props', () => {
     wrapper.unmount()
   })
 
-  test('test image width', async () => {
+  test('image title', () => {
+    const wrapper = mount(VarImage, {
+      props: {
+        title: 'This is title',
+      },
+    })
+
+    expect(wrapper.find('.var-image__image').attributes('title')).toContain('This is title')
+    wrapper.unmount()
+  })
+
+  test('image referrerpolicy', () => {
+    const wrapper = mount(VarImage, {
+      props: {
+        referrerpolicy: 'no-referrer',
+      },
+    })
+
+    expect(wrapper.find('.var-image__image').attributes('referrerpolicy')).toContain('no-referrer')
+    wrapper.unmount()
+  })
+
+  test('image position', async () => {
+    const wrapper = mount(VarImage)
+
+    expect(wrapper.find('.var-image__image').attributes('style')).toContain('object-position: 50% 50%')
+
+    await wrapper.setProps({
+      position: 'left',
+    })
+    expect(wrapper.find('.var-image__image').attributes('style')).toContain('object-position: left')
+
+    wrapper.unmount()
+  })
+
+  test('image width', async () => {
     const wrapper = mount(VarImage, {
       props: {
         width: '20px',
@@ -118,7 +178,7 @@ describe('test image component props', () => {
     wrapper.unmount()
   })
 
-  test('test image height', async () => {
+  test('image height', async () => {
     const wrapper = mount(VarImage, {
       props: {
         height: '20px',
@@ -131,7 +191,7 @@ describe('test image component props', () => {
     wrapper.unmount()
   })
 
-  test('test image radius', async () => {
+  test('image radius', async () => {
     const wrapper = mount(VarImage, {
       props: {
         radius: '20px',
@@ -144,7 +204,7 @@ describe('test image component props', () => {
     wrapper.unmount()
   })
 
-  test('test image lazy', async () => {
+  test('image lazy', async () => {
     const wrapper = mount(VarImage, {
       props: {
         lazy: false,
@@ -158,7 +218,7 @@ describe('test image component props', () => {
     wrapper.unmount()
   })
 
-  test('test image loading', () => {
+  test('image loading', () => {
     const wrapper = mount(VarImage, {
       props: {
         lazy: true,
@@ -170,7 +230,7 @@ describe('test image component props', () => {
     wrapper.unmount()
   })
 
-  test('test image error', () => {
+  test('image error', () => {
     const wrapper = mount(VarImage, {
       props: {
         lazy: true,
@@ -182,19 +242,7 @@ describe('test image component props', () => {
     wrapper.unmount()
   })
 
-  test('test image error', () => {
-    const wrapper = mount(VarImage, {
-      props: {
-        lazy: true,
-        error: SRC,
-      },
-    })
-
-    expect(wrapper.find('.var-image__image').attributes('lazy-error')).toContain(SRC)
-    wrapper.unmount()
-  })
-
-  test('test image ripple', async () => {
+  test('image ripple', async () => {
     const wrapper = mount(VarImage, {
       props: {
         ripple: true,
@@ -203,18 +251,22 @@ describe('test image component props', () => {
     })
 
     await trigger(wrapper, 'touchstart')
-    await delay(500)
+    await delay(250)
     expect(wrapper.find('.var-ripple').exists()).toBe(true)
+
+    await trigger(document, 'touchend')
+    await delay(500)
+    expect(wrapper.find('.var-ripple').exists()).toBe(false)
 
     await wrapper.setProps({ ripple: false })
     await trigger(wrapper, 'touchstart')
-    await delay(500)
+    await delay(250)
     expect(wrapper.find('.var-ripple').exists()).toBe(false)
 
     wrapper.unmount()
   })
 
-  test('test image block', async () => {
+  test('image block', async () => {
     const wrapper = mount(VarImage, {
       props: {
         block: true,

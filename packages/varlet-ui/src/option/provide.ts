@@ -1,21 +1,22 @@
-import type { ComputedRef } from 'vue'
-import { useAtParentIndex, useParent } from '../utils/components'
-import { SELECT_BIND_OPTION_KEY, SELECT_COUNT_OPTION_KEY, SelectProvider } from '../select/provide'
+import { type ComputedRef } from 'vue'
+import { assert } from '@varlet/shared'
+import { useParent } from '@varlet/use'
+import { SELECT_BIND_OPTION_KEY, type SelectProvider } from '../select/provide'
 
 export interface OptionProvider {
-  label: ComputedRef
-  value: ComputedRef
+  label: ComputedRef<any>
+  value: ComputedRef<any>
+  disabled: ComputedRef<boolean>
+  ripple: ComputedRef<boolean>
   selected: ComputedRef<boolean>
-  sync(checked: boolean): void
+  indeterminate?: ComputedRef<boolean>
+  sync(checked: boolean, indeterminate?: boolean): void
 }
 
 export function useSelect() {
-  const { bindParent, parentProvider } = useParent<SelectProvider, OptionProvider>(SELECT_BIND_OPTION_KEY)
-  const { index } = useAtParentIndex(SELECT_COUNT_OPTION_KEY)
+  const { index, parentProvider, bindParent } = useParent<SelectProvider, OptionProvider>(SELECT_BIND_OPTION_KEY)
 
-  if (!bindParent || !parentProvider) {
-    throw Error('<var-option/> must in <var-select/>')
-  }
+  assert(!!bindParent, 'Option', '<var-option/> must in <var-select/>')
 
   return {
     index,

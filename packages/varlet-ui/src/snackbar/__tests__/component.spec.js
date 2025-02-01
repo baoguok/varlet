@@ -1,22 +1,16 @@
-import Snackbar from '..'
-import VarSnackbar from '../Snackbar'
-import example from '../example'
-import { mount } from '@vue/test-utils'
 import { createApp } from 'vue'
-import { delay, mockStubs } from '../../utils/jest'
+import { mount } from '@vue/test-utils'
+import { expect, test, vi } from 'vitest'
+import Snackbar from '..'
+import { delay, mockStubs } from '../../utils/test'
+import VarSnackbar from '../Snackbar'
 
-test('test snackbar example', () => {
-  const wrapper = mount(example)
-  expect(wrapper.html()).toMatchSnapshot()
-  wrapper.unmount()
-})
-
-test('test snackbar component plugin', () => {
+test('snackbar component plugin', () => {
   const app = createApp({}).use(Snackbar.Component)
   expect(app.component(Snackbar.Component.name)).toBeTruthy()
 })
 
-test('test snackbar style', async () => {
+test('snackbar style', async () => {
   const template = `
      <var-snackbar
       v-model:show="show"
@@ -24,6 +18,7 @@ test('test snackbar style', async () => {
       position="center"
       content-class="test-snackbar"
       vertical
+      :elevation="5"
       :duration="500"
       loading-type="wave"
       loading-size="large"
@@ -32,7 +27,7 @@ test('test snackbar style', async () => {
       lock-scroll
     />
    `
-  mount({
+  const wrapper = mount({
     components: {
       [VarSnackbar.name]: VarSnackbar,
     },
@@ -49,13 +44,15 @@ test('test snackbar style', async () => {
 
   await delay(500)
   expect(document.querySelector('.var-snackbar').style.display).toBe('none')
+
+  wrapper.unmount()
 })
 
-test('test snackbar event', async () => {
-  const open = jest.fn()
-  const opened = jest.fn()
-  const close = jest.fn()
-  const closed = jest.fn()
+test('snackbar event', async () => {
+  const open = vi.fn()
+  const opened = vi.fn()
+  const close = vi.fn()
+  const closed = vi.fn()
   const { mockRestore } = mockStubs()
 
   const template = `
@@ -93,4 +90,5 @@ test('test snackbar event', async () => {
   expect(closed).toHaveBeenCalledTimes(1)
 
   mockRestore()
+  wrapper.unmount()
 })

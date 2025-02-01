@@ -6,32 +6,25 @@
 
 <script lang="ts">
 import { computed, defineComponent } from 'vue'
-import { useStep } from './provide'
+import { call } from '@varlet/shared'
+import { createNamespace } from '../utils/components'
 import { props } from './props'
-import type { ComputedRef } from 'vue'
-import type { StepsProvider } from './provide'
-import { createNamespace, call } from '../utils/components'
+import { useStep, type StepsProvider } from './provide'
 
-const { n } = createNamespace('steps')
+const { name, n } = createNamespace('steps')
 
 export default defineComponent({
-  name: 'VarSteps',
+  name,
   props,
   setup(props) {
-    const active: ComputedRef<number | string> = computed(() => props.active)
-    const activeColor: ComputedRef<string | undefined> = computed(() => props.activeColor)
-    const inactiveColor: ComputedRef<string | undefined> = computed(() => props.inactiveColor)
-    const direction: ComputedRef<string> = computed(() => props.direction)
-
-    const { length, bindStep } = useStep()
-
-    const clickStep = (index: number) => {
-      call(props.onClickStep, index)
-    }
+    const active = computed(() => props.active)
+    const activeColor = computed(() => props.activeColor)
+    const inactiveColor = computed(() => props.inactiveColor)
+    const direction = computed(() => props.direction)
+    const { bindStep } = useStep()
 
     const stepsProvider: StepsProvider = {
       active,
-      length,
       direction,
       activeColor,
       inactiveColor,
@@ -39,9 +32,12 @@ export default defineComponent({
     }
 
     bindStep(stepsProvider)
-    return {
-      n,
+
+    function clickStep(index: number) {
+      call(props.onClickStep, index)
     }
+
+    return { n }
   },
 })
 </script>
@@ -50,6 +46,7 @@ export default defineComponent({
 @import '../styles/common';
 
 .var-steps {
+  width: 100%;
   display: flex;
   justify-content: space-between;
   overflow: hidden;

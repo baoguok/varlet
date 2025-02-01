@@ -4,17 +4,17 @@
 
 An action sheet pops up to give the user the ability to select options.
 `ActionSheet` Functional and component use methods are provided, and there is no essential difference between the two effects and parameters.
-The function returns a `Promise`，on selection return `action`，Click modal close to return `close`.
+The function returns a `Promise`, on selection return `action`. Click modal close to return `close`.
 
-## Functional
+## Function Call
 
-### Basic Use
+### Basic Usage
 
 ```html
 <script setup>
 import { Snackbar, ActionSheet } from '@varlet/ui'
 
-const createBasic = async () => {
+async function createBasic() {
   const action = await ActionSheet({ 
     actions: [
       {
@@ -32,7 +32,7 @@ const createBasic = async () => {
     ] 
   })
   
-  action !== 'close' && Snackbar(`${action.name}`)
+  action !== 'close' && Snackbar(`Your selected is:${action.name}`)
 }
 </script>
 
@@ -47,7 +47,7 @@ const createBasic = async () => {
 <script setup>
 import { Snackbar, ActionSheet } from '@varlet/ui'
 
-const handleSelect = async () => {
+async function handleSelect() {
   const action = await ActionSheet({ 
     actions: [
       {
@@ -66,7 +66,7 @@ const handleSelect = async () => {
     title: 'Choose whichever you like'
   })
   
-  action !== 'close' && Snackbar(`${action.name}`)
+  action !== 'close' && Snackbar(`Your selected is:${action.name}`)
 }
 </script>
 
@@ -77,13 +77,13 @@ const handleSelect = async () => {
 
 ### Action Disabled
 
-The option is passed `disabled` to leave the action in the disabled state
+The option is passed `disabled` to leave the action in the disabled state.
 
 ```html
 <script setup>
 import { Snackbar, ActionSheet } from '@varlet/ui'
 
-const handleSelect = async () => {
+async function handleSelect() {
   const action = await ActionSheet({
     actions: [
       {
@@ -102,7 +102,7 @@ const handleSelect = async () => {
     ]
   })
   
-  action !== 'close' && Snackbar(`${action.name}`)
+  action !== 'close' && Snackbar(`Your selected is:${action.name}`)
 }
 </script>
 
@@ -113,13 +113,13 @@ const handleSelect = async () => {
 
 ### Disable Close On Click Action
 
-Passing in `CloseOnClickAction` disallows the action of `ActionSheet` closing automatically when the option is selected. The user can select the action multiple times. Because `Promise` is only resolved once, it is recommended to use `onSelect` to listen for the action of the user
+Passing in `CloseOnClickAction` disallows the action of `ActionSheet` closing automatically when the option is selected. The user can select the action multiple times. Because `Promise` is only resolved once, it is recommended to use `onSelect` to listen for the action of the user.
 
 ```html
 <script setup>
 import { Snackbar, ActionSheet } from '@varlet/ui'
 
-const handleSelect = async () => {
+async function handleSelect() {
   await ActionSheet({ 
     actions: [
       {
@@ -148,34 +148,34 @@ const handleSelect = async () => {
 
 ### Custom Action Styles
 
-Options provide parameters to configure the style. See the `Action` data structure for options
+Options provide parameters to configure the style. See the `Action` data structure for options.
 
 ```html
 <script setup>
 import { Snackbar, ActionSheet } from '@varlet/ui'
 
-const handleSelect = async () => {
+async function handleSelect() {
   const action = await ActionSheet({ 
     actions: [
       {
         name: 'Item 01',
         icon: 'account-circle',
-        color: '#00c48f',
+        color: 'var(--color-success)',
       },
       {
         name: 'Item 02',
         icon: 'notebook',
-        color: '#ff9800',
+        color: 'var(--color-warning)',
       },
       {
         name: 'Item 03',
         icon: 'wifi',
-        color: '#00afef',
+        color: 'var(--color-info)',
       },
     ]
   })
   
-  action !== 'close' && Snackbar(`${action.name}`)
+  action !== 'close' && Snackbar(`Your selected is:${action.name}`)
 }
 </script>
 
@@ -209,8 +209,8 @@ const actions = ref([
   },
 ])
 
-const handleSelect = (action) => {
-  Snackbar(`${action.name}`)
+function handleSelect(action) {
+  Snackbar(`Your selected is:${action.name}`)
 }
 </script>
 
@@ -247,8 +247,8 @@ const actions = ref([
   },
 ])
 
-const handleSelect = (action) => {
-  Snackbar(`${action.name}`)
+function handleSelect(action) {
+  Snackbar(`Your selected is:${action.name}`)
 }
 </script>
 
@@ -287,8 +287,8 @@ const actions = ref([
   },
 ])
 
-const handleSelect = (action) => {
-  Snackbar(`${action.name}`)
+function handleSelect(action) {
+  Snackbar(`Your selected is:${action.name}`)
 }
 </script>
 
@@ -302,7 +302,7 @@ const handleSelect = (action) => {
 </template>
 ```
 
-### Disable close on click action
+### Disable Close On Click Action
 
 ```html
 <script setup>
@@ -325,8 +325,8 @@ const actions = ref([
   },
 ])
 
-const handleSelect = (action) => {
-  Snackbar(`${action.name}`)
+function handleSelect(action) {
+  Snackbar(`Your selected is:${action.name}`)
 }
 </script>
 
@@ -353,22 +353,22 @@ const actions = ref([
   {
     name: 'Item 01',
     icon: 'account-circle',
-    color: '#00c48f',
+    color: 'var(--color-success)',
   },
   {
     name: 'Item 02',
     icon: 'notebook',
-    color: '#ff9800',
+    color: 'var(--color-warning)',
   },
   {
     name: 'Item 03',
     icon: 'wifi',
-    color: '#00afef',
+    color: 'var(--color-info)',
   },
 ])
 
-const handleSelect = (action) => {
-  Snackbar(`${action.name}`)
+function handleSelect(action) {
+  Snackbar(`Your selected is:${action.name}`)
 }
 </script>
 
@@ -397,37 +397,53 @@ const handleSelect = (action) => {
 | `lock-scroll`            | Whether to disable scrolling penetration, scrolling the Dialog when disabled will not cause the body to scroll | _boolean_             | `true`       |
 | `close-on-click-action`  | Whether to close the actions sheet when clicking action                                                        | _boolean_             | `true`       |
 | `close-on-click-overlay` | Whether to click the overlay to close the action sheet                                                         | _boolean_             | `true`       |
-| `teleport`               | The location of the action sheet to mount                                                                      | _TeleportProps['to']_ | `-`          |
+| `close-on-key-escape` | Whether to support keyboard ESC to close the action sheet | _boolean_ | `true`  |
+| `safe-area`              | Whether to enable bottom safety zone adaptation	                                                              | _boolean_             | `false`  |
+| `teleport`               | The location of the action sheet to mount                                                                      | _TeleportProps['to'] \| false_ | `body`          |
 
 ### Events
 
 | Event           | Description                                          | Arguments        |
 | --------------- | ---------------------------------------------------- | ---------------- |
-| `select`        | Triggered when the action is click                   | `action: Action` |
-| `open`          | Triggered when the action sheet is open              | `-`              |
-| `opened`        | Triggered when the action sheet open-animation ends  | `-`              |
-| `close`         | Triggered when the action sheet is close             | `-`              |
-| `closed`        | Triggered when the action sheet close-animation ends | `-`              |
-| `click-overlay` | Triggered when you click on overlay                  | `-`              |
+| `select`        | Triggered when selecting an action sheet                  | `action: Action` |
+| `open`          | Triggered when opening an action sheet              | `-`              |
+| `opened`        | Triggered when an action sheet open-animation ends  | `-`              |
+| `close`         | Triggered when closing an action sheet            | `-`              |
+| `closed`        | Triggered when an action sheet close-animation ends | `-`              |
+| `click-overlay` | Triggered when clicking on overlay                  | `-`              |
+| `key-escape` | Triggered when click keyboard ESC  | `-` |
+
+### Methods
+
+| Method | Description | Arguments | Return |
+| --- | --- | --- | --- |
+| `ActionSheet` | Show action sheet | _options \| string_ | `-` |
+| `ActionSheet.close` | Close action sheet | _-_ | `-` |
+| `ActionSheet.setDefaultOptions` | Set default option configuration | _options_ | `-` |
+| `ActionSheet.resetDefaultOptions` | Reset default option configuration | _-_ | `-` |
 
 ### ActionSheet Options
 
 #### Options passed in for a functional call
 
-| Prop                  | Description                                                                                                          | Type                       | Default      |
+| Option                  | Description                                                                                                          | Type                       | Default      |
 | --------------------- | -------------------------------------------------------------------------------------------------------------------- | -------------------------- | ------------ |
 | `title`               | Action sheet title                                                                                                   | _string_                   | `Select One` |
 | `overlay`             | Whether to display the overlay                                                                                       | _boolean_                  | `true`       |
 | `overlayClass`        | Custom overlay class                                                                                                 | _string_                   | `-`          |
 | `overlayStyle`        | Custom overlay style                                                                                                 | _object_                   | `-`          |
 | `lockScroll`          | Whether to disable scrolling penetration, scrolling the action sheet when disabled will not cause the body to scroll | _boolean_                  | `true`       |
+| `closeOnClickAction`  | Whether to close the actions sheet when clicking action                                                        | _boolean_             | `true`       |
 | `closeOnClickOverlay` | Whether to click the overlay to close the action sheet                                                               | _boolean_                  | `true`       |
+| `closeOnKeyEscape` | Whether to support keyboard ESC to close the action sheet | _boolean_ | `true`  |
+| `safe-area`              | Whether to enable bottom safety zone adaptation	                                                              | _boolean_             | `false`  |
 | `onOpen`              | Action sheet open callback                                                                                           | _() => void_               | `-`          |
 | `onOpened`            | Action sheet open-animation ends callback                                                                            | _() => void_               | `-`          |
 | `onClose`             | Action sheet close callback                                                                                          | _() => void_               | `-`          |
 | `onClosed`            | Action sheet close-animation ends callback                                                                           | _() => void_               | `-`          |
 | `onSelect`            | Action sheet click action callback                                                                                   | _(action: Action) => void_ | `-`          |
 | `onClickOverlay`      | Click overlay callback                                                                                               | _() => void_               | `-`          |
+| `onKeyEscape` | Triggered when click keyboard ESC  | _() => void_  | `-` |
 
 ### ActionSheet Action
 
@@ -435,25 +451,27 @@ const handleSelect = (action) => {
 | ----------- | ----------------------------------- | --------- | ------- |
 | `name`      | Action name                         | _string_  | `-`     |
 | `color`     | Action text color                   | _string_  | `-`     |
-| `icon`      | Icon，support network image address | _string_  | `-`     |
+| `icon`      | Icon, support network image address | _string_  | `-`     |
 | `iconSize`  | Icon size                           | _string_  | `-`     |
+| `namespace` | Icon namespace | _string_ | `-` |
 | `className` | Class name                          | _string_  | `-`     |
 | `disabled`  | Disable or not option               | _boolean_ | `false` |
 
 ### Slots
 
-| Slot      | Description        | Arguments |
+| Name | Description | SlotProps |
 | --------- | ------------------ | --------- |
 | `actions` | Action list        | `-`       |
 | `title`   | Action sheet title | `-`       |
 
 ### Style Variables
 
-Here are the CSS variables used by the component, Styles can be customized using [StyleProvider](#/en-US/style-provider)
+Here are the CSS variables used by the component. Styles can be customized using [StyleProvider](#/en-US/style-provider).
 
 | Variable                                    | Default                      |
 | ------------------------------------------- | ---------------------------- |
 | `--action-sheet-border-radius`              | `2px`                        |
+| `--action-sheet-border-top`                 | `none`                       |
 | `--action-sheet-background`                 | `#fff`                       |
 | `--action-sheet-title-color`                | `#888`                       |
 | `--action-sheet-title-padding`              | `10px 16px`                  |

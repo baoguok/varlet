@@ -1,9 +1,11 @@
+import { withInstall, withPropsDefaultsSetter } from '../utils/components'
 import BottomNavigationItem from './BottomNavigationItem.vue'
-import type { App } from 'vue'
+import { props as bottomNavigationItemProps } from './props'
 
-BottomNavigationItem.install = function (app: App) {
-  app.component(BottomNavigationItem.name, BottomNavigationItem)
-}
+withInstall(BottomNavigationItem)
+withPropsDefaultsSetter(BottomNavigationItem, bottomNavigationItemProps)
+
+export { bottomNavigationItemProps }
 
 export const _BottomNavigationItemComponent = BottomNavigationItem
 

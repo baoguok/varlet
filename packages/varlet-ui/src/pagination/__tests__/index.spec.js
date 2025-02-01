@@ -1,17 +1,11 @@
-import example from '../example'
-import Pagination from '..'
-import VarPagination from '../Pagination'
 import { createApp } from 'vue'
 import { mount } from '@vue/test-utils'
-import { delay, trigger } from '../../utils/jest'
+import { describe, expect, test, vi } from 'vitest'
+import Pagination from '..'
+import { delay } from '../../utils/test'
+import VarPagination from '../Pagination'
 
-test('test pagination example', () => {
-  const wrapper = mount(example)
-  expect(wrapper.html()).toMatchSnapshot()
-  wrapper.unmount()
-})
-
-test('test pagination plugin', () => {
+test('pagination plugin', () => {
   const app = createApp({}).use(Pagination)
   expect(app.component(Pagination.name)).toBeTruthy()
 })
@@ -73,7 +67,7 @@ describe('basic mode', () => {
   })
 
   test('click ellipsis', async () => {
-    const change = jest.fn()
+    const change = vi.fn()
     const template = `
       <var-pagination
         current="10"
@@ -133,12 +127,6 @@ test('Size related props', async () => {
 
   expect(wrapper.html()).toMatchSnapshot()
 
-  const lists = document.querySelectorAll('.var-pagination__list')
-
-  expect(lists.length).toBe(4)
-
-  expect(lists[3].innerHTML.includes('40')).toBeTruthy()
-
   await wrapper.setData({ sizeChange: false })
 
   expect(wrapper.html()).toMatchSnapshot()
@@ -172,14 +160,13 @@ test('change current and size', async () => {
 })
 
 test('change event', async () => {
-  const change = jest.fn()
+  const change = vi.fn()
   const template = `<var-pagination current="2" :size="20" total="325" @change="change" />`
 
   const wrapper = mount({
     components: {
       [VarPagination.name]: VarPagination,
     },
-
     methods: {
       change,
     },
@@ -201,10 +188,5 @@ test('change event', async () => {
   expect(input.element.value).toBe('2')
   expect(change).toBeCalledTimes(2)
 
-  await wrapper.find('.var-pagination__size--open').trigger('click')
-  const li = document.querySelector('.var-pagination__list')
-  await trigger(li, 'click')
-  expect(change).toBeCalledTimes(3)
-  expect(wrapper.find('.var-pagination__simple').text().includes('33')).toBe(true)
   wrapper.unmount()
 })

@@ -1,14 +1,7 @@
 <script setup>
-import VarList from '..'
-import VarCell from '../../cell'
-import VarTabs from '../../tabs'
-import VarTab from '../../tab'
-import VarTabsItems from '../../tabs-items'
-import VarTabItem from '../../tab-item'
-import dark from '../../themes/dark'
 import { reactive, toRefs } from 'vue'
-import { watchLang, watchDarkMode } from '@varlet/cli/site/utils'
-import { use, pack } from './locale'
+import { onThemeChange, watchLang } from '@varlet/cli/client'
+import { t, use } from './locale'
 
 const values = reactive({
   loading: false,
@@ -27,12 +20,10 @@ const values = reactive({
 const { list, list2, list3, loading, loading2, loading3, finished, finished2, finished3, error, current } =
   toRefs(values)
 
-const load = () => {
-  if (values.current !== 0) {
-    values.loading = false
-    return
-  }
+watchLang(use)
+onThemeChange()
 
+function load() {
   setTimeout(() => {
     for (let i = 0; i < 20; i++) {
       values.list.push(values.list.length + 1)
@@ -46,12 +37,7 @@ const load = () => {
   }, 1000)
 }
 
-const load2 = () => {
-  if (values.current !== 1) {
-    values.loading2 = false
-    return
-  }
-
+function load2() {
   setTimeout(() => {
     if (values.list2.length === 40) {
       values.error = true
@@ -67,12 +53,7 @@ const load2 = () => {
   }, 1000)
 }
 
-const load3 = () => {
-  if (values.current !== 2) {
-    values.loading3 = false
-    return
-  }
-
+function load3() {
   setTimeout(() => {
     for (let i = 0; i < 20; i++) {
       values.list3.push(values.list3.length + 1)
@@ -85,39 +66,36 @@ const load3 = () => {
     }
   }, 1000)
 }
-
-watchLang(use)
-watchDarkMode(dark)
 </script>
 
 <template>
-  <var-tabs v-model:active="current" sticky offset-top="54px" style="margin-bottom: 10px">
-    <var-tab>{{ pack.basicUsage }}</var-tab>
-    <var-tab>{{ pack.loadFail }}</var-tab>
-    <var-tab>{{ pack.tipText }}</var-tab>
+  <var-tabs v-model:active="current" sticky offset-top="14.4vmin" style="margin-bottom: 10px">
+    <var-tab>{{ t('basicUsage') }}</var-tab>
+    <var-tab>{{ t('loadFail') }}</var-tab>
+    <var-tab>{{ t('tipText') }}</var-tab>
   </var-tabs>
 
   <var-tabs-items v-model:active="current">
     <var-tab-item>
-      <var-list :finished="finished" v-model:loading="loading" @load="load">
-        <var-cell :key="d" v-for="d in list"> {{ pack.listItem }}: {{ d }} </var-cell>
+      <var-list v-model:loading="loading" :finished="finished" @load="load">
+        <var-cell v-for="d in list" :key="d"> {{ t('listItem') }}: {{ d }} </var-cell>
       </var-list>
     </var-tab-item>
     <var-tab-item>
-      <var-list :finished="finished2" v-model:error="error" v-model:loading="loading2" @load="load2">
-        <var-cell :key="d" v-for="d in list2"> {{ pack.listItem }}: {{ d }} </var-cell>
+      <var-list v-model:error="error" v-model:loading="loading2" :finished="finished2" @load="load2">
+        <var-cell v-for="d in list2" :key="d"> {{ t('listItem') }}: {{ d }} </var-cell>
       </var-list>
     </var-tab-item>
     <var-tab-item>
       <var-list
-        :loading-text="pack.loadingText"
-        :finished-text="pack.finishedText"
-        :error-text="pack.errorText"
-        :finished="finished3"
         v-model:loading="loading3"
+        :loading-text="t('loadingText')"
+        :finished-text="t('finishedText')"
+        :error-text="t('errorText')"
+        :finished="finished3"
         @load="load3"
       >
-        <var-cell :key="d" v-for="d in list3"> {{ pack.listItem }}: {{ d }} </var-cell>
+        <var-cell v-for="d in list3" :key="d"> {{ t('listItem') }}: {{ d }} </var-cell>
       </var-list>
     </var-tab-item>
   </var-tabs-items>

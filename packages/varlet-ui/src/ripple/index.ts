@@ -1,10 +1,9 @@
+import { type App, type Directive, type DirectiveBinding, type Plugin } from 'vue'
+import { getRect, getStyle, supportTouch } from '@varlet/shared'
 import context from '../context'
-import './ripple.less'
-import '../styles/common.less'
-import { supportTouch } from '../utils/elements'
-import type { Directive, Plugin, App } from 'vue'
-import type { DirectiveBinding } from '@vue/runtime-core'
 import { createNamespace } from '../utils/components'
+import '../styles/common.less'
+import './ripple.less'
 
 const { n } = createNamespace('ripple')
 
@@ -18,7 +17,6 @@ interface RippleStyles {
 
 interface RippleOptions {
   removeRipple: any
-  touchmoveForbid: boolean
   color?: string
   disabled?: boolean
   tasker?: number | null
@@ -31,7 +29,7 @@ interface RippleHTMLElement extends HTMLElement {
 const ANIMATION_DURATION = 250
 
 function setStyles(element: RippleHTMLElement) {
-  const { zIndex, position } = window.getComputedStyle(element)
+  const { zIndex, position } = getStyle(element)
 
   element.style.overflow = 'hidden'
   element.style.overflowX = 'hidden'
@@ -40,15 +38,19 @@ function setStyles(element: RippleHTMLElement) {
   zIndex === 'auto' && (element.style.zIndex = '1')
 }
 
-function computeRippleStyles(element: RippleHTMLElement, event: TouchEvent): RippleStyles {
-  const { top, left }: DOMRect = element.getBoundingClientRect()
+function isTouchEvent(event: Event): event is TouchEvent {
+  return 'touches' in event
+}
+
+function computeRippleStyles(element: RippleHTMLElement, event: TouchEvent | KeyboardEvent): RippleStyles {
+  const { top, left }: DOMRect = getRect(element)
   const { clientWidth, clientHeight } = element
 
   const radius: number = Math.sqrt(clientWidth ** 2 + clientHeight ** 2) / 2
   const size: number = radius * 2
 
-  const localX: number = event.touches[0].clientX - left
-  const localY: number = event.touches[0].clientY - top
+  const localX: number = isTouchEvent(event) ? event.touches[0].clientX - left : clientWidth / 2
+  const localY: number = isTouchEvent(event) ? event.touches[0].clientY - top : clientHeight / 2
 
   const centerX: number = (clientWidth - radius * 2) / 2
   const centerY: number = (clientHeight - radius * 2) / 2
@@ -59,11 +61,11 @@ function computeRippleStyles(element: RippleHTMLElement, event: TouchEvent): Rip
   return { x, y, centerX, centerY, size }
 }
 
-function createRipple(this: RippleHTMLElement, event: TouchEvent) {
+function createRipple(this: RippleHTMLElement, event: TouchEvent | KeyboardEvent) {
   const _ripple = this._ripple as RippleOptions
   _ripple.removeRipple()
 
-  if (_ripple.disabled || _ripple.tasker) {
+  if (_ripple.disabled || _ripple.tasker || !context.enableRipple) {
     return
   }
 
@@ -90,7 +92,7 @@ function createRipple(this: RippleHTMLElement, event: TouchEvent) {
     }, 20)
   }
 
-  _ripple.tasker = window.setTimeout(task, 60)
+  _ripple.tasker = window.setTimeout(task, 30)
 }
 
 function removeRipple(this: RippleHTMLElement) {
@@ -105,60 +107,94 @@ function removeRipple(this: RippleHTMLElement) {
     const lastRipple: RippleHTMLElement = ripples[ripples.length - 1]
     const delay: number = ANIMATION_DURATION - performance.now() + Number(lastRipple.dataset.createdAt)
 
-    setTimeout(() => {
+    window.setTimeout(() => {
       lastRipple.style.opacity = `0`
 
-      setTimeout(() => lastRipple.parentNode?.removeChild(lastRipple), ANIMATION_DURATION)
+      window.setTimeout(() => lastRipple.parentNode?.removeChild(lastRipple), ANIMATION_DURATION)
     }, delay)
   }
 
-  _ripple.tasker ? setTimeout(task, 60) : task()
+  _ripple.tasker ? window.setTimeout(task, 30) : task()
 }
 
 function forbidRippleTask(this: RippleHTMLElement) {
+  if (!supportTouch() || !context.enableRipple) {
+    return
+  }
+
   const _ripple = this._ripple as RippleOptions
-
-  if (!supportTouch()) {
-    return
-  }
-
-  if (!_ripple.touchmoveForbid) {
-    return
-  }
-
   _ripple.tasker && window.clearTimeout(_ripple.tasker)
   _ripple.tasker = null
+}
+
+let hasKeyboardRipple = false
+
+function createKeyboardRipple(this: RippleHTMLElement, event: KeyboardEvent) {
+  if (hasKeyboardRipple || !(event.key === ' ' || event.key === 'Enter')) {
+    return
+  }
+
+  createRipple.call(this, event)
+  hasKeyboardRipple = true
+}
+
+function removeKeyboardRipple(this: RippleHTMLElement) {
+  if (!hasKeyboardRipple) {
+    return
+  }
+
+  removeRipple.call(this)
+  hasKeyboardRipple = false
 }
 
 function mounted(el: RippleHTMLElement, binding: DirectiveBinding<RippleOptions>) {
   el._ripple = {
     tasker: null,
     ...(binding.value ?? {}),
-    touchmoveForbid: binding.value?.touchmoveForbid ?? context.touchmoveForbid,
     removeRipple: removeRipple.bind(el),
   }
 
   el.addEventListener('touchstart', createRipple, { passive: true })
   el.addEventListener('touchmove', forbidRippleTask, { passive: true })
   el.addEventListener('dragstart', removeRipple, { passive: true })
+  el.addEventListener('keydown', createKeyboardRipple)
+  el.addEventListener('keyup', removeKeyboardRipple)
+  el.addEventListener('blur', removeKeyboardRipple)
+
   document.addEventListener('touchend', el._ripple.removeRipple, { passive: true })
   document.addEventListener('touchcancel', el._ripple.removeRipple, { passive: true })
+  document.addEventListener('dragend', el._ripple.removeRipple, { passive: true })
 }
 
 function unmounted(el: RippleHTMLElement) {
   el.removeEventListener('touchstart', createRipple)
   el.removeEventListener('touchmove', forbidRippleTask)
   el.removeEventListener('dragstart', removeRipple)
+
+  if (!el._ripple || !el._ripple.removeRipple) {
+    // may be null in nuxt
+    return
+  }
+
   document.removeEventListener('touchend', el._ripple!.removeRipple)
   document.removeEventListener('touchcancel', el._ripple!.removeRipple)
+  document.removeEventListener('dragend', el._ripple!.removeRipple)
 }
 
 function updated(el: RippleHTMLElement, binding: DirectiveBinding<RippleOptions>) {
-  el._ripple = {
-    ...el._ripple,
-    ...(binding.value ?? {}),
-    touchmoveForbid: binding.value?.touchmoveForbid ?? context.touchmoveForbid,
-    tasker: null,
+  const newBinding = {
+    color: binding.value?.color,
+    disabled: binding.value?.disabled,
+  }
+
+  const diff = newBinding.color !== el._ripple?.color || newBinding.disabled !== el._ripple?.disabled
+
+  if (diff) {
+    el._ripple = {
+      tasker: newBinding.disabled ? null : el._ripple?.tasker,
+      removeRipple: el._ripple?.removeRipple,
+      ...newBinding,
+    }
   }
 }
 

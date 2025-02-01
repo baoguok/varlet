@@ -1,4 +1,7 @@
-import { VarComponent } from './varComponent'
+import { VNode } from 'vue'
+import { BasicAttributes, ListenerProp, SetPropsDefaults, VarComponent } from './varComponent'
+
+export declare const timePickerProps: Record<keyof TimePickerProps, any>
 
 export type AllowedTime = {
   hours?: (hour: number) => boolean
@@ -6,23 +9,32 @@ export type AllowedTime = {
   seconds?: (second: number) => boolean
 }
 
-export interface TimePickerProps {
+export type TimePickerFormat = 'ampm' | '24hr'
+
+export interface TimePickerProps extends BasicAttributes {
   modelValue?: string
-  shadow?: boolean
+  elevation?: boolean | string | number
   color?: string
-  headerColor?: string
+  hint?: string
+  titleColor?: string
   allowedTime?: AllowedTime
-  format?: 'ampm' | '24hr'
+  format?: TimePickerFormat
   min?: string
   max?: string
   useSeconds?: boolean
   readonly?: boolean
-  onChange?: (value: string) => void
-  'onUpdate:modelValue'?: (value: string) => void
+  onChange?: ListenerProp<(value: string) => void>
+  'onUpdate:modelValue'?: ListenerProp<(value: string) => void>
 }
 
 export class TimePicker extends VarComponent {
+  static setPropsDefaults: SetPropsDefaults<TimePickerProps>
+
   $props: TimePickerProps
+
+  $slots: {
+    actions(): VNode[]
+  }
 }
 
 export class _TimePickerComponent extends TimePicker {}

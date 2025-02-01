@@ -1,13 +1,11 @@
 <script setup>
-import VarTable from '..'
-import VarPagination from '../../pagination'
-import AppType from '@varlet/cli/site/mobile/components/AppType'
-import dark from '../../themes/dark'
 import { ref } from 'vue'
-import { watchLang, watchDarkMode } from '@varlet/cli/site/utils'
-import { use, pack } from './locale'
+import { AppType, onThemeChange, watchLang } from '@varlet/cli/client'
+import { t, use } from './locale'
 
-const gen = (current, size) => {
+const list = ref(gen(1, 10))
+
+function gen(current, size) {
   return Array.from({ length: size }).map((_, index) => {
     const id = (current - 1) * size + index + 1
 
@@ -19,47 +17,46 @@ const gen = (current, size) => {
   })
 }
 
-const list = ref(gen(1, 10))
-
-const get = (current, size) => {
+function get(current, size) {
   list.value = gen(current, size)
 }
 
 watchLang(use)
-watchDarkMode(dark)
+onThemeChange()
 </script>
 
 <template>
-  <app-type>{{ pack.basicUsage }}</app-type>
+  <app-type>{{ t('basicUsage') }}</app-type>
   <var-table>
     <thead>
       <tr>
-        <th>{{ pack.name }}</th>
-        <th>{{ pack.math }}</th>
-        <th>{{ pack.english }}</th>
+        <th>{{ t('name') }}</th>
+        <th>{{ t('math') }}</th>
+        <th>{{ t('english') }}</th>
       </tr>
     </thead>
+
     <tbody>
       <tr>
-        <td>{{ pack.jerry }}</td>
+        <td>{{ t('jerry') }}</td>
         <td>124</td>
         <td>38</td>
       </tr>
       <tr>
-        <td>{{ pack.tom }}</td>
+        <td>{{ t('tom') }}</td>
         <td>100</td>
         <td>135</td>
       </tr>
     </tbody>
   </var-table>
 
-  <app-type>{{ pack.slot }}</app-type>
+  <app-type>{{ t('slot') }}</app-type>
   <var-table>
     <thead>
       <tr>
-        <th>{{ pack.name }}</th>
-        <th>{{ pack.math }}</th>
-        <th>{{ pack.english }}</th>
+        <th>{{ t('name') }}</th>
+        <th>{{ t('math') }}</th>
+        <th>{{ t('english') }}</th>
       </tr>
     </thead>
     <tbody>

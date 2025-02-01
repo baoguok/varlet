@@ -1,15 +1,14 @@
-@index-bar-list-item-font-size: var(--font-size-xs);
-@index-bar-list-item-color: var(--color-primary);
-@index-bar-list-item-active-color: var(--color-danger);
-@index-bar-list-item-height: 14px;
-@index-bar-list-item-padding: 0 10px;
-
 :root {
-  --index-bar-list-item-font-size: @index-bar-list-item-font-size;
-  --index-bar-list-item-color: @index-bar-list-item-color;
-  --index-bar-list-item-active-color: @index-bar-list-item-active-color;
-  --index-bar-list-item-height: @index-bar-list-item-height;
-  --index-bar-list-item-padding: @index-bar-list-item-padding;
+  --index-bar-list-right: 0;
+  --index-bar-list-top: 50%;
+  --index-bar-list-left: auto;
+  --index-bar-list-bottom: auto;
+  --index-bar-list-transform: translate(0, -50%);
+  --index-bar-list-item-font-size: var(--font-size-xs);
+  --index-bar-list-item-color: var(--color-primary);
+  --index-bar-list-item-active-color: var(--color-danger);
+  --index-bar-list-item-height: 14px;
+  --index-bar-list-item-padding: 0 10px;
 }
 
 .var-index-bar {
@@ -17,9 +16,11 @@
 
   &__anchor-list {
     position: fixed;
-    right: 0;
-    top: 50%;
-    transform: translate(0, -50%);
+    right: var(--index-bar-list-right);
+    top: var(--index-bar-list-top);
+    left: var(--index-bar-list-left);
+    bottom: var(--index-bar-list-bottom);
+    transform: var(--index-bar-list-transform);
     list-style: none;
     padding: 0;
     margin: 0;
@@ -34,7 +35,7 @@
     padding: var(--index-bar-list-item-padding);
     color: var(--index-bar-list-item-color);
     cursor: pointer;
-    -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+    -webkit-tap-highlight-color: transparent;
 
     &--active {
       color: var(--index-bar-list-item-active-color);

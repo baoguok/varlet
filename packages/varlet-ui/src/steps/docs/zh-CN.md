@@ -14,7 +14,7 @@ import { ref } from 'vue'
 
 const active = ref(0)
 
-const next = () => {
+function next() {
   active.value = (active.value + 1) % 4
 }
 </script>
@@ -33,11 +33,17 @@ const next = () => {
 ### 自定义样式
 
 ```html
+<script setup>
+import { ref } from 'vue'
+
+const active = ref(0)
+</script>
+
 <template>
   <var-steps
     :active="active"
-    active-color="#f44336"
-    inactive-color="#e99eb4"
+    active-color="var(--color-danger)" 
+    inactive-color="var(--color-warning)"
   >
     <var-step active-icon="heart" current-icon="fire" inactive-icon="heart-half-full">
       步骤1
@@ -60,6 +66,12 @@ const next = () => {
 通过 `direction` 属性改变步骤条的显示方向。
 
 ```html
+<script setup>
+import { ref } from 'vue'
+
+const active = ref(0)
+</script>
+
 <template>
   <var-steps direction="vertical" :active="active">
     <var-step>步骤1</var-step>
@@ -80,8 +92,8 @@ const next = () => {
 | ----- | -------------- | -------- | ---------- |
 | `active` | 当前步骤 | _string \| number_ | `0` |
 | `direction` | 显示方向，可选值为 `vertical` | _string_ | `horizontal` |
-| `active-color` | 激活状态颜色 | _string_ | `#2979ff` |
-| `inactive-color` | 未激活状态颜色 | _string_ | `#9e9e9e` |
+| `active-color` | 激活状态颜色 | _string_ | `-` |
+| `inactive-color` | 未激活状态颜色 | _string_ | `-` |
 
 #### Step Props
 
@@ -90,6 +102,9 @@ const next = () => {
 | `active-icon` | 激活状态图标  | _string_ | `check` |
 | `current-icon` | 当前步骤时的图标 | _string_ | `-` |
 | `inactive-icon` | 未激活状态图标 | _string_ | `-` |
+| `active-icon-namespace` | 激活状态图标命名空间  | _string_ | `var-icon` |
+| `current-icon-namespace` | 当前步骤时的图标命名空间 | _string_ | `var-icon` |
+| `inactive-icon-namespace` | 未激活状态图标命名空间 | _string_ | `var-icon` |
 
 ### 事件
 
@@ -101,6 +116,12 @@ const next = () => {
 
 ### 插槽
 
+#### Steps Slots
+
+| 名称 | 说明        | 参数 |
+| ----- |-----------| -------- |
+| `default` | steps 的内容 | `-` |
+
 #### Step Slots
 
 | 名称 | 说明 | 参数 |
@@ -109,14 +130,14 @@ const next = () => {
 
 ### 样式变量
 
-以下为组件使用的 css 变量，可以使用 [StyleProvider 组件](#/zh-CN/style-provider) 进行样式定制
+以下为组件使用的 css 变量，可以使用 [StyleProvider 组件](#/zh-CN/style-provider) 进行样式定制。
 
 | 变量名 | 默认值 |
 | --- | --- |
 | `--step-tag-size` | `20px` |
 | `--step-tag-background` | `#9e9e9e` |
 | `--step-tag-font-size` | `var(--font-size-md)` |
-| `--step-tag-color` | `#fff` |
+| `--step-tag-color` | `var(--color-on-primary)` |
 | `--step-tag-active-color` | `var(--color-primary)` |
 | `--step-tag-margin` | `4px 0` |
 | `--step-tag-icon-size` | `var(--font-size-lg)` |
@@ -124,7 +145,6 @@ const next = () => {
 | `--step-content-color` | `rgba(0, 0, 0, 0.38)` |
 | `--step-content-active-color` | `#000` |
 | `--step-line-background` | `#000` |
-| `--step-vertical-min-height` | `30px` |
+| `--step-line-gap` | `8px` |
 | `--step-vertical-tag-margin` | `0 4px` |
-| `--step-vertical-line-height` | `calc(100% - 30px)` |
-| `--step-vertical-line-min-height` | `20px` |
+| `--step-vertical-min-height` | `50px` |

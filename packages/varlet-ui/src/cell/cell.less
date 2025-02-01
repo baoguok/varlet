@@ -1,27 +1,16 @@
-@cell-color: var(--color-text);
-@cell-font-size: var(--font-size-md);
-@cell-desc-font-size: var(--font-size-sm);
-@cell-desc-color: rgba(0, 0, 0, 0.6);
-@cell-padding: 10px 12px;
-@cell-min-height: 40px;
-@cell-border-color: #bcc2cb;
-@cell-border-left: 12px;
-@cell-border-right: 12px;
-@cell-icon-right: 8px;
-@cell-extra-left: 8px;
-
 :root {
-  --cell-color: @cell-color;
-  --cell-font-size: @cell-font-size;
-  --cell-desc-font-size: @cell-desc-font-size;
-  --cell-desc-color: @cell-desc-color;
-  --cell-padding: @cell-padding;
-  --cell-min-height: @cell-min-height;
-  --cell-border-color: @cell-border-color;
-  --cell-border-left: @cell-border-left;
-  --cell-border-right: @cell-border-right;
-  --cell-icon-right: @cell-icon-right;
-  --cell-extra-left: @cell-extra-left;
+  --cell-color: var(--color-text);
+  --cell-font-size: var(--font-size-md);
+  --cell-description-font-size: var(--font-size-sm);
+  --cell-description-color: rgba(0, 0, 0, 0.6);
+  --cell-description-margin-top: 4px;
+  --cell-padding: 10px 12px;
+  --cell-min-height: 40px;
+  --cell-border-color: var(--color-outline);
+  --cell-border-left: 12px;
+  --cell-border-right: 12px;
+  --cell-icon-right: 8px;
+  --cell-extra-left: 8px;
 }
 
 .var-cell {
@@ -29,11 +18,13 @@
   display: flex;
   min-height: var(--cell-min-height);
   outline: none;
+  width: 100%;
   padding: var(--cell-padding);
   position: relative;
   box-sizing: border-box;
   font-size: var(--cell-font-size);
   color: var(--cell-color);
+  -webkit-tap-highlight-color: transparent;
 
   &--border {
     &::after {
@@ -41,11 +32,12 @@
       box-sizing: border-box;
       content: ' ';
       pointer-events: none;
-      right: var(--cell-border-right);
       bottom: 0;
+      right: var(--cell-border-right);
       left: var(--cell-border-left);
       border-bottom: 1px solid var(--cell-border-color);
       transform: scaleY(0.5);
+      transition: border 0.25s;
     }
   }
 
@@ -56,7 +48,7 @@
 
   &__content {
     flex: 1;
-    overflow: hidden;
+    min-width: 0;
   }
 
   &__title {
@@ -65,13 +57,18 @@
     white-space: nowrap;
   }
 
-  &__desc {
-    font-size: var(--cell-desc-font-size);
-    color: var(--cell-desc-color);
+  &__description {
+    font-size: var(--cell-description-font-size);
+    color: var(--cell-description-color);
+    margin-top: var(--cell-description-margin-top);
   }
 
   &__extra {
     flex: 0;
     margin-left: var(--cell-extra-left);
+  }
+
+  &--cursor {
+    cursor: pointer;
   }
 }

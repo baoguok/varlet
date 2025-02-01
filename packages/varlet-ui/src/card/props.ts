@@ -1,41 +1,47 @@
 import type { PropType } from 'vue'
+import { defineListenerProp } from '../utils/components'
 
-function fitValidator(fit: string) {
-  return ['fill', 'contain', 'cover', 'none', 'scale-down'].includes(fit)
-}
+export type CardFit = 'fill' | 'contain' | 'cover' | 'none' | 'scale-down'
+
+export type CardLayout = 'row' | 'column'
+
+export type CardVariant = 'standard' | 'outlined' | 'filled'
 
 export const props = {
-  src: {
-    type: String,
-  },
+  src: String,
   fit: {
-    type: String as PropType<'fill' | 'contain' | 'cover' | 'none' | 'scale-down'>,
-    validator: fitValidator,
+    type: String as PropType<CardFit>,
     default: 'cover',
   },
-  height: {
-    type: [String, Number],
+  imageHeight: [String, Number],
+  imageWidth: [String, Number],
+  variant: {
+    type: String as PropType<CardVariant>,
+    default: 'standard',
   },
-  alt: {
-    type: String,
+  layout: {
+    type: String as PropType<CardLayout>,
+    default: 'column',
   },
-  title: {
-    type: String,
+  floating: Boolean,
+  floatingDuration: {
+    type: Number,
+    default: 250,
   },
-  subtitle: {
-    type: String,
-  },
-  description: {
-    type: String,
-  },
+  alt: String,
+  title: String,
+  subtitle: String,
+  description: String,
   elevation: {
-    type: [Number, String],
+    type: [Boolean, Number, String],
+    default: true,
   },
-  ripple: {
-    type: Boolean,
-    default: false,
-  },
-  onClick: {
-    type: Function as PropType<(e: Event) => void>,
-  },
+  ripple: Boolean,
+  onClick: defineListenerProp<(e: Event) => void>(),
+  'onUpdate:floating': defineListenerProp<(value: boolean) => void>(),
+
+  /**
+   * @deprecated use outlined variant instead
+   */
+  outline: Boolean,
 }

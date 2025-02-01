@@ -9,7 +9,7 @@
 
 ```html
 <template>
-  <var-image src="https://varlet-varletjs.vercel.app/cat.jpg" />
+  <var-image src="https://varletjs.org/cat.jpg" />
 </template>
 ```
 
@@ -21,35 +21,35 @@
     <var-image 
       width="85px" 
       height="85px" 
-      src="https://varlet-varletjs.vercel.app/cat.jpg" 
+      src="https://varletjs.org/cat.jpg" 
     />
 
     <var-image 
       width="85px" 
       height="85px"
       fit="cover" 
-      src="https://varlet-varletjs.vercel.app/cat.jpg" 
-    />
-
-    <var-image 
-      width="85px"
-      height="85px" 
-      fit="contain"
-      src="https://varlet-varletjs.vercel.app/cat.jpg" 
+      src="https://varletjs.org/cat.jpg" 
     />
 
     <var-image 
       width="85px"
       height="85px"
       fit="none"
-      src="https://varlet-varletjs.vercel.app/cat.jpg"
+      src="https://varletjs.org/cat.jpg"
+    />
+
+    <var-image 
+      width="85px"
+      height="85px" 
+      fit="contain"
+      src="https://varletjs.org/cat.jpg" 
     />
 
     <var-image 
       width="85px"
       height="85px" 
       fit="scale-down"
-      src="https://varlet-varletjs.vercel.app/cat.jpg" 
+      src="https://varletjs.org/cat.jpg" 
     />
   </var-space>
 </template>
@@ -65,7 +65,7 @@
       height="85px"
       fit="cover"
       :radius="10"
-      src="https://varlet-varletjs.vercel.app/cat.jpg"
+      src="https://varletjs.org/cat.jpg"
     />
 
     <var-image
@@ -73,7 +73,7 @@
       height="85px"
       fit="cover"
       radius="50%"
-      src="https://varlet-varletjs.vercel.app/cat.jpg"
+      src="https://varletjs.org/cat.jpg"
     />
   </var-space>
 </template>
@@ -87,7 +87,7 @@
     width="85px" 
     height="85px"
     ripple
-    src="https://varlet-varletjs.vercel.app/cat.jpg"
+    src="https://varletjs.org/cat.jpg"
   />
 </template>
 ```
@@ -100,7 +100,7 @@
     width="85px"
     height="85px"  
     lazy 
-    src="https://varlet-varletjs.vercel.app/cat.jpg" 
+    src="https://varletjs.org/cat.jpg" 
   />
 </template>
 ```
@@ -116,8 +116,30 @@
     height="85px"
     loading="https://xxx.xxx/loading.png"
     error="https://xxx.xxx/error.png"
-    src="https://varlet-varletjs.vercel.app/cat.jpg"
+    src="https://varletjs.org/cat.jpg"
   />
+</template>
+```
+
+### 加载失败插槽
+
+```html
+<template>
+  <var-image 
+    width="22.666vw" 
+    height="22.666vw" 
+    src="https://varletjs.org/ca.jpg"
+  >
+    <template #error>
+      <svg viewBox="0 0 24 24" style="width: 100%; height: 100%;">
+        <path
+          fill="currentColor"
+          d="M21,5V11.59L18,8.58L14,12.59L10,8.59L6,12.59L3,9.58V5A2,2 0 0,1 5,3H19A2,2 0 0,1 21,5M18,11.42L21,14.43V19A2,2 0 0,1 19,21H5A2,2 0 0,1 3,19V12.42L6,15.41L10,11.41L14,15.41"
+        >
+        </path>
+      </svg>
+    </template>
+  </var-image>
 </template>
 ```
 
@@ -126,16 +148,36 @@
 在 `.vue` 文件中，`Vue组件` 不会如同原生 img 一样被构建工具自动处理模块请求，所以需要手动导入图片资源。
 下面是不同构建工具的使用方式。
 
-#### Webpack
+#### Vite
+
+推荐使用 [@vitejs/plugin-vue](https://github.com/vitejs/vite/tree/main/packages/plugin-vue#asset-url-handling) 进行路径预处理。
+
+```ts
+// playground-ignore
+// vite.config.js
+import vue from '@vitejs/plugin-vue'
+
+export default defineConfig({
+  plugins: [
+    vue({
+      template: {
+        transformAssetUrls: {
+          'var-image': ['src']
+        }
+      }
+    })
+  ],
+})
+```
 
 ```html
 <!-- playground-ignore -->
 <template>
-  <var-image :src="require('../../assets/logo.png')"/>
+  <var-image src="../../assets/logo.png"/>
 </template>
 ```
 
-#### Vite
+或者单独导入
 
 ```html
 <!-- playground-ignore -->
@@ -148,23 +190,35 @@ import logo from '../../assets/logo.png'
 </template>
 ```
 
+#### Webpack
+
+```html
+<!-- playground-ignore -->
+<template>
+  <var-image :src="require('../../assets/logo.png')"/>
+</template>
+```
+
 ## API
 
 ### 属性
 
-| 参数 | 说明 | 类型 | 默认值 |
-| --- | --- | --- | --- |
-| `src` | 图片地址 | _string_ | `-` |
-| `fit` | 填充模式, 可选值为 `fill contain cover none scale-down` | _string_ | `fill` |
-| `alt` | 替代文本 | _string_ | `-` |
-| `width` | 图片宽度 | _string \| number_ | `-` |
-| `height` | 图片高度 | _string \| number_ | `-` |
-| `radius` | 图片圆角 | _string \| number_ | `-` |
-| `lazy` | 是否开启懒加载 | _boolean_ | `false` |
-| `loading` | 当开启懒加载时, 加载中显示的图片 | _string_ | `-` |
-| `error` | 当开启懒加载时, 加载失败显示的图片 | _string_ | `-` |
-| `ripple` | 是否开启水波 | _boolean_ | `false` |
-| `block` | 是否是块级元素 | _boolean_ | `true` |
+| 参数        | 说明                                              | 类型 | 默认值 |
+|-----------|-------------------------------------------------| --- | --- |
+| `src`     | 图片地址                                            | _string_ | `-` |
+| `fit`     | 填充模式, 可选值为 `fill contain cover none scale-down` | _string_ | `fill` |
+| `position` ***3.2.3***  | 可替换元素的内容在其内容框中的位置，等同于 [object-position](https://developer.mozilla.org/en-US/docs/Web/CSS/object-position)    | _string_ | `50% 50%` |
+| `alt`     | 替代文本，和 `img` 标签原生属性一致                           | _string_ | `-` |
+| `title`   | 图片描述性文字，和 `img` 标签原生属性一致             | _string_ | `-` |
+| `referrerpolicy`   | 指示在获取资源时使用的来源地址。该属性需注意浏览器兼容性，参见 [MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/img)            | _string_ | `-` |
+| `width`   | 图片宽度                                            | _string \| number_ | `-` |
+| `height`  | 图片高度                                            | _string \| number_ | `-` |
+| `radius`  | 图片圆角                                            | _string \| number_ | `0` |
+| `lazy`    | 是否开启懒加载                                         | _boolean_ | `false` |
+| `loading` | 当开启懒加载时, 加载中显示的图片                               | _string_ | `-` |
+| `error`   | 当开启懒加载时, 加载失败显示的图片                              | _string_ | `-` |
+| `ripple`  | 是否开启水波                                          | _boolean_ | `false` |
+| `block`   | 是否是块级元素                                         | _boolean_ | `true` |
 
 ### 事件
 
@@ -173,3 +227,9 @@ import logo from '../../assets/logo.png'
 | `click` | 点击图片时触发 | `event: Event` |
 | `load` | 图片成功加载时触发(懒加载模式下失败时会多次尝试加载图片，只会在成功加载时触发) | `event: Event` |
 | `error` | 图片失败加载时触发(懒加载模式下失败时会多次尝试加载图片，只会在尝试次数结束时触发) | `event: Event` |
+
+### 插槽
+
+| 插槽名 | 说明 | 参数 |
+| --- | --- | --- |
+| `error` | 加载失败插槽 | `-` |

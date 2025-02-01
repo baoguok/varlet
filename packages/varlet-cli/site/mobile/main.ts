@@ -1,23 +1,15 @@
-import routes from '@mobile-routes'
+import { createApp } from 'vue'
 import config from '@config'
+import routes from '@mobile-routes'
+import Varlet from '@varlet/ui'
+import { createRouter, createWebHashHistory } from 'vue-router'
+import { inIframe, isPhone } from '../utils'
 import App from './App.vue'
 import '@varlet/touch-emulator'
-import { createApp } from 'vue'
-import { createRouter, createWebHashHistory } from 'vue-router'
+import '@varlet/ui/es/style'
 
-import Icon from '../components/icon'
-import AppBar from '../components/app-bar'
-import Button from '../components/button'
-import Cell from '../components/cell'
-import Ripple from '../components/ripple'
-import '../components/styles/common.less'
-import '../components/styles/elevation.less'
-
-import { get } from 'lodash-es'
-import { inIframe, isPhone } from '../utils'
-
-const redirect = get(config, 'mobile.redirect')
-const defaultLanguage = get(config, 'defaultLanguage')
+const redirect = config?.mobile?.redirect
+const defaultLanguage = config?.defaultLanguage
 
 redirect &&
   routes.push({
@@ -27,7 +19,7 @@ redirect &&
 
 routes.push({
   path: '/home',
-  component: () => import('./components/AppHome.vue')
+  component: () => import('./AppHome.vue'),
 })
 
 const router = createRouter({
@@ -37,17 +29,21 @@ const router = createRouter({
 })
 
 router.beforeEach((to: any) => {
-  const language = to.query.language ?? defaultLanguage
-  const path = to.path
-  const replace = to.query.replace
+  const { path, hash, query } = to
+  const language = query.language ?? defaultLanguage
+  const replace = query.replace
 
   if (!isPhone() && !inIframe()) {
     window.location.href = `./#/${language}${path}`
   }
 
   if (!isPhone() && inIframe()) {
-    // @ts-ignore
-    window.top.onMobileRouteChange(path, language, replace)
+    try {
+      // @ts-ignore
+      window.parent.onMobileRouteChange(path, language, replace, hash)
+    } catch (e) {
+      console.log(e)
+    }
   }
 
   // @ts-ignore
@@ -59,16 +55,4 @@ router.beforeEach((to: any) => {
   }
 })
 
-// @ts-ignore
-createApp(App)
-  .use(router)
-  // @ts-ignore
-  .use(Icon)
-  // @ts-ignore
-  .use(AppBar)
-  // @ts-ignore
-  .use(Cell)
-  .use(Ripple)
-  // @ts-ignore
-  .use(Button)
-  .mount('#app')
+createApp(App).use(router).use(Varlet).mount('#app')

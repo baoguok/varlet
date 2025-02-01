@@ -1,42 +1,44 @@
-import type { PropType } from 'vue'
-import { pickProps } from '../utils/components'
-import { props as popupProps } from '../popup/props'
-import { Texts } from '.'
+import { type PropType } from 'vue'
+import { popupProps } from '../popup'
+import { defineListenerProp, pickProps } from '../utils/components'
 
-export interface NormalColumn {
-  texts: Texts
-  initialIndex?: number
-}
+export type PickerColumnOption = {
+  text?: string | number
+  value?: string | number
+  children?: PickerColumnOption[]
+  className?: string
+  textClassName?: string
 
-export interface CascadeColumn {
-  [textKey: string]: any
-  children: CascadeColumn[]
+  [key: PropertyKey]: any
 }
 
 export const props = {
-  columns: {
-    type: Array as PropType<NormalColumn[] | CascadeColumn[] | Texts>,
+  modelValue: {
+    type: Array as PropType<(string | number)[]>,
     default: () => [],
   },
-  title: {
-    type: String,
+  columns: {
+    type: Array as PropType<PickerColumnOption[] | PickerColumnOption[][]>,
+    default: () => [],
   },
+  title: String,
   textKey: {
     type: String,
     default: 'text',
+  },
+  valueKey: {
+    type: String,
+    default: 'value',
+  },
+  childrenKey: {
+    type: String,
+    default: 'children',
   },
   toolbar: {
     type: Boolean,
     default: true,
   },
-  cascade: {
-    type: Boolean,
-    default: false,
-  },
-  cascadeInitialIndexes: {
-    type: Array as PropType<number[]>,
-    default: () => [],
-  },
+  cascade: Boolean,
   optionHeight: {
     type: [Number, String],
     default: 44,
@@ -45,43 +47,33 @@ export const props = {
     type: [Number, String],
     default: 6,
   },
-  confirmButtonText: {
-    type: String,
-  },
-  cancelButtonText: {
-    type: String,
-  },
-  confirmButtonTextColor: {
-    type: String,
-  },
-  cancelButtonTextColor: {
-    type: String,
-  },
+  columnsCount: [String, Number],
+  confirmButtonText: String,
+  cancelButtonText: String,
+  confirmButtonTextColor: String,
+  cancelButtonTextColor: String,
   // dynamic internal
-  dynamic: {
-    type: Boolean,
-    default: false,
-  },
-  onChange: {
-    type: Function as PropType<(texts: Texts, indexes: number[]) => void>,
-  },
-  onConfirm: {
-    type: Function as PropType<(texts: Texts, indexes: number[]) => void>,
-  },
-  onCancel: {
-    type: Function as PropType<(texts: Texts, indexes: number[]) => void>,
-  },
-  // dynamic internal
+  dynamic: Boolean,
+  onChange:
+    defineListenerProp<(values: (string | number)[], indexes: number[], options: PickerColumnOption[]) => void>(),
+  onConfirm:
+    defineListenerProp<(values: (string | number)[], indexes: number[], options: PickerColumnOption[]) => void>(),
+  onCancel:
+    defineListenerProp<(values: (string | number)[], indexes: number[], options: PickerColumnOption[]) => void>(),
+  'onUpdate:modelValue': defineListenerProp<(values: (string | number)[]) => void>(),
   ...pickProps(popupProps, [
     'show',
     'onUpdate:show',
     'closeOnClickOverlay',
+    'closeOnKeyEscape',
     'teleport',
+    'safeArea',
     'onOpen',
     'onClose',
     'onOpened',
     'onClosed',
     'onClickOverlay',
     'onRouteChange',
+    'onKeyEscape',
   ]),
 }

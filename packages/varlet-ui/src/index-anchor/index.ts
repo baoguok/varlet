@@ -1,9 +1,11 @@
-import type { App } from 'vue'
+import { withInstall, withPropsDefaultsSetter } from '../utils/components'
 import IndexAnchor from './IndexAnchor.vue'
+import { props as indexAnchorProps } from './props'
 
-IndexAnchor.install = function (app: App) {
-  app.component(IndexAnchor.name, IndexAnchor)
-}
+withInstall(IndexAnchor)
+withPropsDefaultsSetter(IndexAnchor, indexAnchorProps)
+
+export { indexAnchorProps }
 
 export const _IndexAnchorComponent = IndexAnchor
 

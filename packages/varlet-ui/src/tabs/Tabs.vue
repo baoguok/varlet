@@ -1,15 +1,21 @@
 <template>
-  <component :is="sticky ? 'var-sticky' : Transition" :offset-top="sticky ? offsetTop : null">
+  <component
+    :is="sticky ? n('$-sticky') : Transition"
+    :ref="sticky ? 'stickyComponent' : undefined"
+    :css-mode="sticky ? stickyCssMode : undefined"
+    :offset-top="sticky ? offsetTop : undefined"
+    :z-index="sticky ? stickyZIndex : undefined"
+  >
     <div
       :class="
         classes(
           n(),
-          'var--box',
+          n('$--box'),
           n(`--item-${itemDirection}`),
           n(`--layout-${layoutDirection}-padding`),
-          [elevation, 'var-elevation--4'],
+          formatElevation(elevation, 4),
           [fixedBottom, n('--fixed-bottom')],
-          [safeArea, n('--safe-area')]
+          [safeArea, n('--safe-area')],
         )
       "
       :style="{ background: color }"
@@ -20,61 +26,93 @@
         :class="
           classes(
             n('tab-wrap'),
-            [scrollable, n(`--layout-${layoutDirection}-scrollable`)],
-            n(`--layout-${layoutDirection}`)
+            [localScrollable, n(`--layout-${layoutDirection}-scrollable`)],
+            n(`--layout-${layoutDirection}`),
           )
         "
       >
         <slot />
 
         <div
-          :class="classes(n('indicator'), n(`--layout-${layoutDirection}-indicator`))"
+          :class="classes(n('indicator'), n(`--layout-${layoutDirection}${indicatorPosition}-indicator`))"
           :style="{
             width: layoutDirection === 'horizontal' ? indicatorWidth : toSizeUnit(indicatorSize),
             height: layoutDirection === 'horizontal' ? toSizeUnit(indicatorSize) : indicatorHeight,
             transform: layoutDirection === 'horizontal' ? `translateX(${indicatorX})` : `translateY(${indicatorY})`,
-            background: indicatorColor || activeColor,
           }"
-        ></div>
+        >
+          <div
+            :class="classes(n('indicator-inner'), n(`--layout-${layoutDirection}-indicator-inner`))"
+            :style="{ background: indicatorColor || activeColor }"
+          ></div>
+        </div>
       </div>
     </div>
   </component>
 </template>
 
 <script lang="ts">
+import { computed, defineComponent, onActivated, ref, Transition, watch } from 'vue'
+import { call, clamp, doubleRaf, isNumber } from '@varlet/shared'
+import { onWindowResize } from '@varlet/use'
 import VarSticky from '../sticky'
-import { defineComponent, watch, ref, computed, Transition, onMounted, onUnmounted } from 'vue'
+import { type TabProvider } from '../tab/provide'
+import { createNamespace, formatElevation } from '../utils/components'
+import { scrollTo, toSizeUnit } from '../utils/elements'
+import { linear } from '../utils/shared'
 import { props } from './props'
-import { useTabList } from './provide'
-import { isNumber, linear } from '../utils/shared'
-import { toSizeUnit, scrollTo, doubleRaf } from '../utils/elements'
-import type { Ref, ComputedRef } from 'vue'
-import type { TabsProvider } from './provide'
-import type { TabProvider } from '../tab/provide'
-import { createNamespace, call } from '../utils/components'
+import { useTabList, type TabsProvider } from './provide'
 
-const { n, classes } = createNamespace('tabs')
+const { name, n, classes } = createNamespace('tabs')
 
 export default defineComponent({
-  name: 'VarTabs',
+  name,
   components: { VarSticky },
   inheritAttrs: false,
   props,
   setup(props) {
-    const indicatorWidth: Ref<string> = ref('0px')
-    const indicatorHeight: Ref<string> = ref('0px')
-    const indicatorX: Ref<string> = ref('0px')
-    const indicatorY: Ref<string> = ref('0px')
-    const scrollable: Ref<boolean> = ref(false)
-    const scrollerEl: Ref<HTMLElement | null> = ref(null)
-    const active: ComputedRef<number | string> = computed(() => props.active)
-    const activeColor: ComputedRef<string | undefined> = computed(() => props.activeColor)
-    const inactiveColor: ComputedRef<string | undefined> = computed(() => props.inactiveColor)
-    const disabledColor: ComputedRef<string | undefined> = computed(() => props.disabledColor)
-    const itemDirection: ComputedRef<string> = computed(() => props.itemDirection)
+    const indicatorWidth = ref('0px')
+    const indicatorHeight = ref('0px')
+    const indicatorX = ref('0px')
+    const indicatorY = ref('0px')
+    const localScrollable = ref(false)
+    const scrollerEl = ref<HTMLElement | null>(null)
+    const active = computed(() => props.active)
+    const activeColor = computed(() => props.activeColor)
+    const inactiveColor = computed(() => props.inactiveColor)
+    const disabledColor = computed(() => props.disabledColor)
+    const itemDirection = computed(() => props.itemDirection)
+    const stickyComponent = ref<null | typeof VarSticky>(null)
+    const indicatorPosition = computed<string>(() => (props.indicatorPosition === 'reverse' ? '-reverse' : ''))
     const { tabList, bindTabList, length } = useTabList()
 
-    const onTabClick = (tab: TabProvider) => {
+    const tabsProvider: TabsProvider = {
+      active,
+      activeColor,
+      inactiveColor,
+      disabledColor,
+      itemDirection,
+      resize,
+      onTabClick,
+    }
+
+    bindTabList(tabsProvider)
+
+    watch(
+      () => length.value,
+      async () => {
+        await doubleRaf()
+        resize()
+      },
+    )
+
+    watch(() => [props.active, props.scrollable], resize)
+
+    onActivated(resize)
+
+    onWindowResize(resize)
+
+    function onTabClick(tab: TabProvider) {
       const currentActive = tab.name.value ?? tab.index.value
       const { active, onChange, onClick } = props
 
@@ -83,15 +121,15 @@ export default defineComponent({
       currentActive !== active && call(onChange, currentActive)
     }
 
-    const matchName = (): TabProvider | undefined => {
+    function matchName(): TabProvider | undefined {
       return tabList.find(({ name }: TabProvider) => props.active === name.value)
     }
 
-    const matchIndex = (activeIndex?: number): TabProvider | undefined => {
+    function matchIndex(activeIndex?: number): TabProvider | undefined {
       return tabList.find(({ index }: TabProvider) => (activeIndex ?? props.active) === index.value)
     }
 
-    const matchBoundary = (): TabProvider | undefined => {
+    function matchBoundary(): TabProvider | undefined {
       if (length.value === 0) {
         return
       }
@@ -99,30 +137,34 @@ export default defineComponent({
       const { active } = props
 
       if (isNumber(active)) {
-        const activeIndex = active > length.value - 1 ? length.value - 1 : 0
+        const activeIndex = clamp(active, 0, length.value - 1)
         call(props['onUpdate:active'], activeIndex)
         return matchIndex(activeIndex)
       }
     }
 
-    const watchScrollable = () => {
-      scrollable.value = tabList.length >= 5
+    function watchScrollable() {
+      localScrollable.value = props.scrollable === 'always' || tabList.length >= 5
     }
 
-    const moveIndicator = ({ element }: TabProvider) => {
+    function moveIndicator({ element }: TabProvider) {
       const el = element.value
 
+      if (!el) {
+        return
+      }
+
       if (props.layoutDirection === 'horizontal') {
-        indicatorWidth.value = `${el?.offsetWidth}px`
-        indicatorX.value = `${el?.offsetLeft}px`
+        indicatorWidth.value = `${el.offsetWidth}px`
+        indicatorX.value = `${el.offsetLeft}px`
       } else {
-        indicatorHeight.value = `${el?.offsetHeight}px`
-        indicatorY.value = `${el?.offsetTop}px`
+        indicatorHeight.value = `${el.offsetHeight}px`
+        indicatorY.value = `${el.offsetTop}px`
       }
     }
 
-    const scrollToCenter = ({ element }: TabProvider) => {
-      if (!scrollable.value) {
+    function scrollToCenter({ element }: TabProvider) {
+      if (!localScrollable.value) {
         return
       }
 
@@ -145,7 +187,7 @@ export default defineComponent({
     }
 
     // expose
-    const resize = () => {
+    function resize() {
       const tab: TabProvider | undefined = matchName() || matchIndex() || matchBoundary()
       if (!tab || tab.disabled.value) {
         return
@@ -156,43 +198,29 @@ export default defineComponent({
       scrollToCenter(tab)
     }
 
-    const tabsProvider: TabsProvider = {
-      active,
-      activeColor,
-      inactiveColor,
-      disabledColor,
-      itemDirection,
-      resize,
-      onTabClick,
+    // expose
+    async function resizeSticky() {
+      if (props.sticky && stickyComponent.value) {
+        await stickyComponent.value.resize()
+      }
     }
 
-    bindTabList(tabsProvider)
-
-    watch(
-      () => length.value,
-      async () => {
-        await doubleRaf()
-        resize()
-      }
-    )
-
-    watch(() => props.active, resize)
-
-    onMounted(() => window.addEventListener('resize', resize))
-    onUnmounted(() => window.removeEventListener('resize', resize))
-
     return {
+      stickyComponent,
       indicatorWidth,
       indicatorHeight,
       indicatorX,
       indicatorY,
-      scrollable,
+      indicatorPosition,
+      localScrollable,
       scrollerEl,
       Transition,
       toSizeUnit,
       n,
       classes,
       resize,
+      resizeSticky,
+      formatElevation,
     }
   },
 })

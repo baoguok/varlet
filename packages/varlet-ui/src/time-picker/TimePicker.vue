@@ -1,33 +1,40 @@
 <template>
-  <div :class="classes(n(), [shadow, 'var-elevation--2'])" ref="picker">
-    <div :class="n('title')" :style="{ background: headerColor || color }">
-      <div :class="n('title-time')">
-        <div :class="classes(n('title-btn'), [type === 'hour', n('title-btn--active')])" @click="checkPanel('hour')">
-          {{ time.hour }}
+  <div ref="picker" :class="classes(n(), formatElevation(elevation, 2))">
+    <div :class="n('title')" :style="{ background: titleColor || color }">
+      <div :class="n('title-hint')">{{ hint ?? (pt ? pt : t)('timePickerHint') }}</div>
+      <div :class="n('title-time-container')">
+        <div :class="n('title-time')">
+          <div :class="classes(n('title-btn'), [type === 'hour', n('title-btn--active')])" @click="checkPanel('hour')">
+            {{ time.hour }}
+          </div>
+          <span :class="n('title-splitter')">:</span>
+          <div
+            :class="classes(n('title-btn'), [type === 'minute', n('title-btn--active')])"
+            @click="checkPanel('minute')"
+          >
+            {{ time.minute }}
+          </div>
+          <span v-if="useSeconds" :class="n('title-splitter')">:</span>
+          <div
+            v-if="useSeconds"
+            :class="classes(n('title-btn'), [type === 'second', n('title-btn--active')])"
+            @click="checkPanel('second')"
+          >
+            {{ time.second }}
+          </div>
         </div>
-        <span>:</span>
-        <div
-          :class="classes(n('title-btn'), [type === 'minute', n('title-btn--active')])"
-          @click="checkPanel('minute')"
-        >
-          {{ time.minute }}
+        <div v-if="format === 'ampm'" :class="n('title-ampm')">
+          <div :class="classes(n('title-btn'), [ampm === 'am', n('title-btn--active')])" @click="checkAmpm('am')">
+            AM
+          </div>
+          <div :class="classes(n('title-btn'), [ampm === 'pm', n('title-btn--active')])" @click="checkAmpm('pm')">
+            PM
+          </div>
         </div>
-        <span v-if="useSeconds">:</span>
-        <div
-          v-if="useSeconds"
-          :class="classes(n('title-btn'), [type === 'second', n('title-btn--active')])"
-          @click="checkPanel('second')"
-        >
-          {{ time.second }}
-        </div>
-      </div>
-      <div :class="n('title-ampm')" v-if="format === 'ampm'">
-        <div :class="classes(n('title-btn'), [ampm === 'am', n('title-btn--active')])" @click="checkAmpm('am')">AM</div>
-        <div :class="classes(n('title-btn'), [ampm === 'pm', n('title-btn--active')])" @click="checkAmpm('pm')">PM</div>
       </div>
     </div>
     <div :class="n('body')">
-      <div :class="n('clock-container')" @touchstart="moveHand" @touchmove="moveHand" @touchend="end" ref="container">
+      <div ref="container" :class="n('clock-container')" @touchstart="moveHand" @touchmove="moveHand" @touchend="end">
         <transition :name="`${n()}-panel-fade`">
           <clock
             :key="type"
@@ -50,82 +57,129 @@
         </transition>
       </div>
     </div>
+    <div v-if="$slots.actions" :class="n('actions')">
+      <slot name="actions"></slot>
+    </div>
   </div>
 </template>
 
 <script lang="ts">
-import { computed, defineComponent, reactive, ref, watch } from 'vue'
-import dayjs from 'dayjs/esm'
+import { computed, defineComponent, reactive, ref, watch, type DefineComponent } from 'vue'
+import { call, getRect, preventDefault, toNumber } from '@varlet/shared'
+import dayjs from 'dayjs/esm/index.js'
+import { t } from '../locale'
+import { injectLocaleProvider } from '../locale-provider/provide'
+import { createNamespace, formatElevation } from '../utils/components'
+import { padStart } from '../utils/shared'
 import Clock from './clock.vue'
-import { props, hoursAmpm, hours24 } from './props'
-import { toNumber } from '../utils/shared'
-import { createNamespace, call } from '../utils/components'
-import { getNumberTime, getIsDisableMinute, getIsDisableSecond } from './utils'
-import type { ComputedRef, Ref, DefineComponent, UnwrapRef } from 'vue'
-import type { Time, AmPm } from './props'
+import { hours24, hoursAmpm, props, type AmPm, type Time } from './props'
+import { getIsDisableMinute, getIsDisableSecond, getNumberTime } from './utils'
 
-const { n, classes } = createNamespace('time-picker')
+const { name, n, classes } = createNamespace('time-picker')
 
 export default defineComponent({
-  name: 'VarTimePicker',
-  components: {
-    Clock,
-  },
+  name,
+  components: { Clock },
   props,
   setup(props) {
-    const container: Ref<HTMLDivElement | null> = ref(null)
-    const picker: Ref<HTMLElement | null> = ref(null)
-    const inner: Ref<DefineComponent | null> = ref(null)
-    const isInner: Ref<boolean> = ref(false)
-    const isPreventNextUpdate: Ref<boolean> = ref(false)
-    const isActualInner: Ref<boolean> = ref(false)
-    const isChosenUsableHour: Ref<boolean> = ref(false)
-    const isChosenUsableMinute: Ref<boolean> = ref(false)
-    const hourRad: Ref<number | undefined> = ref(undefined)
-    const minuteRad: Ref<number> = ref(0)
-    const secondRad: Ref<number> = ref(0)
-    const type: Ref<keyof Time> = ref('hour')
-    const ampm: Ref<AmPm> = ref('am')
-    const isDisableHour: Ref<boolean> = ref(false)
-    const isDisableMinute: Ref<boolean> = ref(false)
-    const time: Ref<Time> = ref({
+    const container = ref<HTMLElement | null>(null)
+    const picker = ref<HTMLElement | null>(null)
+    const inner = ref<DefineComponent | null>(null)
+    const isInner = ref(false)
+    const isPreventNextUpdate = ref(false)
+    const isActualInner = ref(false)
+    const isChosenUsableHour = ref(false)
+    const isChosenUsableMinute = ref(false)
+    const isDisableHour = ref(false)
+    const isDisableMinute = ref(false)
+    const minuteRad = ref(0)
+    const secondRad = ref(0)
+    const hourRad = ref<number | undefined>()
+    const type = ref<keyof Time>('hour')
+    const ampm = ref<AmPm>('am')
+    const time = ref<Time>({
       hour: '00',
       minute: '00',
       second: '00',
     })
-
-    const center: UnwrapRef<Record<string, number>> = reactive({
+    const center = reactive<Record<string, number>>({
       x: 0,
       y: 0,
     })
-    const innerRange: UnwrapRef<Record<string, Array<number>>> = reactive({
+    const innerRange = reactive<Record<string, number[]>>({
       x: [],
       y: [],
     })
-
-    const getRad: ComputedRef<number | undefined> = computed(() => {
-      if (type.value === 'hour') return hourRad.value
-      if (type.value === 'minute') return minuteRad.value
+    const getRad = computed(() => {
+      if (type.value === 'hour') {
+        return hourRad.value
+      }
+      if (type.value === 'minute') {
+        return minuteRad.value
+      }
 
       return secondRad.value
     })
+    const { t: pt } = injectLocaleProvider()
 
-    const update = (newTime: string) => {
+    watch(
+      () => props.modelValue,
+      (value) => {
+        if (value === undefined || value === '') {
+          resetTime()
+          return
+        }
+
+        const { hour, minute, second } = getNumberTime(value)
+
+        const formatHour12 = dayjs().hour(hour).format('hh')
+        const formatHour24 = dayjs().hour(hour).format('HH')
+        const formatMinute = dayjs().minute(minute).format('mm')
+        const formatSecond = dayjs().second(second).format('ss')
+
+        hourRad.value = (formatHour12 === '12' ? 0 : toNumber(formatHour12)) * 30
+        minuteRad.value = toNumber(formatMinute) * 6
+        secondRad.value = toNumber(formatSecond) * 6
+
+        time.value = getTime(value)
+
+        if (props.format !== '24hr') {
+          ampm.value = padStart(`${hour}`, 2, '0') === formatHour24 && hours24.includes(formatHour24) ? 'pm' : 'am'
+        }
+
+        isInner.value = props.format === '24hr' && hours24.includes(formatHour24)
+      },
+      { immediate: true },
+    )
+
+    function resetTime() {
+      hourRad.value = undefined
+      minuteRad.value = 0
+      secondRad.value = 0
+      time.value = {
+        hour: '00',
+        minute: '00',
+        second: '00',
+      }
+      ampm.value = 'am'
+    }
+
+    function update(newTime: string) {
       call(props['onUpdate:modelValue'], newTime)
       call(props.onChange, newTime)
     }
 
-    const rad2deg = (rad: number): number => {
+    function rad2deg(rad: number): number {
       return rad * 57.29577951308232
     }
 
-    const checkPanel = (panelType: keyof Time) => {
+    function checkPanel(panelType: keyof Time) {
       isChosenUsableHour.value = false
       isDisableMinute.value = false
       type.value = panelType
     }
 
-    const findAvailableHour = (ampm: string): string | undefined => {
+    function findAvailableHour(ampm: string): string | undefined {
       const { disableHour } = inner.value as DefineComponent
 
       const index = hoursAmpm.findIndex((hour) => toNumber(hour) === toNumber(time.value.hour))
@@ -139,27 +193,31 @@ export default defineComponent({
       })
     }
 
-    const checkAmpm = (ampmType: AmPm) => {
-      if (props.readonly) return
+    function checkAmpm(ampmType: AmPm) {
+      if (props.readonly) {
+        return
+      }
 
       ampm.value = ampmType
       const newHour = findAvailableHour(ampmType)
-      if (!newHour) return
+      if (!newHour) {
+        return
+      }
 
       const second = props.useSeconds ? `:${time.value.second}` : ''
-      const newTime = `${newHour.padStart(2, '0')}:${time.value.minute}${second}`
+      const newTime = `${padStart(newHour, 2, '0')}:${time.value.minute}${second}`
 
       update(newTime)
     }
 
-    const getInner = (clientX: number, clientY: number): boolean => {
+    function getInner(clientX: number, clientY: number): boolean {
       const xIsInRange = clientX >= innerRange.x[0] && clientX <= innerRange.x[1]
       const yIsInRange = clientY >= innerRange.y[0] && clientY <= innerRange.y[1]
 
       return xIsInRange && yIsInRange
     }
 
-    const getTime = (value: string): Time => {
+    function getTime(value: string): Time {
       const hourFormat = props.format === '24hr' ? 'HH' : 'hh'
       const { hour, minute, second } = getNumberTime(value)
 
@@ -170,12 +228,12 @@ export default defineComponent({
       }
     }
 
-    const getHourIndex = (rad: number): number => {
+    function getHourIndex(rad: number): number {
       const value = rad / 30
       return value >= 0 ? value : value + 12
     }
 
-    const getRangeSize = () => {
+    function getRangeSize() {
       const { width: innerWidth, height: innerHeight } = (inner.value as DefineComponent).getSize()
 
       const rangeXMin = center.x - innerWidth / 2 - 8
@@ -192,7 +250,7 @@ export default defineComponent({
       }
     }
 
-    const setHourRad = (clientX: number, clientY: number, roundDeg: number) => {
+    function setHourRad(clientX: number, clientY: number, roundDeg: number) {
       const { disableHour } = inner.value as DefineComponent
       isActualInner.value = getInner(clientX, clientY)
       const rad = Math.round(roundDeg / 30) * 30 + 90
@@ -202,16 +260,20 @@ export default defineComponent({
       if (!disableHour.includes(anotherHour)) {
         isInner.value = props.format === '24hr' ? getInner(clientX, clientY) : false
       }
-      if (isInner.value !== isActualInner.value) return
+      if (isInner.value !== isActualInner.value) {
+        return
+      }
 
       const newHour = isInner.value || ampm.value === 'pm' ? hours24[index] : hoursAmpm[index]
       isDisableHour.value = disableHour.includes(newHour)
-      if (isDisableHour.value) return
+      if (isDisableHour.value) {
+        return
+      }
       hourRad.value = rad
       isChosenUsableHour.value = true
     }
 
-    const setMinuteRad = (roundDeg: number) => {
+    function setMinuteRad(roundDeg: number) {
       const { disableHour } = inner.value as DefineComponent
       const rad = Math.round(roundDeg / 6) * 6 + 90
       const radToMin = rad / 6 >= 0 ? rad / 6 : rad / 6 + 60
@@ -228,12 +290,14 @@ export default defineComponent({
       }
       isDisableMinute.value = getIsDisableMinute(values)
 
-      if (isDisableMinute.value) return
+      if (isDisableMinute.value) {
+        return
+      }
       minuteRad.value = rad
       isChosenUsableMinute.value = true
     }
 
-    const setSecondRad = (roundDeg: number) => {
+    function setSecondRad(roundDeg: number) {
       const { disableHour } = inner.value as DefineComponent
       const rad = Math.round(roundDeg / 6) * 6 + 90
       const radToSec = rad / 6 >= 0 ? rad / 6 : rad / 6 + 60
@@ -250,11 +314,13 @@ export default defineComponent({
         allowedTime: props.allowedTime,
       }
 
-      if (!getIsDisableSecond(values)) secondRad.value = rad
+      if (!getIsDisableSecond(values)) {
+        secondRad.value = rad
+      }
     }
 
-    const setCenterAndRange = () => {
-      const { left, top, width, height } = (container.value as HTMLDivElement).getBoundingClientRect()
+    function setCenterAndRange() {
+      const { left, top, width, height } = getRect(container.value as HTMLElement)
 
       center.x = left + width / 2
       center.y = top + height / 2
@@ -267,9 +333,11 @@ export default defineComponent({
       }
     }
 
-    const moveHand = (event: TouchEvent) => {
-      event.preventDefault()
-      if (props.readonly) return
+    function moveHand(event: TouchEvent) {
+      preventDefault(event)
+      if (props.readonly) {
+        return
+      }
 
       setCenterAndRange()
 
@@ -279,13 +347,19 @@ export default defineComponent({
       const y = clientY - center.y
       const roundDeg = Math.round(rad2deg(Math.atan2(y, x)))
 
-      if (type.value === 'hour') setHourRad(clientX, clientY, roundDeg)
-      else if (type.value === 'minute') setMinuteRad(roundDeg)
-      else setSecondRad(roundDeg)
+      if (type.value === 'hour') {
+        setHourRad(clientX, clientY, roundDeg)
+      } else if (type.value === 'minute') {
+        setMinuteRad(roundDeg)
+      } else {
+        setSecondRad(roundDeg)
+      }
     }
 
-    const end = () => {
-      if (props.readonly) return
+    function end() {
+      if (props.readonly) {
+        return
+      }
 
       if (type.value === 'hour' && isChosenUsableHour.value) {
         type.value = 'minute'
@@ -297,40 +371,11 @@ export default defineComponent({
       }
     }
 
-    const changePreventUpdate = () => {
+    function changePreventUpdate() {
       isPreventNextUpdate.value = false
     }
 
-    watch(
-      () => props.modelValue,
-      (value) => {
-        if (value) {
-          const { hour, minute, second } = getNumberTime(value)
-
-          const formatHour12 = dayjs().hour(hour).format('hh')
-          const formatHour24 = dayjs().hour(hour).format('HH')
-          const formatMinute = dayjs().minute(minute).format('mm')
-          const formatSecond = dayjs().second(second).format('ss')
-
-          hourRad.value = (formatHour12 === '12' ? 0 : toNumber(formatHour12)) * 30
-          minuteRad.value = toNumber(formatMinute) * 6
-          secondRad.value = toNumber(formatSecond) * 6
-
-          time.value = getTime(value)
-
-          if (props.format !== '24hr') {
-            ampm.value = `${hour}`.padStart(2, '0') === formatHour24 && hours24.includes(formatHour24) ? 'pm' : 'am'
-          }
-
-          isInner.value = props.format === '24hr' && hours24.includes(formatHour24)
-        }
-      },
-      { immediate: true }
-    )
-
     return {
-      n,
-      classes,
       getRad,
       time,
       container,
@@ -340,12 +385,17 @@ export default defineComponent({
       type,
       ampm,
       isPreventNextUpdate,
+      n,
+      classes,
+      t,
+      pt,
       moveHand,
       checkPanel,
       checkAmpm,
       end,
       update,
       changePreventUpdate,
+      formatElevation,
     }
   },
 })

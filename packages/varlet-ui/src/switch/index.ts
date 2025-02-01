@@ -1,9 +1,11 @@
-import type { App } from 'vue'
+import { withInstall, withPropsDefaultsSetter } from '../utils/components'
+import { props as switchProps } from './props'
 import Switch from './Switch.vue'
 
-Switch.install = function (app: App) {
-  app.component(Switch.name, Switch)
-}
+withInstall(Switch)
+withPropsDefaultsSetter(Switch, switchProps)
+
+export { switchProps }
 
 export const _SwitchComponent = Switch
 

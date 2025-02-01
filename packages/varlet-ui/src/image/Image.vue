@@ -1,82 +1,109 @@
 <template>
   <div
-    :class="classes(n(), 'var--box', [!block, 'var--inline-block'])"
+    v-ripple="{ disabled: !ripple }"
+    :class="classes(n(), n('$--box'), [!block, n('$--inline-block')])"
     :style="{
       width: toSizeUnit(width),
       height: toSizeUnit(height),
-      'border-radius': toSizeUnit(radius),
+      borderRadius: toSizeUnit(radius),
     }"
-    v-ripple="{ disabled: !ripple }"
   >
     <img
+      v-if="lazy && !showErrorSlot"
+      v-lazy="src ?? ''"
+      role="img"
       :class="n('image')"
       :alt="alt"
-      :lazy-error="error"
+      :title="title"
+      :referrerpolicy="referrerpolicy"
       :lazy-loading="loading"
-      :style="{ objectFit: fit }"
-      v-if="lazy"
-      v-lazy="src"
+      :lazy-error="error"
+      :style="{ objectFit: fit, objectPosition: position }"
       @load="handleLoad"
-      @error="handleError"
-      @click="onClick"
+      @click="handleClick"
     />
 
     <img
+      v-if="!lazy && !showErrorSlot"
+      role="img"
       :class="n('image')"
       :alt="alt"
-      :style="{ objectFit: fit }"
+      :title="title"
+      :referrerpolicy="referrerpolicy"
+      :style="{ objectFit: fit, objectPosition: position }"
       :src="src"
-      v-else
       @load="handleLoad"
       @error="handleError"
-      @click="onClick"
+      @click="handleClick"
     />
+
+    <slot v-if="showErrorSlot" name="error" />
   </div>
 </template>
 
 <script lang="ts">
+import { defineComponent, ref, watch } from 'vue'
+import { call } from '@varlet/shared'
+import Lazy, { type LazyHTMLElement } from '../lazy'
 import Ripple from '../ripple'
-import Lazy from '../lazy'
-import { defineComponent } from 'vue'
-import { props } from './props'
+import { createNamespace } from '../utils/components'
 import { toSizeUnit } from '../utils/elements'
-import type { LazyHTMLElement } from '../lazy'
-import { createNamespace, call } from '../utils/components'
+import { props } from './props'
 
-const { n, classes } = createNamespace('image')
+const { name, n, classes } = createNamespace('image')
 
 export default defineComponent({
-  name: 'VarImage',
+  name,
   directives: {
     Lazy,
     Ripple,
   },
   props,
-  setup(props) {
-    const handleLoad = (e: Event) => {
-      const el: LazyHTMLElement = e.currentTarget as LazyHTMLElement
-      const { lazy, onLoad, onError } = props
+  setup(props, { slots }) {
+    const showErrorSlot = ref(false)
 
-      if (lazy) {
-        el._lazy.state === 'success' && call(onLoad, e)
-        el._lazy.state === 'error' && call(onError, e)
+    watch(
+      () => props.src,
+      () => {
+        showErrorSlot.value = false
+      },
+    )
+
+    function handleError(e: Event) {
+      // the value of showErrorSlot depends on whether there is an error slot
+      showErrorSlot.value = !!slots.error
+      call(props.onError, e)
+    }
+
+    function handleLoad(e: Event) {
+      const el: LazyHTMLElement = e.currentTarget as LazyHTMLElement
+
+      if (props.lazy) {
+        if (el._lazy.state === 'success') {
+          call(props.onLoad, e)
+          return
+        }
+
+        if (el._lazy.state === 'error') {
+          handleError(e)
+        }
       } else {
-        call(onLoad, e)
+        call(props.onLoad, e)
       }
     }
 
-    const handleError = (e: Event) => {
-      const { lazy, onError } = props
-
-      !lazy && call(onError, e)
+    function handleClick(e: Event) {
+      call(props.onClick, e)
     }
 
     return {
+      showErrorSlot,
       n,
       classes,
       toSizeUnit,
       handleLoad,
       handleError,
+      handleClick,
     }
   },
 })

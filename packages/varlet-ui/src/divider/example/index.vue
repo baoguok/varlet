@@ -1,42 +1,41 @@
 <script setup>
-import AppType from '@varlet/cli/site/mobile/components/AppType'
-import VarDivider from '..'
-import VarIcon from '../../icon'
-import dark from '../../themes/dark'
-import { pack, use } from './locale'
-import { watchLang, watchDarkMode } from '@varlet/cli/site/utils'
+import { AppType, onThemeChange, watchLang } from '@varlet/cli/client'
+import { t, use } from './locale'
 
 watchLang(use)
-watchDarkMode(dark)
+onThemeChange()
 </script>
 <template>
-  <app-type>{{ pack.basicUsage }}</app-type>
+  <app-type>{{ t('basicUsage') }}</app-type>
   <var-divider />
 
-  <app-type>{{ pack.dashed }}</app-type>
+  <app-type>{{ t('dashed') }}</app-type>
   <var-divider dashed />
 
-  <app-type>{{ pack.inset }}</app-type>
+  <app-type>{{ t('inset') }}</app-type>
   <var-divider inset />
   <var-divider :inset="36" margin="36px 0" />
   <var-divider inset="-36px" />
 
-  <app-type>{{ pack.vertical }}</app-type>
+  <app-type>{{ t('vertical') }}</app-type>
   <div class="divider-example-vertical-container">
-    <span>{{ pack.text }}</span>
+    <span>{{ t('text') }}</span>
     <var-divider vertical />
-    <span>{{ pack.text }}</span>
+    <span>{{ t('text') }}</span>
     <var-divider vertical />
-    <span>{{ pack.text }}</span>
+    <span>{{ t('text') }}</span>
   </div>
 
-  <app-type>{{ pack.withDesc }}</app-type>
-  <var-divider :description="pack.withDescText" />
+  <app-type>{{ t('withDesc') }}</app-type>
+  <var-divider :description="t('withDescText')" />
 
-  <app-type>{{ pack.custom }}</app-type>
+  <app-type>{{ t('custom') }}</app-type>
   <var-divider>
-    <var-icon name="heart-outline" style="margin: 0 16px; color: rgb(41, 121, 255)" />
+    <var-icon name="heart-outline" style="margin: 0 16px; color: var(--color-danger)" />
   </var-divider>
+
+  <app-type>{{ t('hairline') }}</app-type>
+  <var-divider hairline />
 </template>
 
 <style lang="less" scoped>

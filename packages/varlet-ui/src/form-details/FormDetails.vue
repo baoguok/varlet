@@ -1,8 +1,22 @@
 <template>
   <transition :name="n()">
-    <div :class="n()" v-if="errorMessage || maxlengthText">
-      <div :class="n('message')">{{ errorMessage }}</div>
-      <div :class="n('length')">{{ maxlengthText }}</div>
+    <div v-if="errorMessage || extraMessage || $slots['extra-message']" :class="n()">
+      <div :class="n('error-message')">
+        <transition :name="n('message')">
+          <div v-if="errorMessage">
+            {{ errorMessage }}
+          </div>
+        </transition>
+      </div>
+      <div :class="n('extra-message')">
+        <transition :name="n('message')">
+          <slot name="extra-message">
+            <div v-if="extraMessage">
+              {{ extraMessage }}
+            </div>
+          </slot>
+        </transition>
+      </div>
     </div>
   </transition>
 </template>
@@ -12,10 +26,10 @@ import { defineComponent } from 'vue'
 import { createNamespace } from '../utils/components'
 import { props } from './props'
 
-const { n } = createNamespace('form-details')
+const { name, n } = createNamespace('form-details')
 
 export default defineComponent({
-  name: 'VarFormDetails',
+  name,
   props,
   setup: () => ({ n }),
 })

@@ -1,16 +1,17 @@
-import Cell from '..'
-import VarCell from '../Cell'
-import VarIcon from '../../icon/Icon'
-import { mount } from '@vue/test-utils'
 import { createApp, h } from 'vue'
+import { mount } from '@vue/test-utils'
+import { describe, expect, test } from 'vitest'
+import Cell from '..'
+import VarIcon from '../../icon/Icon'
+import VarCell from '../Cell'
 
-test('test cell plugin', () => {
+test('cell plugin', () => {
   const app = createApp({}).use(Cell)
   expect(app.component(Cell.name)).toBeTruthy()
 })
 
 describe('test cell component props', () => {
-  test('test cell title', () => {
+  test('cell title', () => {
     const wrapper = mount(VarCell, {
       props: {
         title: 'This is cell',
@@ -21,7 +22,7 @@ describe('test cell component props', () => {
     wrapper.unmount()
   })
 
-  test('test cell icon', () => {
+  test('cell icon', () => {
     const wrapper = mount(VarCell, {
       props: {
         icon: 'fire',
@@ -32,18 +33,18 @@ describe('test cell component props', () => {
     wrapper.unmount()
   })
 
-  test('test cell desc', () => {
+  test('cell description', () => {
     const wrapper = mount(VarCell, {
       props: {
-        desc: 'This is desc',
+        description: 'This is desc',
       },
     })
 
-    expect(wrapper.find('.var-cell__desc').text()).toBe('This is desc')
+    expect(wrapper.find('.var-cell__description').text()).toBe('This is desc')
     wrapper.unmount()
   })
 
-  test('test cell border', async () => {
+  test('cell border', async () => {
     const wrapper = mount(VarCell, {
       props: {
         border: true,
@@ -56,7 +57,7 @@ describe('test cell component props', () => {
     wrapper.unmount()
   })
 
-  test('test cell icon class', () => {
+  test('cell icon class', () => {
     const wrapper = mount(VarCell, {
       props: {
         icon: 'fire',
@@ -68,7 +69,7 @@ describe('test cell component props', () => {
     wrapper.unmount()
   })
 
-  test('test cell title class', () => {
+  test('cell title class', () => {
     const wrapper = mount(VarCell, {
       props: {
         title: 'This is Cell',
@@ -80,19 +81,19 @@ describe('test cell component props', () => {
     wrapper.unmount()
   })
 
-  test('test cell desc class', () => {
+  test('cell description class', () => {
     const wrapper = mount(VarCell, {
       props: {
-        desc: 'This is desc',
-        descClass: 'test-desc-class',
+        description: 'This is desc',
+        descriptionClass: 'test-desc-class',
       },
     })
 
-    expect(wrapper.find('.var-cell__desc').classes()).toContain('test-desc-class')
+    expect(wrapper.find('.var-cell__description').classes()).toContain('test-desc-class')
     wrapper.unmount()
   })
 
-  test('test cell extra class', () => {
+  test('cell extra class', () => {
     const wrapper = mount(VarCell, {
       props: {
         extraClass: 'test-extra-class',
@@ -108,18 +109,18 @@ describe('test cell component props', () => {
 })
 
 describe('test cell component slots', () => {
-  test('test cell default slots', () => {
+  test('cell default slots', () => {
     const wrapper = mount(VarCell, {
       slots: {
         default: () => 'This is cell',
       },
     })
 
-    expect(wrapper.find('.var-cell__title').element.textContent).toBe('This is cell')
+    expect(wrapper.find('.var-cell__content').text()).toBe('This is cell')
     wrapper.unmount()
   })
 
-  test('test cell icon slots', () => {
+  test('cell icon slots', () => {
     const wrapper = mount(VarCell, {
       slots: {
         icon: h(VarIcon, { name: 'fire' }),
@@ -130,18 +131,30 @@ describe('test cell component slots', () => {
     wrapper.unmount()
   })
 
-  test('test cell desc slots', () => {
+  test('cell description slots', () => {
     const wrapper = mount(VarCell, {
       slots: {
-        desc: () => 'This is desc',
+        description: () => 'This is desc',
       },
     })
 
-    expect(wrapper.find('.var-cell__desc').text()).toBe('This is desc')
+    expect(wrapper.find('.var-cell__content').text()).toBe('This is desc')
     wrapper.unmount()
   })
 
-  test('test cell extra slots', () => {
+  test('cell default and description slots', () => {
+    const wrapper = mount(VarCell, {
+      slots: {
+        default: () => 'This is default ',
+        description: () => 'This is desc',
+      },
+    })
+
+    expect(wrapper.find('.var-cell__content').text()).toBe('This is default This is desc')
+    wrapper.unmount()
+  })
+
+  test('cell extra slots', () => {
     const wrapper = mount(VarCell, {
       slots: {
         extra: 'information',

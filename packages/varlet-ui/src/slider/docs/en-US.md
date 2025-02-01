@@ -18,7 +18,7 @@ const value = ref(3)
 </template>
 ```
 
-### Step size
+### Step Size
 
 Set step increment by `step`.
 
@@ -30,13 +30,13 @@ const value = ref(25)
 </script>
 
 <template>
-  <var-slider v-model="value" step="10" />
+  <var-slider v-model="value" :step="10" />
 </template>
 ```
 
-### Dual thumb
+### Dual Thumbs
 
-Open the double slider mode through the `range` attribute. Make sure the `value` is an **array**.
+Open the double slider mode through the `range` attribute. Make sure the `value` is an array.
 
 ```html
 <script setup>
@@ -44,13 +44,27 @@ import { ref } from 'vue'
 
 const value = ref([24, 50])
 
-const handleChange = (value) => {
+function handleChange(value) {
   console.log(value)
 }
 </script>
 
 <template>
   <var-slider v-model="value" range @change="handleChange" />
+</template>
+```
+
+### Range
+
+```html
+<script setup>
+import { ref } from 'vue'
+
+const value = ref(0)
+</script>
+
+<template>
+  <var-slider v-model="value" :max="210" :min="-50" label-visible="always" />
 </template>
 ```
 
@@ -82,7 +96,7 @@ const value = ref(40)
 </template>
 ```
 
-### Slider size
+### Slider Size
 
 Control the size of slider through `track-height` and `thumb-size`.
 
@@ -94,11 +108,11 @@ const value = ref([7, 64])
 </script>
 
 <template>
-  <var-slider v-model="value" track-height="4" thumb-size="8" range />
+  <var-slider v-model="value" :track-height="4" :thumb-size="8" range />
 </template>
 ```
 
-### Custom style
+### Custom Style
 
 ```html
 <script setup>
@@ -156,7 +170,7 @@ const value = ref([5, 38])
 </style>
 ```
 
-### Show label
+### Show Label
 Control the display of labels through the `label-visible` attribute.
 
 ```html
@@ -175,11 +189,10 @@ const value2 = ref(50)
 </template>
 ```
 
-### Validate value
+### Validate Value
 
 Verify the value through the `rules` attribute.
-
-<span style="font-size: 12px">`rules` is an array that accepts `functions`, `boolean`, and `string`. Functions pass an input value as an argument and must return either `true` / `false` or a `string` containing an error message. The input field will enter an error state if a function returns (or any value in the array contains) `false` or is a `string`.</span>
+`rules` is an array that accepts `functions`, `boolean`, and `string`. Functions pass an input value as an argument and must return either `true` / `false` or a `string` containing an error message. The input field will enter an error state if a function returns (or any value in the array contains) `false` or is a `string`.
 
 ```html
 <script setup>
@@ -189,7 +202,46 @@ const value = ref(20)
 </script>
 
 <template>
-  <var-slider v-model="value" :rules="[(v) => v > 35 || 'error message']" />
+  <var-slider v-model="value" :rules="[v => v > 35 || 'error message']" />
+</template>
+```
+
+### Validate With Zod
+
+```html
+<script setup>
+import { ref } from 'vue'
+import { z } from 'zod'
+
+const value = ref(20)
+</script>
+
+<template>
+  <var-slider v-model="value" :rules="z.number().min(36, 'error message')" />
+</template>
+```
+
+### Vertical
+
+Set the `direction` attribute value to `vertical` to make the slider display vertically.
+
+```html
+<script setup>
+import { ref } from 'vue'
+
+const value1 = ref(50)
+const value2 = ref([7, 64])
+</script>
+
+<template>
+  <var-space justify="space-around">
+    <div style="height: 300px">
+      <var-slider v-model="value1" direction="vertical" />
+    </div>
+    <div style="height: 300px">
+      <var-slider v-model="value2" range label-visible="always" direction="vertical" />
+    </div>
+  </var-space>
 </template>
 ```
 
@@ -197,27 +249,32 @@ const value = ref(20)
 
 ### Props
 
-| Prop | Description | Type | Default |
-| ----- | -------------- | -------- | ---------- |
-| `v-model` | The value of slider | _number \| [number, number]_ | `0` |
-| `step`| Step size. The value is an integer between `1 ~ 100` | _string \| number_ | `1` |
-| `range`| Whether open the dual thumb mode | _boolean_ | `false` |
+| Prop | Description                                                              | Type | Default |
+| ----- |--------------------------------------------------------------------------| -------- | ---------- |
+| `v-model` | The value of slider                                                      | _number \| [number, number]_ | `0` |
+| `step`| Step size. The value must greater than 0                                 | _string \| number_ | `1` |
+| `range`| Whether open the dual thumb mode                                         | _boolean_ | `false` |
+| `max` | The maximum value the slider can slide to                                | _string \| number_ | `100`           |
+| `min` | The minimum value the slider can slide to                                | _string \| number_ | `0`           |
 | `label-visible` | Whether to display labels, the optional value is `always, normal, never` | _string_ | `normal` |
-| `label-text-color` | Color of label text | _string_ | `#fff` |
-| `track-height` | Height of slider | _string \| number_ | `2` |
-| `thumb-size` | Size of thumb | _string \| number_ | `12` |
-| `disabled`| 	Whether to disable slider  | _boolean_  | `false` |
-| `readonly`| 	Whether to readonly slider | _boolean_  | `false` |
-| `rules`| Validation rules | _array_  | `-` |
-
-
+| `label-text-color` | Color of label text                                                      | _string_ | `-` |
+| `label-color`  | Background color of label                                                | _string_ | `-`               |
+| `active-color` | Background color of actived track                                        | _string_ | `-`               |
+| `track-color`  | Background color of track                                                | _string_ | `-`               |
+| `track-height` | Height of track                                                          | _string \| number_ | `-` |
+| `thumb-size` | Size of thumb                                                            | _string \| number_ | `-` |
+| `thumb-color`   | Background color of thumb                                                | _string_ | `-`               |
+| `disabled`| Whether to disable slider                                                | _boolean_  | `false` |
+| `readonly`| Whether to readonly slider                                               | _boolean_  | `false` |
+| `direction` | Direction of slider, Can be set to `vertical horizontal`                           | _string_ | `horizontal` |
+| `rules` | Validation rules, return `true` to indicate verification passes, other types of values ​​will be converted into text as user prompts. [Zod validation](#/en-US/zodValidation) is supported since `3.5.0` | _((v: number \| [number, number]) => any) \| ZodType \| Array<((v: number \| [number, number]) => any) \| ZodType>_ | `-` |
 ### Events
 
 | Event | Description | arguments |
 | ----- | -------- | -------- |
-| `change` | 	Emitted after slider changed | value: current value |
+| `change` |  Emitted after slider changed | `value`: current value |
 | `start` | Emitted when start dragged | `-` |
-| `end` | Emitted when end dragged | value: current value |
+| `end` | Emitted when end dragged | `value`: current value |
 
 ### Slots
 
@@ -227,14 +284,20 @@ const value = ref(20)
 
 ### Style Variables
 
-Here are the CSS variables used by the component, Styles can be customized using [StyleProvider](#/en-US/style-provider)
+Here are the CSS variables used by the component. Styles can be customized using [StyleProvider](#/en-US/style-provider).
 
 | Variable | Default |
 | --- | --- |
 | `--slider-error-color` | `var(--color-danger)` |
 | `--slider-track-background` | `#bdbdbd` |
+| `--slider-track-height` | `2px` |
+| `--slider-track-border-radius` | `0` |
+| `--slider-track-fill-border-radius` | `0` |
 | `--slider-track-fill-background` | `var(--color-primary)` |
 | `--slider-thumb-block-background` | `var(--color-primary)` |
 | `--slider-thumb-ripple-background` | `var(--color-primary)` |
 | `--slider-thumb-label-background` | `var(--color-primary)` |
 | `--slider-thumb-label-font-size` | `var(--font-size-sm)` |
+| `--slider-thumb-label-text-color` | `var(--color-on-primary)` |
+| `--slider-thumb-size` | `12px` |
+| `--slider-disabled-opacity` | `var(--opacity-disabled)` |

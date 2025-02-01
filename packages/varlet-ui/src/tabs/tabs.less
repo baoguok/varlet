@@ -1,19 +1,13 @@
-@tabs-item-horizontal-height: 44px;
-@tabs-item-vertical-height: 66px;
-@tabs-radius: 2px;
-@tabs-padding: 12px;
-@tabs-indicator-size: 2px;
-@tabs-indicator-background: var(--color-primary);
-@tabs-background: #fff;
-
 :root {
-  --tabs-item-horizontal-height: @tabs-item-horizontal-height;
-  --tabs-item-vertical-height: @tabs-item-vertical-height;
-  --tabs-radius: @tabs-radius;
-  --tabs-padding: @tabs-padding;
-  --tabs-indicator-size: @tabs-indicator-size;
-  --tabs-indicator-background: @tabs-indicator-background;
-  --tabs-background: @tabs-background;
+  --tabs-item-horizontal-height: 44px;
+  --tabs-item-vertical-height: 66px;
+  --tabs-radius: 2px;
+  --tabs-padding: 12px;
+  --tabs-indicator-size: 2px;
+  --tabs-indicator-border-radius: 0;
+  --tabs-indicator-background: var(--color-primary);
+  --tabs-background: #fff;
+  --tabs-indicator-inner-size: 100%;
 }
 
 .var-tabs {
@@ -29,10 +23,18 @@
   }
 
   &__indicator {
+    display: flex;
+    justify-content: center;
+    align-items: center;
     position: absolute;
-    z-index: 10;
+    z-index: 1;
     transition-property: width, transform;
     transition-duration: 0.3s;
+  }
+
+  &__indicator-inner {
+    background: var(--tabs-indicator-background);
+    border-radius: var(--tabs-indicator-border-radius);
   }
 
   &--layout-horizontal {
@@ -41,6 +43,11 @@
     &-scrollable {
       overflow-x: auto;
       overflow-y: hidden;
+      scrollbar-width: none;
+
+      &::-webkit-scrollbar {
+        display: none;
+      }
     }
 
     &-padding {
@@ -51,7 +58,17 @@
       left: 0;
       bottom: 0;
       height: var(--tabs-indicator-size);
-      background: var(--tabs-indicator-background);
+    }
+
+    &-reverse-indicator {
+      left: 0;
+      top: 0;
+      height: var(--tabs-indicator-size);
+    }
+
+    &-indicator-inner {
+      width: var(--tabs-indicator-inner-size);
+      height: 100%;
     }
   }
 
@@ -61,6 +78,11 @@
     &-scrollable {
       overflow-x: hidden;
       overflow-y: auto;
+      scrollbar-width: none;
+
+      &::-webkit-scrollbar {
+        display: none;
+      }
     }
 
     &-padding {
@@ -71,7 +93,17 @@
       left: 0;
       top: 0;
       width: var(--tabs-indicator-size);
-      background: var(--tabs-indicator-background);
+    }
+
+    &-reverse-indicator {
+      right: 0;
+      top: 0;
+      width: var(--tabs-indicator-size);
+    }
+
+    &-indicator-inner {
+      width: 100%;
+      height: var(--tabs-indicator-inner-size);
     }
   }
 

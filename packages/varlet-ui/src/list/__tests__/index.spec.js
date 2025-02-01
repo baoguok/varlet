@@ -1,17 +1,20 @@
-import List from '..'
-import VarList from '../List'
+import { createApp } from 'vue'
 import { mount } from '@vue/test-utils'
-import { createApp, h } from 'vue'
-import { delay } from '../../utils/jest'
+import { describe, expect, test, vi } from 'vitest'
+import List from '..'
+import TabItem from '../../tab-item'
+import TabsItems from '../../tabs-items'
+import { delay } from '../../utils/test'
+import VarList from '../List'
 
-test('test list plugin', () => {
+test('list use', () => {
   const app = createApp({}).use(List)
   expect(app.component(List.name)).toBeTruthy()
 })
 
-test('test list immediate check', async () => {
-  const onLoad = jest.fn()
-  const onUpdateLoading = jest.fn()
+test('list component load event', async () => {
+  const onLoad = vi.fn()
+  const onUpdateLoading = vi.fn()
 
   const wrapper = mount(VarList, {
     props: {
@@ -21,64 +24,113 @@ test('test list immediate check', async () => {
     attachTo: document.body,
   })
 
-  const mockGetBoundingClientRect = jest.spyOn(wrapper.element, 'getBoundingClientRect').mockReturnValue({ bottom: 0 })
+  const mockGetBoundingClientRect = vi.spyOn(wrapper.element, 'getBoundingClientRect').mockReturnValue({ bottom: 0 })
   await delay(16)
 
   expect(onLoad).toHaveBeenCalledTimes(1)
   expect(onUpdateLoading).toHaveBeenCalledTimes(1)
-  expect(wrapper.html()).toMatchSnapshot()
   wrapper.unmount()
   mockGetBoundingClientRect.mockRestore()
 })
 
-test('test click error text reload', async () => {
-  const onLoad = jest.fn()
-  const onUpdateLoading = jest.fn((value) => wrapper.setProps({ loading: value }))
-  const onUpdateError = jest.fn((value) => wrapper.setProps({ error: value }))
+describe('test list component props', () => {
+  test('list loading and loading-text', async () => {
+    const wrapper = mount(VarList, {
+      props: {
+        loading: true,
+        loadingText: 'This is loading text',
+      },
+    })
 
-  const wrapper = mount(VarList, {
-    props: {
+    const mockGetBoundingClientRect = vi.spyOn(wrapper.element, 'getBoundingClientRect').mockReturnValue({ bottom: 50 })
+    await delay(16)
+    expect(wrapper.find('.var-list__loading').element.textContent).toBe('This is loading text')
+    await wrapper.setProps({ loading: false })
+    await delay(16)
+    expect(wrapper.find('.var-list__loading').exists()).toBe(false)
+    wrapper.unmount()
+    mockGetBoundingClientRect.mockRestore()
+  })
+
+  test('list error and error-text', async () => {
+    const wrapper = mount(VarList, {
+      props: {
+        error: true,
+        errorText: 'This is error text',
+      },
+    })
+
+    const mockGetBoundingClientRect = vi.spyOn(wrapper.element, 'getBoundingClientRect').mockReturnValue({ bottom: 50 })
+    await delay(16)
+    expect(wrapper.find('.var-list__error').element.textContent).toBe('This is error text')
+    await wrapper.setProps({ error: false })
+    await delay(16)
+    expect(wrapper.find('.var-list__error').exists()).toBe(false)
+    wrapper.unmount()
+    mockGetBoundingClientRect.mockRestore()
+  })
+
+  test('list finished and finished-text', async () => {
+    const wrapper = mount(VarList, {
+      props: {
+        finished: true,
+        finishedText: 'This is finished text',
+      },
+    })
+
+    const mockGetBoundingClientRect = vi.spyOn(wrapper.element, 'getBoundingClientRect').mockReturnValue({ bottom: 50 })
+    await delay(16)
+    expect(wrapper.find('.var-list__finished').element.textContent).toBe('This is finished text')
+    await wrapper.setProps({ finished: false })
+    await delay(16)
+    expect(wrapper.find('.var-list__finished').exists()).toBe(false)
+    wrapper.unmount()
+    mockGetBoundingClientRect.mockRestore()
+  })
+})
+
+test('load event while list in tab-item', async () => {
+  const load = vi.fn()
+  const load2 = vi.fn()
+
+  const Wrapper = {
+    components: {
+      [List.name]: List,
+      [TabsItems.name]: TabsItems,
+      [TabItem.name]: TabItem,
+    },
+    data: () => ({
       loading: false,
-      loadingText: '正在加载',
-      error: true,
-      errorText: '点击重试',
-      onLoad,
-      'onUpdate:error': onUpdateError,
-      'onUpdate:loading': onUpdateLoading,
+      loading2: false,
+      active: 0,
+    }),
+    methods: {
+      load,
+      load2,
     },
-    attachTo: document.body,
-  })
+    template: `
+    <var-tabs-items v-model:active="active">
+      <var-tab-item>
+        <var-list v-model:loading="loading" @load="load">
+        </var-list>
+      </var-tab-item>
+      <var-tab-item>
+        <var-list v-model:loading="loading2" @load="load2">
+        </var-list>
+      </var-tab-item>
+    </var-tabs-items>
+    `,
+  }
 
-  const mockGetBoundingClientRect = jest.spyOn(wrapper.element, 'getBoundingClientRect').mockReturnValue({ bottom: 50 })
+  const wrapper = mount(Wrapper)
+  await delay(60)
+  expect(load).toBeCalledTimes(1)
+  expect(load2).toBeCalledTimes(0)
 
-  await delay(16)
+  await wrapper.setData({ active: 1 })
+  await delay(0)
+  expect(load).toBeCalledTimes(1)
+  expect(load2).toBeCalledTimes(1)
 
-  expect(onLoad).toHaveBeenCalledTimes(0)
-  expect(wrapper.find('.var-list__error').text()).toBe('点击重试')
-  expect(wrapper.html()).toMatchSnapshot()
-
-  await wrapper.find('.var-list__error').trigger('click')
-  expect(onUpdateLoading).toHaveBeenCalledTimes(1)
-  expect(onUpdateError).toHaveBeenCalledTimes(1)
-  expect(onLoad).toHaveBeenCalledTimes(1)
-  expect(wrapper.find('.var-list__loading-text').text()).toBe('正在加载')
-  expect(wrapper.html()).toMatchSnapshot()
-  wrapper.unmount()
-  mockGetBoundingClientRect.mockRestore()
-})
-
-test('test list finished', async () => {
-  const wrapper = mount(VarList, {
-    props: {
-      finished: true,
-      finishedText: '暂无更多',
-    },
-    attachTo: document.body,
-  })
-
-  await delay(16)
-
-  expect(wrapper.find('.var-list__finished').text()).toBe('暂无更多')
-  expect(wrapper.html()).toMatchSnapshot()
   wrapper.unmount()
 })

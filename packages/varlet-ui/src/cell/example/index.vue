@@ -1,41 +1,79 @@
 <script setup>
-import AppType from '@varlet/cli/site/mobile/components/AppType'
-import VarIcon from '../../icon'
-import VarCell from '..'
-import dark from '../../themes/dark'
-import { pack, use } from './locale'
-import { watchLang, watchDarkMode } from '@varlet/cli/site/utils'
+import { ref } from 'vue'
+import { AppType, onThemeChange, watchLang } from '@varlet/cli/client'
+import { t, use } from './locale'
+
+const items = ref([
+  {
+    name: 'Vue2',
+    icon: 'star',
+    enabled: false,
+  },
+  {
+    name: 'Vue3',
+    icon: 'heart',
+    enabled: false,
+  },
+  {
+    name: 'React',
+    icon: 'close-circle',
+    enabled: false,
+  },
+])
+
+const handleClick = (item) => {
+  item.enabled = !item.enabled
+}
 
 watchLang(use)
-watchDarkMode(dark)
+onThemeChange()
 </script>
 
 <template>
-  <app-type>{{ pack.basicUsage }}</app-type>
-  <var-cell> {{ pack.content }} </var-cell>
-  <var-cell> {{ pack.content }} </var-cell>
+  <app-type>{{ t('basicUsage') }}</app-type>
+  <var-cell> {{ t('content') }} </var-cell>
+  <var-cell> {{ t('content') }} </var-cell>
 
-  <app-type>{{ pack.showIcon }}</app-type>
-  <var-cell icon="fire" :title="pack.content">
+  <app-type>{{ t('showIcon') }}</app-type>
+  <var-cell icon="fire" :title="t('content')">
     <template #extra>
       <var-icon name="information" />
     </template>
   </var-cell>
-  <var-cell icon="fire" :title="pack.content">
+  <var-cell icon="fire" :title="t('content')">
     <template #extra>
       <var-icon name="information" />
     </template>
   </var-cell>
 
-  <app-type>{{ pack.showDesc }}</app-type>
-  <var-cell icon="fire" :title="pack.content" :desc="pack.description">
+  <app-type>{{ t('showDesc') }}</app-type>
+  <var-cell icon="fire" :title="t('content')" :description="t('description')">
     <template #extra>
       <var-icon name="information" />
     </template>
   </var-cell>
-  <var-cell :title="pack.content" :desc="pack.description" />
+  <var-cell :title="t('content')" :description="t('description')" />
 
-  <app-type>{{ pack.showBorder }}</app-type>
-  <var-cell border> {{ pack.content }} </var-cell>
-  <var-cell border> {{ pack.content }} </var-cell>
+  <app-type>{{ t('showBorder') }}</app-type>
+  <var-cell border> {{ t('content') }} </var-cell>
+  <var-cell border> {{ t('content') }} </var-cell>
+
+  <app-type>{{ t('list') }}</app-type>
+  <var-paper :elevation="2">
+    <var-cell
+      v-for="(item, index) in items"
+      :key="item.name"
+      ripple
+      :icon="item.icon"
+      :border="index !== items.length - 1"
+      :border-offset="0"
+      @click="handleClick(item)"
+    >
+      {{ item.name }}
+
+      <template #extra>
+        <var-switch v-model="item.enabled" @click.stop />
+      </template>
+    </var-cell>
+  </var-paper>
 </template>

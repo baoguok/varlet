@@ -1,20 +1,65 @@
-import { VarComponent } from './varComponent'
+import { VNode } from 'vue'
+import { BasicAttributes, ListenerProp, SetPropsDefaults, VarComponent } from './varComponent'
 
-export interface CardProps {
+export declare const cardProps: Record<keyof CardProps, any>
+
+export type CardFit = 'fill' | 'contain' | 'cover' | 'none' | 'scale-down'
+
+export type CardLayout = 'row' | 'column'
+
+export type CardVariant = 'standard' | 'outlined' | 'filled'
+
+export interface CardProps extends BasicAttributes {
+  variant?: CardVariant
   src?: string
-  fit?: 'fill' | 'contain' | 'cover' | 'none' | 'scale-down'
-  height?: string | number
+  fit?: CardFit
+  imageHeight?: string | number
+  imageWidth?: string | number
   alt?: string
   title?: string
   subtitle?: string
   description?: string
-  elevation?: string | number
+  elevation?: boolean | number | string
   ripple?: boolean
-  onClick?: (e: Event) => void
+  layout?: CardLayout
+  floating?: boolean
+  floatingDuration?: number
+  onClick?: ListenerProp<(e: Event) => void>
+  'onUpdate:floating'?: ListenerProp<(value: boolean) => void>
+
+  /**
+   * @deprecated
+   */
+  outline?: boolean
+}
+
+export interface CardTitleData {
+  slotClass: string
+}
+
+export interface CardSubtitleData {
+  slotClass: string
+}
+
+export interface CardDescriptionData {
+  slotClass: string
 }
 
 export class Card extends VarComponent {
+  static setPropsDefaults: SetPropsDefaults<CardProps>
+
   $props: CardProps
+
+  $slots: {
+    image(): VNode[]
+    default(): VNode[]
+    title(data: CardTitleData): VNode[]
+    subtitle(data: CardSubtitleData): VNode[]
+    description(data: CardDescriptionData): VNode[]
+    extra(): VNode[]
+    'close-button'(): VNode[]
+    'floating-content'(): VNode[]
+  }
 }
 
 export class _CardComponent extends Card {}

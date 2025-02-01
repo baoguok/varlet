@@ -1,94 +1,46 @@
-import { pickProps } from '../utils/components'
-import { props as loadingProps } from '../loading/props'
-import { SNACKBAR_TYPE, SnackbarType } from './index'
-import type { PropType, TeleportProps } from 'vue'
+import { type PropType, type TeleportProps } from 'vue'
+import type { SlotType } from '.'
+import { loadingProps } from '../loading'
+import { defineListenerProp, pickProps } from '../utils/components'
+import { SnackbarType } from './index'
 
-export function positionValidator(position: string): boolean {
-  const validPositions = ['top', 'center', 'bottom']
-  return validPositions.includes(position)
-}
-
-export function typeValidator(type: SnackbarType): boolean {
-  return SNACKBAR_TYPE.includes(type)
-}
+export type SnackbarPosition = 'top' | 'center' | 'bottom'
 
 export const props = {
-  type: {
-    type: String as PropType<SnackbarType>,
-    validator: typeValidator,
-  },
-  // snackbar显示的位置
+  type: String as PropType<SnackbarType>,
   position: {
-    type: String,
+    type: String as PropType<SnackbarPosition>,
     default: 'top',
-    validator: positionValidator,
   },
-  // content内容
-  content: {
-    type: String,
-  },
-  // 为snackbar content添加自定义类名
-  contentClass: {
-    type: String,
-  },
-  // snackbar 持续时间
+  content: [String, Function, Object] as PropType<SlotType>,
+  contentClass: String,
   duration: {
     type: Number,
     default: 3000,
   },
-  // 是否将消息条内容堆叠在操作（按钮）之上
-  vertical: {
-    type: Boolean,
-    default: false,
+  elevation: {
+    type: [Boolean, String, Number],
+    default: true,
   },
-  // 加载动画类型
+  vertical: Boolean,
   loadingType: pickProps(loadingProps, 'type'),
-  // 加载动画尺寸
   loadingSize: pickProps(loadingProps, 'size'),
-  // 是否禁止滚动穿透
-  lockScroll: {
-    type: Boolean,
-    default: false,
+  loadingRadius: pickProps(loadingProps, 'radius'),
+  loadingColor: {
+    ...pickProps(loadingProps, 'color'),
+    default: 'currentColor',
   },
-  // 控制组件可见还是隐藏
-  show: {
-    type: Boolean,
-    default: false,
-  },
-  // teleport
+  lockScroll: Boolean,
+  show: Boolean,
   teleport: {
-    type: String as PropType<TeleportProps['to']>,
+    type: [String, Object, Boolean] as PropType<TeleportProps['to'] | false>,
     default: 'body',
   },
-  // 是否禁止点击背景
-  forbidClick: {
-    type: Boolean,
-    default: false,
-  },
-  // 打开时的回调函数
-  onOpen: {
-    type: Function as PropType<() => void>,
-    default: () => {},
-  },
-  // 打开动画结束时的回调
-  onOpened: {
-    type: Function as PropType<() => void>,
-    default: () => {},
-  },
-  // 关闭时的回调函数
-  onClose: {
-    type: Function as PropType<() => void>,
-    default: () => {},
-  },
-  // 关闭动画结束时的回调
-  onClosed: {
-    type: Function as PropType<() => void>,
-    default: () => {},
-  },
-  'onUpdate:show': {
-    type: Function as PropType<(show: boolean) => void>,
-  },
-  _update: {
-    type: String,
-  },
+  forbidClick: Boolean,
+  onOpen: defineListenerProp<() => void>(),
+  onOpened: defineListenerProp<() => void>(),
+  onClose: defineListenerProp<() => void>(),
+  onClosed: defineListenerProp<() => void>(),
+  'onUpdate:show': defineListenerProp<(show: boolean) => void>(),
+  _update: String,
 }

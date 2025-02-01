@@ -1,10 +1,16 @@
+import { type PropType } from 'vue'
+import { defineListenerProp } from '../utils/components'
+
+export type FormScrollToError = 'start' | 'end'
+
 export const props = {
-  disabled: {
-    type: Boolean,
-    default: false,
+  disabled: Boolean,
+  readonly: Boolean,
+  scrollToError: String as PropType<FormScrollToError>,
+  scrollToErrorOffsetY: {
+    type: [String, Number],
+    default: 0,
   },
-  readonly: {
-    type: Boolean,
-    default: false,
-  },
+  onSubmit: defineListenerProp<(valid: boolean) => void>(),
+  onReset: defineListenerProp<() => void>(),
 }

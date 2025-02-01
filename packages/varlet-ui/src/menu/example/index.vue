@@ -1,132 +1,142 @@
 <script setup>
-import VarMenu from '..'
-import VarButton from '../../button'
-import VarCell from '../../cell'
-import Snackbar from '../../snackbar'
-import AppType from '@varlet/cli/site/mobile/components/AppType'
-import { reactive, toRefs, ref } from 'vue'
-import { pack, use } from './locale'
-import { watchLang, watchDarkMode } from '@varlet/cli/site/utils'
-import dark from '../../themes/dark'
+import { ref } from 'vue'
+import { AppType, onThemeChange, watchLang } from '@varlet/cli/client'
+import { Snackbar } from '@varlet/ui'
+import { t, use } from './locale/index'
 
-const values = reactive({
-  top: false,
-  bottom: false,
-  offsetX: false,
-  offsetX1: false,
-  offsetY: false,
-  offsetY1: false,
-  event: false,
-})
-const bgColor = ref('#fff')
-const { top, bottom, offsetX, offsetX1, offsetY, offsetY1, event } = toRefs(values)
+const show = ref(false)
+const trigger = ref('click')
+const placementValue = ref('cover-top-start')
+const placementOptions = ref([
+  'top',
+  'top-start',
+  'top-end',
+  'bottom',
+  'bottom-start',
+  'bottom-end',
+  'right',
+  'right-start',
+  'right-end',
+  'left',
+  'left-start',
+  'left-end',
+  'cover-top',
+  'cover-top-start',
+  'cover-top-end',
+  'cover-bottom',
+  'cover-bottom-start',
+  'cover-bottom-end',
+  'cover-left',
+  'cover-right',
+])
 
 watchLang(use)
-watchDarkMode(dark, (themes) => {
-  bgColor.value = themes === 'darkThemes' ? '#272727' : '#fff'
-})
+onThemeChange()
+
+function closeMenu() {
+  show.value = false
+}
 </script>
 
 <template>
-  <app-type>{{ pack.alignmentMethods }}</app-type>
-  <div class="block-1">
-    <var-menu v-model:show="top">
-      <var-button type="primary" @click="top = true">{{ pack.topAlignment }}</var-button>
+  <app-type>{{ t('basicUsage') }}</app-type>
+  <var-menu>
+    <var-button type="primary">{{ t('basicUsage') }}</var-button>
+    <template #menu>
+      <var-cell>{{ t('menuOption') }}</var-cell>
+      <var-cell>{{ t('menuOption') }}</var-cell>
+      <var-cell>{{ t('menuOption') }}</var-cell>
+    </template>
+  </var-menu>
 
+  <app-type>{{ t('placement') }}</app-type>
+  <var-select v-model="placementValue" :hint="false">
+    <var-option v-for="(item, index) in placementOptions" :key="index" :label="item" />
+  </var-select>
+  <div class="placement-container">
+    <var-menu :placement="placementValue">
+      <var-button type="primary">
+        <var-icon name="star" />
+      </var-button>
       <template #menu>
-        <div class="cell-list" :style="{ background: bgColor }">
-          <var-cell>{{ pack.menuOption }}</var-cell>
-          <var-cell>{{ pack.menuOption }}</var-cell>
-          <var-cell>{{ pack.menuOption }}</var-cell>
-        </div>
+        <var-cell>{{ t('menuOption') }}</var-cell>
+        <var-cell>{{ t('menuOption') }}</var-cell>
+        <var-cell>{{ t('menuOption') }}</var-cell>
       </template>
     </var-menu>
   </div>
 
-  <div class="block">
-    <var-menu alignment="bottom" v-model:show="bottom">
-      <var-button type="primary" @click="bottom = true">{{ pack.bottomAlignment }}</var-button>
+  <app-type>{{ t('offset') }}</app-type>
+  <var-menu offset-x="36px" offset-y="18px">
+    <var-button type="primary">{{ t('offset') }}</var-button>
+    <template #menu>
+      <var-cell>{{ t('menuOption') }}</var-cell>
+      <var-cell>{{ t('menuOption') }}</var-cell>
+      <var-cell>{{ t('menuOption') }}</var-cell>
+    </template>
+  </var-menu>
 
-      <template #menu>
-        <div class="cell-list" :style="{ background: bgColor }">
-          <var-cell>{{ pack.menuOption }}</var-cell>
-          <var-cell>{{ pack.menuOption }}</var-cell>
-          <var-cell>{{ pack.menuOption }}</var-cell>
-        </div>
-      </template>
-    </var-menu>
-  </div>
-
-  <app-type>{{ pack.offset }}</app-type>
-
-  <div class="block-1">
-    <var-menu :offset-x="72" v-model:show="offsetX">
-      <var-button type="primary" @click="offsetX = true">{{ pack.offsetRight }}</var-button>
-
-      <template #menu>
-        <div class="cell-list" :style="{ background: bgColor }">
-          <var-cell>{{ pack.menuOption }}</var-cell>
-          <var-cell>{{ pack.menuOption }}</var-cell>
-          <var-cell>{{ pack.menuOption }}</var-cell>
-        </div>
-      </template>
-    </var-menu>
-
-    <var-menu :offset-x="-72" v-model:show="offsetX1">
-      <var-button type="primary" @click="offsetX1 = true">{{ pack.offsetLeft }}</var-button>
-
-      <template #menu>
-        <div class="cell-list" :style="{ background: bgColor }">
-          <var-cell>{{ pack.menuOption }}</var-cell>
-          <var-cell>{{ pack.menuOption }}</var-cell>
-          <var-cell>{{ pack.menuOption }}</var-cell>
-        </div>
-      </template>
-    </var-menu>
-  </div>
-
-  <div class="block-2">
-    <var-menu :offset-y="36" v-model:show="offsetY">
-      <var-button type="primary" @click="offsetY = true">{{ pack.offsetBottom }}</var-button>
-
-      <template #menu>
-        <div class="cell-list" :style="{ background: bgColor }">
-          <var-cell>{{ pack.menuOption }}</var-cell>
-          <var-cell>{{ pack.menuOption }}</var-cell>
-          <var-cell>{{ pack.menuOption }}</var-cell>
-        </div>
-      </template>
-    </var-menu>
-
-    <var-menu :offset-y="-36" v-model:show="offsetY1">
-      <var-button type="primary" @click="offsetY1 = true">{{ pack.offsetTop }}</var-button>
-
-      <template #menu>
-        <div class="cell-list" :style="{ background: bgColor }">
-          <var-cell>{{ pack.menuOption }}</var-cell>
-          <var-cell>{{ pack.menuOption }}</var-cell>
-          <var-cell>{{ pack.menuOption }}</var-cell>
-        </div>
-      </template>
-    </var-menu>
-  </div>
-
-  <app-type>{{ pack.events }}</app-type>
-  <var-menu
-    v-model:show="event"
-    @open="() => Snackbar.info('open')"
-    @opened="() => Snackbar.success('opened')"
-    @close="() => Snackbar.warning('close')"
-    @closed="() => Snackbar.error('closed')"
-  >
-    <var-button type="primary" @click="event = true">{{ pack.events }}</var-button>
+  <app-type>{{ t('sameWidth') }}</app-type>
+  <var-menu same-width>
+    <var-button type="primary">{{ t('sameWidth') }}</var-button>
 
     <template #menu>
-      <div class="cell-list" :style="{ background: bgColor }">
-        <var-cell>{{ pack.menuOption }}</var-cell>
-        <var-cell>{{ pack.menuOption }}</var-cell>
-        <var-cell>{{ pack.menuOption }}</var-cell>
-      </div>
+      <var-cell>{{ t('menuOption') }}</var-cell>
+      <var-cell>{{ t('menuOption') }}</var-cell>
+      <var-cell>{{ t('menuOption') }}</var-cell>
+    </template>
+  </var-menu>
+
+  <app-type>{{ t('trigger') }}</app-type>
+  <var-select v-model="trigger" :hint="false">
+    <var-option label="click" />
+    <var-option label="hover" />
+  </var-select>
+  <var-menu style="margin-top: 15px" :trigger="trigger">
+    <var-button type="primary">{{ t('trigger') }}</var-button>
+
+    <template #menu>
+      <var-cell>{{ t('menuOption') }}</var-cell>
+      <var-cell>{{ t('menuOption') }}</var-cell>
+      <var-cell>{{ t('menuOption') }}</var-cell>
+    </template>
+  </var-menu>
+
+  <app-type>{{ t('events') }}</app-type>
+  <var-menu
+    @open="Snackbar.info('open')"
+    @opened="Snackbar.success('opened')"
+    @close="Snackbar.warning('close')"
+    @closed="Snackbar.error('closed')"
+  >
+    <var-button type="primary">{{ t('events') }}</var-button>
+
+    <template #menu>
+      <var-cell>{{ t('menuOption') }}</var-cell>
+      <var-cell>{{ t('menuOption') }}</var-cell>
+      <var-cell>{{ t('menuOption') }}</var-cell>
+    </template>
+  </var-menu>
+
+  <app-type>{{ t('disabled') }}</app-type>
+  <var-menu disabled>
+    <var-button type="primary" disabled>{{ t('disabled') }}</var-button>
+
+    <template #menu>
+      <var-cell>{{ t('menuOption') }}</var-cell>
+      <var-cell>{{ t('menuOption') }}</var-cell>
+      <var-cell>{{ t('menuOption') }}</var-cell>
+    </template>
+  </var-menu>
+
+  <app-type>{{ t('twoWayBinding') }}</app-type>
+  <var-menu v-model:show="show">
+    <var-button type="primary">{{ t('twoWayBinding') }}</var-button>
+
+    <template #menu>
+      <var-cell @click="closeMenu">{{ t('menuOption') }}</var-cell>
+      <var-cell @click="closeMenu">{{ t('menuOption') }}</var-cell>
+      <var-cell @click="closeMenu">{{ t('menuOption') }}</var-cell>
     </template>
   </var-menu>
 
@@ -134,22 +144,10 @@ watchDarkMode(dark, (themes) => {
 </template>
 
 <style scoped lang="less">
-.cell-list {
-  transition: background-color 0.25s;
-}
-
-.block {
-  margin-top: 130px;
-}
-
-.block-1 {
+.placement-container {
+  height: 250px;
   display: flex;
-  justify-content: space-between;
-}
-
-.block-2 {
-  display: flex;
-  justify-content: space-between;
-  margin-top: 130px;
+  justify-content: center;
+  align-items: center;
 }
 </style>

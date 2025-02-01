@@ -1,18 +1,15 @@
-import type { PropType } from 'vue'
+import { type PropType } from 'vue'
+import { defineListenerProp } from '../utils/components'
 
 type AllowedDates = (val: string) => boolean
 
-type DatePickerType = 'date' | 'month'
+type DatePickerType = 'year' | 'date' | 'month'
 
 export type TouchDirection = 'x' | 'y'
 
 export type Month = '01' | '02' | '03' | '04' | '05' | '06' | '07' | '08' | '09' | '10' | '11' | '12'
 
 export type Week = '0' | '1' | '2' | '3' | '4' | '5' | '6'
-
-function typeValidator(type: string): boolean {
-  return ['date', 'month'].includes(type)
-}
 
 export type ComponentProps = {
   type: string
@@ -24,14 +21,7 @@ export type ComponentProps = {
   showCurrent: boolean
   multiple: boolean
   range: boolean
-}
-
-export type MonthDict = {
-  index: Month
-}
-
-export type WeekDict = {
-  index: Week
+  buttonElevation: boolean | string | number
 }
 
 export type PanelBtnDisabled = {
@@ -40,139 +30,62 @@ export type PanelBtnDisabled = {
 }
 
 export type Choose = {
-  chooseMonth: MonthDict | undefined
+  chooseMonth: Month | undefined
   chooseYear: string | undefined
   chooseDay: string | undefined
+  chooseYears: Array<string>
   chooseMonths: Array<string>
   chooseDays: Array<string>
+  chooseRangeYear: Array<string>
   chooseRangeMonth: Array<string>
   chooseRangeDay: Array<string>
 }
 
 export type Preview = {
-  previewMonth: MonthDict
+  previewMonth?: Month
   previewYear: string
 }
 
-export const MONTH_LIST: Array<MonthDict> = [
-  {
-    index: '01',
-  },
-  {
-    index: '02',
-  },
-  {
-    index: '03',
-  },
-  {
-    index: '04',
-  },
-  {
-    index: '05',
-  },
-  {
-    index: '06',
-  },
-  {
-    index: '07',
-  },
-  {
-    index: '08',
-  },
-  {
-    index: '09',
-  },
-  {
-    index: '10',
-  },
-  {
-    index: '11',
-  },
-  {
-    index: '12',
-  },
-]
+export const MONTH_LIST: Array<Month> = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12']
 
-export const WEEK_HEADER: Array<WeekDict> = [
-  {
-    index: '0',
-  },
-  {
-    index: '1',
-  },
-  {
-    index: '2',
-  },
-  {
-    index: '3',
-  },
-  {
-    index: '4',
-  },
-  {
-    index: '5',
-  },
-  {
-    index: '6',
-  },
-]
+export const WEEK_HEADER: Array<Week> = ['0', '1', '2', '3', '4', '5', '6']
 
 export const props = {
-  modelValue: {
-    type: [String, Array] as PropType<string | Array<string>>,
-  },
+  modelValue: [String, Array] as PropType<string | Array<string>>,
   type: {
     type: String as PropType<DatePickerType>,
     default: 'date',
-    validator: typeValidator,
   },
-  allowedDates: {
-    type: Function as PropType<AllowedDates>,
-  },
-  color: {
-    type: String,
-  },
-  headerColor: {
-    type: String,
-  },
-  shadow: {
-    type: Boolean,
+  hint: String,
+  allowedDates: Function as PropType<AllowedDates>,
+  color: String,
+  titleColor: String,
+  elevation: {
+    type: [Boolean, Number, String],
     default: false,
+  },
+  buttonElevation: {
+    type: [Boolean, Number, String],
+    default: true,
   },
   firstDayOfWeek: {
     type: [String, Number],
     default: 0,
   },
-  min: {
-    type: String,
-  },
-  max: {
-    type: String,
-  },
+  min: String,
+  max: String,
   showCurrent: {
     type: Boolean,
     default: true,
   },
-  readonly: {
-    type: Boolean,
-    default: false,
-  },
-  multiple: {
-    type: Boolean,
-    default: false,
-  },
-  range: {
-    type: Boolean,
-    default: false,
-  },
+  readonly: Boolean,
+  multiple: Boolean,
+  range: Boolean,
   touchable: {
     type: Boolean,
     default: true,
   },
-  onChange: {
-    type: Function as PropType<(value: string | string[]) => void>,
-  },
-  'onUpdate:modelValue': {
-    type: Function as PropType<(value: string | string[]) => void>,
-  },
+  onPreview: defineListenerProp<(year: number, month: number, day?: number) => void>(),
+  onChange: defineListenerProp<(value: string | string[]) => void>(),
+  'onUpdate:modelValue': defineListenerProp<(value: string | string[]) => void>(),
 }

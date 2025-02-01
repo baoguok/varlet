@@ -1,4 +1,5 @@
-import type { PropType } from 'vue'
+import { InputHTMLAttributes, type PropType } from 'vue'
+import { defineListenerProp } from '../utils/components'
 
 export interface VarFile {
   id: number
@@ -6,11 +7,14 @@ export interface VarFile {
   name?: string
   url?: string
   cover?: string
+  progress?: number
   fit?: 'fill' | 'contain' | 'cover' | 'none' | 'scale-down'
   state?: 'loading' | 'success' | 'error'
 }
 
-export type ValidateTriggers = 'onChange' | 'onRemove'
+export type UploaderResolveType = 'default' | 'file' | 'data-url'
+
+export type UploaderValidateTrigger = 'onChange' | 'onRemove'
 
 export const props = {
   modelValue: {
@@ -22,31 +26,26 @@ export const props = {
     default: 'image/*',
   },
   capture: {
-    type: [String, Boolean] as PropType<boolean | 'user' | 'environment'>,
+    type: [String, Boolean] as PropType<InputHTMLAttributes['capture']>,
     default: undefined,
   },
-  multiple: {
-    type: Boolean,
-    default: false,
+  multiple: Boolean,
+  readonly: Boolean,
+  disabled: Boolean,
+  elevation: {
+    type: [Boolean, Number, String],
+    default: true,
   },
-  readonly: {
-    type: Boolean,
-    default: false,
-  },
-  disabled: {
-    type: Boolean,
-    default: false,
+  resolveType: {
+    type: String as PropType<UploaderResolveType>,
+    default: 'default',
   },
   removable: {
     type: Boolean,
     default: true,
   },
-  maxlength: {
-    type: [Number, String],
-  },
-  maxsize: {
-    type: [Number, String],
-  },
+  maxlength: [Number, String],
+  maxsize: [Number, String],
   previewed: {
     type: Boolean,
     default: true,
@@ -56,32 +55,19 @@ export const props = {
     default: true,
   },
   validateTrigger: {
-    type: Array as PropType<Array<ValidateTriggers>>,
+    type: Array as PropType<Array<UploaderValidateTrigger>>,
     default: () => ['onChange', 'onRemove'],
   },
-  rules: {
-    type: Array as PropType<Array<(v: VarFile) => any>>,
-  },
-  hideList: {
-    type: Boolean,
-    default: false,
-  },
-  onBeforeRead: {
-    type: Function as PropType<(file: VarFile) => Promise<boolean> | boolean>,
-  },
-  onAfterRead: {
-    type: Function as PropType<(file: VarFile) => any>,
-  },
-  onBeforeRemove: {
-    type: Function as PropType<(file: VarFile) => any>,
-  },
-  onRemove: {
-    type: Function as PropType<(file: VarFile) => any>,
-  },
-  onOversize: {
-    type: Function as PropType<(file: VarFile) => any>,
-  },
-  'onUpdate:modelValue': {
-    type: Function as PropType<(files: VarFile[]) => any>,
-  },
+  rules: [Array, Function, Object] as PropType<any>,
+  hideList: Boolean,
+  preventDefaultPreview: Boolean,
+  onClickAction: defineListenerProp<(chooseFile: () => void, event: Event) => void>(),
+  onBeforeFilter: defineListenerProp<(files: VarFile[]) => Promise<VarFile[]> | VarFile[]>(),
+  onBeforeRead: defineListenerProp<(file: VarFile) => Promise<any> | any>(),
+  onAfterRead: defineListenerProp<(file: VarFile) => any>(),
+  onBeforeRemove: defineListenerProp<(file: VarFile) => any>(),
+  onRemove: defineListenerProp<(file: VarFile) => any>(),
+  onOversize: defineListenerProp<(file: VarFile) => any>(),
+  onPreview: defineListenerProp<(file: VarFile) => void>(),
+  'onUpdate:modelValue': defineListenerProp<(files: VarFile[]) => any>(),
 }

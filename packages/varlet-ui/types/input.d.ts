@@ -1,14 +1,32 @@
-import { VarComponent } from './varComponent'
+import { InputHTMLAttributes, VNode } from 'vue'
+import {
+  BasicAttributes,
+  Rules as InputRules,
+  Variant as InputVariant,
+  ListenerProp,
+  SetPropsDefaults,
+  VarComponent,
+} from './varComponent'
 
-export type InputValidateTriggers = 'onFocus' | 'onBlur' | 'onChange' | 'onClick' | 'onClear' | 'onInput'
+export declare const inputProps: Record<keyof InputProps, any>
 
-export interface InputProps {
+export type InputValidateTrigger = 'onFocus' | 'onBlur' | 'onChange' | 'onClick' | 'onClear' | 'onInput'
+
+export type InputType = 'text' | 'password' | 'number' | 'tel' | 'email'
+
+export type InputSize = 'small' | 'normal'
+
+export interface InputProps extends BasicAttributes {
   modelValue?: string
-  type?: 'text' | 'password' | 'number'
+  type?: InputType
+  size?: InputSize
+  variant?: InputVariant
   textarea?: boolean
+  ariaLabel?: string
   rows?: string | number
   placeholder?: string
   hint?: boolean
+  line?: boolean
   textColor?: string
   focusColor?: string
   blurColor?: string
@@ -17,19 +35,34 @@ export interface InputProps {
   readonly?: boolean
   clearable?: boolean
   resize?: boolean
-  validateTrigger?: InputValidateTriggers[]
-  rules?: Array<(v: string) => any>
-  onFocus?: (e: Event) => void
-  onBlur?: (e: Event) => void
-  onClick?: (e: Event) => void
-  onClear?: (value: string) => void
-  onInput?: (value: string, e: Event) => void
-  onChange?: (value: string, e: Event) => void
-  'onUpdate:modelValue'?: (value: string) => void
+  autofocus?: boolean
+  validateTrigger?: InputValidateTrigger[]
+  rules?: InputRules
+  enterkeyhint?: InputHTMLAttributes['enterKeyHint']
+  onFocus?: ListenerProp<(e: Event) => void>
+  onBlur?: ListenerProp<(e: Event) => void>
+  onClick?: ListenerProp<(e: Event) => void>
+  onClear?: ListenerProp<(value: string) => void>
+  onInput?: ListenerProp<(value: string, e: Event) => void>
+  onChange?: ListenerProp<(value: string, e: Event) => void>
+  'onUpdate:modelValue'?: ListenerProp<(value: string) => void>
+}
+
+export interface InputClearIconData {
+  clear: (e: Event) => void
 }
 
 export class Input extends VarComponent {
+  static setPropsDefaults: SetPropsDefaults<InputProps>
+
   $props: InputProps
+
+  $slots: {
+    'prepend-icon'(): VNode[]
+    'append-icon'(): VNode[]
+    'clear-icon'(data: InputClearIconData): VNode[]
+    'extra-message'(): VNode[]
+  }
 
   focus(): void
 

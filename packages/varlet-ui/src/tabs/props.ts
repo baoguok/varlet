@@ -1,10 +1,12 @@
-import { pickProps } from '../utils/components'
-import { props as stickyProps } from '../sticky/props'
-import type { PropType } from 'vue'
+import { type PropType } from 'vue'
+import { stickyProps } from '../sticky'
+import { defineListenerProp, pickProps } from '../utils/components'
 
-function directionValidator(direction: string) {
-  return ['horizontal', 'vertical'].includes(direction)
-}
+export type TabsDirection = 'horizontal' | 'vertical'
+
+export type TabsScrollable = 'auto' | 'always'
+
+export type TabsIndicatorPosition = 'normal' | 'reverse'
 
 export const props = {
   active: {
@@ -12,57 +14,38 @@ export const props = {
     default: 0,
   },
   layoutDirection: {
-    type: String as PropType<'horizontal' | 'vertical'>,
+    type: String as PropType<TabsDirection>,
     default: 'horizontal',
-    validator: directionValidator,
   },
   itemDirection: {
-    type: String as PropType<'horizontal' | 'vertical'>,
+    type: String as PropType<TabsDirection>,
     default: 'horizontal',
-    validator: directionValidator,
   },
-  fixedBottom: {
-    type: Boolean,
-    default: false,
-  },
-  activeColor: {
-    type: String,
-  },
-  inactiveColor: {
-    type: String,
-  },
-  disabledColor: {
-    type: String,
-  },
-  color: {
-    type: String,
-  },
-  indicatorColor: {
-    type: String,
-  },
-  indicatorSize: {
-    type: [String, Number],
-  },
+  fixedBottom: Boolean,
+  activeColor: String,
+  inactiveColor: String,
+  disabledColor: String,
+  color: String,
+  indicatorColor: String,
+  indicatorSize: [String, Number],
   elevation: {
-    type: Boolean,
+    type: [Boolean, String, Number],
     default: false,
   },
-  sticky: {
-    type: Boolean,
-    default: false,
+  scrollable: {
+    type: String as PropType<TabsScrollable>,
+    default: 'auto',
   },
-  safeArea: {
-    type: Boolean,
-    default: false,
+  indicatorPosition: {
+    type: String as PropType<TabsIndicatorPosition>,
+    default: 'normal',
   },
+  safeArea: Boolean,
+  sticky: Boolean,
+  stickyCssMode: pickProps(stickyProps, 'cssMode'),
+  stickyZIndex: pickProps(stickyProps, 'zIndex'),
   offsetTop: pickProps(stickyProps, 'offsetTop'),
-  onClick: {
-    type: Function as PropType<(active: string | number) => void>,
-  },
-  onChange: {
-    type: Function as PropType<(active: string | number) => void>,
-  },
-  'onUpdate:active': {
-    type: Function as PropType<(active: string | number) => void>,
-  },
+  onClick: defineListenerProp<(active: string | number) => void>(),
+  onChange: defineListenerProp<(active: string | number) => void>(),
+  'onUpdate:active': defineListenerProp<(active: string | number) => void>(),
 }

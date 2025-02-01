@@ -1,42 +1,21 @@
-import type { PropType } from 'vue'
+import { defineListenerProp } from '../utils/components'
 
 export const props = {
-  loading: {
-    type: Boolean,
-    default: false,
-  },
+  loading: Boolean,
   immediateCheck: {
     type: Boolean,
     default: true,
   },
-  finished: {
-    type: Boolean,
-    default: false,
-  },
-  error: {
-    type: Boolean,
-    default: false,
-  },
+  finished: Boolean,
+  error: Boolean,
   offset: {
     type: [String, Number],
     default: 0,
   },
-  loadingText: {
-    type: String,
-  },
-  finishedText: {
-    type: String,
-  },
-  errorText: {
-    type: String,
-  },
-  onLoad: {
-    type: Function as PropType<() => void>,
-  },
-  'onUpdate:loading': {
-    type: Function as PropType<(loading: boolean) => void>,
-  },
-  'onUpdate:error': {
-    type: Function as PropType<(error: boolean) => void>,
-  },
+  loadingText: String,
+  finishedText: String,
+  errorText: String,
+  onLoad: defineListenerProp<() => void>(),
+  'onUpdate:loading': defineListenerProp<(loading: boolean) => void>(),
+  'onUpdate:error': defineListenerProp<(error: boolean) => void>(),
 }

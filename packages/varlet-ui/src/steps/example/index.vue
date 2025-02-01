@@ -1,48 +1,42 @@
 <script setup>
-import VarSteps from '..'
-import VarStep from '../../step'
-import VarButton from '../../button'
-import AppType from '@varlet/cli/site/mobile/components/AppType'
-import dark from '../../themes/dark'
 import { ref } from 'vue'
-import { pack, use } from './locale'
-import { watchLang, watchDarkMode } from '@varlet/cli/site/utils'
+import { AppType, onThemeChange, watchLang } from '@varlet/cli/client'
+import { t, use } from './locale'
 
 const active = ref(0)
 
-const next = () => {
+watchLang(use)
+onThemeChange()
+
+function next() {
   active.value = (active.value + 1) % 4
 }
-
-watchLang(use)
-
-watchDarkMode(dark)
 </script>
 
 <template>
-  <app-type>{{ pack.basicUsage }}</app-type>
+  <app-type>{{ t('basicUsage') }}</app-type>
   <var-steps :active="active">
-    <var-step>{{ pack.first }}</var-step>
-    <var-step>{{ pack.second }}</var-step>
-    <var-step>{{ pack.third }}</var-step>
-    <var-step>{{ pack.fourth }}</var-step>
+    <var-step>{{ t('first') }}</var-step>
+    <var-step>{{ t('second') }}</var-step>
+    <var-step>{{ t('third') }}</var-step>
+    <var-step>{{ t('fourth') }}</var-step>
   </var-steps>
 
-  <app-type>{{ pack.customStyle }}</app-type>
-  <var-steps :active="active" active-color="#f44336" inactive-color="#e99eb4">
-    <var-step active-icon="heart" current-icon="fire" inactive-icon="heart-half-full">{{ pack.first }}</var-step>
-    <var-step active-icon="heart" current-icon="fire" inactive-icon="heart-half-full">{{ pack.second }}</var-step>
-    <var-step active-icon="heart" current-icon="fire" inactive-icon="heart-half-full">{{ pack.third }}</var-step>
-    <var-step active-icon="heart" current-icon="fire" inactive-icon="heart-half-full">{{ pack.fourth }}</var-step>
+  <app-type>{{ t('customStyle') }}</app-type>
+  <var-steps :active="active" active-color="var(--color-danger)" inactive-color="var(--color-warning)">
+    <var-step active-icon="heart" current-icon="fire" inactive-icon="heart-half-full">{{ t('first') }}</var-step>
+    <var-step active-icon="heart" current-icon="fire" inactive-icon="heart-half-full">{{ t('second') }}</var-step>
+    <var-step active-icon="heart" current-icon="fire" inactive-icon="heart-half-full">{{ t('third') }}</var-step>
+    <var-step active-icon="heart" current-icon="fire" inactive-icon="heart-half-full">{{ t('fourth') }}</var-step>
   </var-steps>
 
-  <app-type>{{ pack.vertical }}</app-type>
+  <app-type>{{ t('vertical') }}</app-type>
   <var-steps direction="vertical" :active="active">
-    <var-step>{{ pack.first }}</var-step>
-    <var-step>{{ pack.second }}</var-step>
-    <var-step>{{ pack.third }}</var-step>
-    <var-step>{{ pack.fourth }}</var-step>
+    <var-step>{{ t('first') }}</var-step>
+    <var-step>{{ t('second') }}</var-step>
+    <var-step>{{ t('third') }}</var-step>
+    <var-step>{{ t('fourth') }}</var-step>
   </var-steps>
 
-  <var-button type="primary" block @click="next" style="margin-top: 20px">{{ pack.next }}</var-button>
+  <var-button type="primary" block @click="next">{{ t('next') }}</var-button>
 </template>

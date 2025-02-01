@@ -1,18 +1,13 @@
+import { createApp } from 'vue'
+import { mount } from '@vue/test-utils'
+import { describe, expect, test, vi } from 'vitest'
 import Swipe from '..'
 import SwipeItem from '../../swipe-item'
-import VarSwipe from '../Swipe'
 import VarSwipeItem from '../../swipe-item/SwipeItem'
-import { mount } from '@vue/test-utils'
-import { createApp } from 'vue'
-import { delay, mockOffset, triggerDrag } from '../../utils/jest'
+import { delay, mockOffset, trigger, triggerDrag, triggerKeyboard } from '../../utils/test'
+import VarSwipe from '../Swipe'
 
 mockOffset()
-
-test('test swipe & swipe-item plugin', () => {
-  const app = createApp({}).use(Swipe).use(SwipeItem)
-  expect(app.component(Swipe.name)).toBeTruthy()
-  expect(app.component(SwipeItem.name)).toBeTruthy()
-})
 
 const Wrapper = {
   components: {
@@ -29,16 +24,21 @@ const Wrapper = {
   `,
 }
 
-test('test swipe next & prev & to method', async () => {
-  const onChange = jest.fn()
+test('swipe & swipe-item use', () => {
+  const app = createApp({}).use(Swipe).use(SwipeItem)
+  expect(app.component(Swipe.name)).toBeTruthy()
+  expect(app.component(SwipeItem.name)).toBeTruthy()
+})
 
+test('swipe next & prev & to method', async () => {
+  const onChange = vi.fn()
   const wrapper = mount(Wrapper, {
     props: {
       onChange,
     },
   })
-  await delay(50)
 
+  await delay(50)
   const {
     swipe: { prev, next, to },
   } = wrapper.vm.$refs
@@ -46,153 +46,211 @@ test('test swipe next & prev & to method', async () => {
   to(0)
   expect(onChange).toHaveBeenCalledTimes(0)
   await delay(100)
-  expect(wrapper.html()).toMatchSnapshot()
+  expect(wrapper.findAll('.var-swipe__indicator')[0].classes()).toContain('var-swipe--indicator-active')
 
   next()
   expect(onChange).toHaveBeenLastCalledWith(1)
   await delay(100)
-  expect(wrapper.html()).toMatchSnapshot()
+  expect(wrapper.findAll('.var-swipe__indicator')[1].classes()).toContain('var-swipe--indicator-active')
 
   prev()
   expect(onChange).toHaveBeenLastCalledWith(0)
   await delay(100)
-  expect(wrapper.html()).toMatchSnapshot()
+  expect(wrapper.findAll('.var-swipe__indicator')[0].classes()).toContain('var-swipe--indicator-active')
 
   to(2)
   expect(onChange).toHaveBeenLastCalledWith(2)
   await delay(100)
-  expect(wrapper.html()).toMatchSnapshot()
+  expect(wrapper.findAll('.var-swipe__indicator')[2].classes()).toContain('var-swipe--indicator-active')
 
   next()
   expect(onChange).toHaveBeenLastCalledWith(0)
   await delay(100)
-  expect(wrapper.html()).toMatchSnapshot()
+  expect(wrapper.findAll('.var-swipe__indicator')[0].classes()).toContain('var-swipe--indicator-active')
 
   prev()
   expect(onChange).toHaveBeenLastCalledWith(2)
   await delay(100)
-  expect(wrapper.html()).toMatchSnapshot()
+  expect(wrapper.findAll('.var-swipe__indicator')[2].classes()).toContain('var-swipe--indicator-active')
 
   wrapper.unmount()
 })
 
-test('test render initial index', async () => {
-  const wrapper = mount(Wrapper, {
-    props: {
-      initialIndex: 2,
+test('swipe keyboard Arrow', async () => {
+  const wrapper = mount({
+    components: {
+      [VarSwipe.name]: VarSwipe,
+      [VarSwipeItem.name]: VarSwipeItem,
     },
+    template: `
+      <var-swipe>
+        <var-swipe-item>1</var-swipe-item>
+        <var-swipe-item>2</var-swipe-item>
+      </var-swipe>
+    `,
   })
-  await delay(200)
-  expect(wrapper.html()).toMatchSnapshot()
-  wrapper.unmount()
-})
 
-test('test touch with loop', async () => {
-  const onChange = jest.fn()
+  const children = wrapper.findAllComponents({ name: 'var-swipe-item' })
+  await trigger(children[0].find('.var-swipe-item'), 'focus')
 
-  const wrapper = mount(Wrapper, {
-    props: {
-      onChange,
-    },
-  })
-  await delay(50)
+  await triggerKeyboard(window, 'keydown', { key: 'ArrowRight' })
+  await trigger(children[0].find('.var-swipe-item'), 'blur')
+  await trigger(children[1].find('.var-swipe-item'), 'focus')
 
-  const track = wrapper.find('.var-swipe__track')
+  await triggerKeyboard(window, 'keydown', { key: 'ArrowRight' })
+  await delay(300)
+  await trigger(children[0].find('.var-swipe-item'), 'focus')
+  await trigger(children[1].find('.var-swipe-item'), 'blur')
 
-  await triggerDrag(track, -100, 0)
-  expect(onChange).toHaveBeenLastCalledWith(1)
-  await triggerDrag(track, -100, 0)
-  expect(onChange).toHaveBeenLastCalledWith(2)
-  await triggerDrag(track, -100, 0)
-  expect(onChange).toHaveBeenLastCalledWith(0)
-  await triggerDrag(track, 100, 0)
-  expect(onChange).toHaveBeenLastCalledWith(2)
-  await triggerDrag(track, 100, 0)
-  expect(onChange).toHaveBeenLastCalledWith(1)
-  await triggerDrag(track, 100, 0)
-  expect(onChange).toHaveBeenLastCalledWith(0)
+  await triggerKeyboard(window, 'keydown', { key: 'ArrowLeft' })
+  await trigger(children[0].find('.var-swipe-item'), 'blur')
+  await trigger(children[1].find('.var-swipe-item'), 'focus')
 
-  wrapper.unmount()
-})
-
-test('test touch without loop', async () => {
-  const onChange = jest.fn()
-
-  const wrapper = mount(Wrapper, {
-    props: {
-      loop: false,
-      onChange,
-    },
-  })
-  await delay(50)
-
-  const track = wrapper.find('.var-swipe__track')
-
-  await triggerDrag(track, 100, 0)
-  expect(onChange).toHaveBeenCalledTimes(0)
-  await triggerDrag(track, -100, 0)
-  expect(onChange).toHaveBeenLastCalledWith(1)
-  await triggerDrag(track, -100, 0)
-  expect(onChange).toHaveBeenLastCalledWith(2)
-  await triggerDrag(track, -100, 0)
-  expect(onChange).toHaveBeenLastCalledWith(2)
+  await triggerKeyboard(window, 'keydown', { key: 'ArrowLeft' })
+  await delay(300)
+  await trigger(children[0].find('.var-swipe-item'), 'focus')
+  await trigger(children[1].find('.var-swipe-item'), 'blur')
 
   wrapper.unmount()
 })
 
-test('test touch with vertical', async () => {
-  const onChange = jest.fn()
+describe('test swipe component props', () => {
+  test('swipe loop', async () => {
+    const onChange = vi.fn()
+    const wrapper = mount(Wrapper, {
+      props: {
+        loop: false,
+        onChange,
+      },
+    })
 
-  const wrapper = mount(Wrapper, {
-    props: {
-      vertical: true,
-      onChange,
-    },
+    await delay(50)
+    const track = wrapper.find('.var-swipe__track')
+    await triggerDrag(track, 100, 0)
+    expect(onChange).toHaveBeenCalledTimes(0)
+    await triggerDrag(track, -100, 0)
+    expect(onChange).toHaveBeenLastCalledWith(1)
+    await triggerDrag(track, -100, 0)
+    expect(onChange).toHaveBeenLastCalledWith(2)
+    await triggerDrag(track, -100, 0)
+    expect(onChange).toHaveBeenLastCalledWith(2)
+    wrapper.unmount()
   })
-  await delay(50)
 
-  const track = wrapper.find('.var-swipe__track')
+  test('swipe autoplay', async () => {
+    const onChange = vi.fn()
+    const wrapper = mount(Wrapper, {
+      props: {
+        autoplay: 100,
+        onChange,
+      },
+    })
 
-  await triggerDrag(track, 0, -100)
-  expect(onChange).toHaveBeenCalledTimes(1)
-  await triggerDrag(track, 0, -100)
-  expect(onChange).toHaveBeenLastCalledWith(2)
-
-  wrapper.unmount()
-})
-
-test('test touch forbid touchable', async () => {
-  const onChange = jest.fn()
-
-  const wrapper = mount(Wrapper, {
-    props: {
-      touchable: false,
-      onChange,
-    },
+    await delay(100)
+    await delay(100)
+    expect(onChange).toHaveBeenLastCalledWith(1)
+    await delay(100)
+    expect(onChange).toHaveBeenLastCalledWith(2)
+    wrapper.unmount()
   })
-  await delay(50)
 
-  const track = wrapper.find('.var-swipe__track')
+  test('swipe duration', () => {
+    const wrapper = mount(Wrapper, {
+      props: {
+        duration: 500,
+      },
+    })
 
-  await triggerDrag(track, -100, 0)
-  expect(onChange).toHaveBeenCalledTimes(0)
-
-  wrapper.unmount()
-})
-
-test('test autoplay', async () => {
-  const onChange = jest.fn()
-
-  const wrapper = mount(Wrapper, {
-    props: {
-      autoplay: 100,
-      onChange,
-    },
+    expect(wrapper.find('.var-swipe__track').attributes('style')).toContain('transition-duration: 500ms;')
+    wrapper.unmount()
   })
-  await delay(100)
-  await delay(100)
-  expect(onChange).toHaveBeenLastCalledWith(1)
-  await delay(100)
-  expect(onChange).toHaveBeenLastCalledWith(2)
-  wrapper.unmount()
+
+  test('swipe initial-index', async () => {
+    const wrapper = mount(Wrapper, {
+      props: {
+        initialIndex: 2,
+      },
+    })
+
+    await delay(200)
+    expect(wrapper.findAll('.var-swipe__indicator')[2].classes()).toContain('var-swipe--indicator-active')
+    wrapper.unmount()
+  })
+
+  test('swipe indicator and indicator-color', async () => {
+    const wrapper = mount(Wrapper, {
+      props: {
+        indicator: true,
+        indicatorColor: 'red',
+      },
+    })
+
+    await delay(200)
+    expect(wrapper.find('.var-swipe__indicators').exists()).toBe(true)
+    wrapper.findAll('.var-swipe__indicator').forEach((item) => {
+      expect(item.attributes('style')).toContain('background: red;')
+    })
+    await wrapper.setProps({ indicator: false })
+    expect(wrapper.find('.var-swipe__indicators').exists()).toBe(false)
+    wrapper.unmount()
+  })
+
+  test('swipe vertical', async () => {
+    const wrapper = mount(Wrapper, {
+      props: {
+        vertical: true,
+      },
+    })
+
+    expect(wrapper.find('.var-swipe--vertical').exists()).toBe(true)
+    await wrapper.setProps({ vertical: false })
+    expect(wrapper.find('.var-swipe--vertical').exists()).toBe(false)
+    wrapper.unmount()
+  })
+
+  test('touch touchable', async () => {
+    const onChange = vi.fn()
+    const wrapper = mount(Wrapper, {
+      props: {
+        touchable: false,
+        onChange,
+      },
+    })
+
+    await delay(50)
+    const track = wrapper.find('.var-swipe__track')
+    await triggerDrag(track, -100, 0)
+    expect(onChange).toHaveBeenCalledTimes(0)
+    wrapper.unmount()
+  })
+
+  test('swipe navigation', async () => {
+    const wrapper = mount(Wrapper, {
+      props: {
+        vertical: true,
+        navigation: true,
+      },
+    })
+
+    await delay(600)
+    expect(wrapper.html()).toMatchSnapshot()
+
+    await wrapper.setProps({ vertical: false })
+    await delay(600)
+    expect(wrapper.find('.var-swipe__navigation').exists()).toBe(true)
+    expect(wrapper.html()).toMatchSnapshot()
+
+    await wrapper.setProps({ navigation: false })
+    expect(wrapper.find('.var-swipe__navigation').exists()).toBe(false)
+    expect(wrapper.html()).toMatchSnapshot()
+
+    await wrapper.setProps({ navigation: 'hover' })
+
+    await wrapper.trigger('mouseenter')
+    expect(wrapper.html()).toMatchSnapshot()
+
+    await wrapper.trigger('mouseleave')
+    expect(wrapper.html()).toMatchSnapshot()
+    wrapper.unmount()
+  })
 })

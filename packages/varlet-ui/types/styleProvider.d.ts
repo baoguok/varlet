@@ -1,14 +1,20 @@
-import type { App } from 'vue'
-import { VarComponent } from './varComponent'
+import { App, VNode } from 'vue'
+import { StyleVars } from './styleVars'
+import { BasicAttributes, SetPropsDefaults, VarComponent } from './varComponent'
 
-export type StyleVars = Record<string, string>
+export declare const styleProviderProps: Record<keyof StyleProviderProps, any>
 
-export interface StyleProviderProps {
+export interface StyleProviderProps extends BasicAttributes {
   styleVars?: StyleVars
+  tag?: string
 }
 
 export class StyleProviderComponent extends VarComponent {
   $props: StyleProviderProps
+
+  $slots: {
+    default(): VNode[]
+  }
 }
 
 export interface IStyleProvider {
@@ -16,8 +22,10 @@ export interface IStyleProvider {
   Component: typeof StyleProviderComponent
 
   install(app: App): void
+
+  setPropsDefaults: SetPropsDefaults<StyleProviderProps>
 }
 
-export const StyleProvider: IStyleProvider
+export declare const StyleProvider: IStyleProvider
 
 export class _StyleProviderComponent extends StyleProviderComponent {}

@@ -2,22 +2,20 @@
 
 ### Intro
 
-A dialog pops up to display the content and handle the user interaction
+A dialog pops up to display the content and handle the user interaction.
 `Dialog` have provided functional and component usage, and there is no essential difference between the two usage effects and parameters.
 
-## Functional
+## Function Call
 
-### Basic Use
+### Basic Usage
 
 ```html
 <script setup>
 import { Dialog } from '@varlet/ui'
-
-const createBasic = () => Dialog('Don\'t Wanna See No Blood, Don\'t Be A Macho Man')
 </script>
 
 <template>
-  <var-button type="primary" block @click="createBasic">Basic Use</var-button>
+  <var-button type="primary" block @click="Dialog('Don\'t Wanna See No Blood, Don\'t Be A Macho Man')">Basic Use</var-button>
 </template>
 ```
 
@@ -27,7 +25,7 @@ const createBasic = () => Dialog('Don\'t Wanna See No Blood, Don\'t Be A Macho M
 <script setup>
 import { Dialog } from '@varlet/ui'
 
-const modifyTitle = () => {
+function modifyTitle() {
   Dialog({
     title: 'Beat It',
     message: 'Don\'t Wanna See No Blood, Don\'t Be A Macho Man',
@@ -46,7 +44,7 @@ const modifyTitle = () => {
 <script setup>
 import { Dialog } from '@varlet/ui'
 
-const hideButton = () => {
+function hideButton() {
   Dialog({
     message: 'Don\'t Wanna See No Blood, Don\'t Be A Macho Man',
     confirmButton: false,
@@ -60,7 +58,7 @@ const hideButton = () => {
 </template>
 ```
 
-### Handling user behavior
+### Handler User Behavior
 
 You can get user behavior from the method's return value, which is a `Promise`.
 Includes `confirm`, `cancel`, and `close(click the overlay to trigger closure)`.
@@ -75,7 +73,9 @@ const actions = {
   close: () => Snackbar.info('close'),
 }
 
-const createAction = async () => actions[await Dialog('Don\'t Wanna See No Blood, Don\'t Be A Macho Man')]()
+async function createAction() {
+  actions[await Dialog('Don\'t Wanna See No Blood, Don\'t Be A Macho Man')]()
+}
 </script>
 
 <template>
@@ -83,7 +83,7 @@ const createAction = async () => actions[await Dialog('Don\'t Wanna See No Blood
 </template>
 ```
 
-### Asynchronous closing
+### Asynchronous Closing
 
 You can use `onBeforeClose` to intercept before closing, and you can get the user behavior from the parameters, and the callback function that triggers the shutdown.
 
@@ -97,15 +97,16 @@ const actions = {
   close: () => Snackbar.info('close'),
 }
 
-const onBeforeClose = (action, done) => {
+function onBeforeClose(action, done) {
   Snackbar.loading('Asynchronous shutdown in progress')
+
   setTimeout(() => {
     actions[action]()
     done()
   }, 1000)
 }
 
-const createAction = async () => {
+function createAction() {
   Dialog({
     message: 'Don\'t Wanna See No Blood, Don\'t Be A Macho Man',
     onBeforeClose
@@ -120,10 +121,10 @@ const createAction = async () => {
 
 ## Component Call
 
-### Basic Use
+### Basic Usage
 
 ```html
-<script>
+<script setup>
 import { ref } from 'vue'
 import { Snackbar } from '@varlet/ui'
    
@@ -136,14 +137,14 @@ const show = ref(false)
     title="Beat It"
     message="Don't Wanna See No Blood, Don't Be A Macho Man"
     v-model:show="show"
-    @confirm="() => Snackbar.success('confirm')"
-    @cancel="() => Snackbar.error('cancel')"
-    @closed="() => Snackbar.info('closed')"
+    @confirm="Snackbar.success('confirm')"
+    @cancel="Snackbar.error('cancel')"
+    @closed="Snackbar.info('closed')"
   />
 </template>
 ```
 
-### Asynchronous closing
+### Asynchronous Closing
 
 ```html
 <script setup>
@@ -158,7 +159,7 @@ const actions = {
   close: () => Snackbar.info('close'),
 }
 
-const onBeforeClose = (action, done) => {
+function onBeforeClose(action, done) {
   Snackbar.loading('Asynchronous shutdown in progress')
 
   setTimeout(() => {
@@ -210,6 +211,7 @@ const show = ref(false)
 | --------------------------- | -------------------------------------------------------------------------------------------------------------- | --------------------- | --------- |
 | `v-model:show`              | Whether to display a Dialog                                                                                    | _boolean_             | `false`   |
 | `title`                     | Dialog title                                                                                                   | _string_              | `Hint`    |
+| `width`                     | Dialog width                                                                                                   | _string \| number_    | `-`  |
 | `message`                   | Dialog message content                                                                                         | _string_              | `-`       |
 | `message-align`             | Dialog message content text alignment, optional values `center`, `left`, `right`                               | _string_              | `left`    |
 | `confirm-button`            | Whether to display the confirm button                                                                          | _boolean_             | `true`    |
@@ -227,7 +229,8 @@ const show = ref(false)
 | `overlay-style`             | Custom overlay style                                                                                           | _string_              | `-`       |
 | `lock-scroll`               | Whether to disable scrolling penetration, scrolling the Dialog when disabled will not cause the body to scroll | _boolean_             | `true`    |
 | `close-on-click-overlay`    | Whether to click the overlay to close the Dialog                                                               | _boolean_             | `true`    |
-| `teleport`                  | The location of the Dialog to mount                                                                            | _TeleportProps['to']_ | `-`       |
+| `close-on-key-escape` | Whether to support keyboard ESC to close the dialog | _boolean_ | `true`  |
+| `teleport`                  | The location of the Dialog to mount                                                                            | _TeleportProps['to'] \| false_ | `body`       |
 
 ### Events
 
@@ -238,17 +241,28 @@ const show = ref(false)
 | `before-close`  | Triggering before the Dialog closes prevents closure | `action: confirm \| cancel \| close` <br> `done: Function` |
 | `close`         | Triggered when the Dialog is close                   | `-`                                                        |
 | `closed`        | Triggered when the Dialog close-animation ends       | `-`                                                        |
-| `confirm`       | Trigger on confirm                                   | `-`                                                        |
-| `cancel`        | Trigger on cancel                                    | `-`                                                        |
-| `click-overlay` | Triggered when you click on overlay                  | `-`                                                        |
+| `confirm`       | Triggered on confirm                                   | `-`                                                        |
+| `cancel`        | Triggered on cancel                                    | `-`                                                        |
+| `click-overlay` | Triggered when clicking on overlay                  | `-`                                                        |
+| `key-escape` | Triggered when click keyboard ESC  | `-` |
+
+### Methods
+
+| Method | Description | Arguments | Return |
+| --- | --- | --- | --- |
+| `Dialog` | Show dialog | _options \| string_ | `-` |
+| `Dialog.close` | Close dialog | _-_ | `-` |
+| `Dialog.setDefaultOptions` | Set default option configuration | _options_ | `-` |
+| `Dialog.resetDefaultOptions` | Reset default option configuration | _-_ | `-` |
 
 ### Dialog Options
 
 #### Options passed in for a functional call
 
-| Prop                     | Description                                                                                                    | Type                                                           | Default |
+| Option                     | Description                                                                                                    | Type                                                           | Default |
 | ------------------------ | -------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------- | ------- |
 | `title`                  | Dialog title                                                                                                   | _string_                                                       | `Hint`  |
+| `width`                  | Dialog width                                                                                                   | _string \| number_                                             | `-`  |
 | `message`                | Dialog message content                                                                                         | _string_                                                       | `-`     |
 | `messageAlign`           | Dialog message content text alignment, optional values `center` `left` `right`                                 | _string_                                                       | `left`  |
 | `confirmButton`          | Whether to display the confirm button                                                                          | _boolean_                                                      | `true`  |
@@ -265,7 +279,8 @@ const show = ref(false)
 | `overlayClass`           | Custom overlay class                                                                                           | _string_                                                       | `-`     |
 | `overlayStyle`           | Custom overlay style                                                                                           | _string_                                                       | `-`     |
 | `lockScroll`             | Whether to disable scrolling penetration, scrolling the Dialog when disabled will not cause the body to scroll | _boolean_                                                      | `true`  |
-| `closeOnClickOverlay`    | Whether to click the overlay to close the Dialog                                                               | _boolean_                                                      | `true`  |
+| `closeOnClickOverlay`    | Whether to click the overlay to close the Dialog  | _boolean_  | `true`  |
+| `closeOnKeyEscape` |  Whether to support keyboard ESC to close the dialog | _boolean_ | `true` |
 | `onOpen`                 | Dialog open callback                                                                                           | _() => void_                                                   | `-`     |
 | `onOpened`               | Dialog open-animation ends callback                                                                            | _() => void_                                                   | `-`     |
 | `onBeforeClose`          | Callbacks prevent closure before the Dialog closes                                                             | _(action: confirm \| cancel \| close, done: Function) => void_ | `-`     |
@@ -274,22 +289,24 @@ const show = ref(false)
 | `onConfirm`              | Confirm callback                                                                                               | _() => void_                                                   | `-`     |
 | `onCancel`               | Cancel callback                                                                                                | _() => void_                                                   | `-`     |
 | `onClickOverlay`         | Click overlay callback                                                                                         | _() => void_                                                   | `-`     |
+| `onKeyEscape`            | Triggered when click keyboard ESC | _() => void_ | `-` |
 
 ### Slots
 
-| Slot      | Description            | Arguments |
+| Name | Description | SlotProps |
 | --------- | ---------------------- | --------- |
 | `default` | Dialog content message | `-`       |
 | `title`   | Dialog title           | `-`       |
+| `actions` ***3.3.3***  | Dialog actions | `slotClass: string` the class of actions container <br> `cancel: () => void` cancel callback function <br> `confirm: () => void` confirm callback function |
 
 ### Style Variables
 
-Here are the CSS variables used by the component, Styles can be customized using [StyleProvider](#/en-US/style-provider)
+Here are the CSS variables used by the component. Styles can be customized using [StyleProvider](#/en-US/style-provider).
 
 | Variable                        | Default                |
 | ------------------------------- | ---------------------- |
 | `--dialog-width`                | `280px`                |
-| `--dialog-background`           | `#fff`                 |
+| `--dialog-background`           | `var(--color-surface-container-low)`                 |
 | `--dialog-border-radius`        | `3px`                  |
 | `--dialog-title-padding`        | `20px 20px 0`          |
 | `--dialog-title-font-size`      | `var(--font-size-lg)`  |
@@ -299,5 +316,6 @@ Here are the CSS variables used by the component, Styles can be customized using
 | `--dialog-message-font-size`    | `var(--font-size-md)`  |
 | `--dialog-actions-padding`      | `0 12px 12px`          |
 | `--dialog-button-margin-left`   | `6px`                  |
+| `--dialog-title-color`          | `#555`                 |
 | `--dialog-confirm-button-color` | `var(--color-primary)` |
 | `--dialog-cancel-button-color`  | `var(--color-primary)` |

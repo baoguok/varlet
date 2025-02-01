@@ -1,72 +1,84 @@
 {
   "name": "@varlet/ui",
-  "version": "1.27.5",
+  "version": "3.8.5",
   "description": "A material like components library",
-  "module": "es/index.js",
-  "main": "lib/index.js",
-  "typings": "types/index.d.ts",
-  "vetur": {
-    "tags": "highlight/tags.json",
-    "attributes": "highlight/attributes.json"
-  },
-  "web-types": "highlight/web-types.json",
   "keywords": [
-    "Vue",
-    "Material",
-    "UI"
+    "Vue3",
+    "Mobile",
+    "Material Design",
+    "UI",
+    "Components"
   ],
+  "homepage": "https://varletjs.org",
+  "bugs": {
+    "url": "https://github.com/varletjs/varlet/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/varletjs/varlet.git"
+  },
+  "license": "MIT",
+  "author": "haoziqaq <357229046@qq.com>",
+  "sideEffects": [
+    "es/**/style/*",
+    "lib/**/style/*",
+    "es/style.mjs",
+    "lib/style.js",
+    "*.css"
+  ],
+  "main": "lib/varlet.cjs.js",
+  "jsdelivr": "umd/varlet.js",
+  "unpkg": "umd/varlet.js",
+  "module": "es/index.mjs",
+  "typings": "types/index.d.ts",
+  "style": "umd/style.css",
   "files": [
     "json",
     "lib",
     "es",
     "umd",
     "highlight",
-    "types",
-    "CHANGELOG.md"
+    "types"
   ],
-  "author": "haoziqaq <357229046@qq.com>",
-  "license": "MIT",
-  "homepage": "https://varlet-varletjs.vercel.app/",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/varletjs/varlet.git"
-  },
-  "bugs": {
-    "url": "https://github.com/varletjs/varlet/issues"
-  },
   "scripts": {
-    "dev": "varlet-cli dev",
     "build": "varlet-cli build",
-    "preview": "varlet-cli preview",
     "compile": "varlet-cli compile",
-    "create": "varlet-cli create",
-    "test": "varlet-cli jest",
-    "test:watch": "varlet-cli jest -w",
-    "test:watchAll": "varlet-cli jest -wa"
+    "compile:style-vars": "varlet-cli compile:style-vars",
+    "create": "varlet-cli create -i",
+    "dev": "varlet-cli dev",
+    "preview": "varlet-cli preview",
+    "test": "varlet-cli test",
+    "test:coverage": "varlet-cli test -cov",
+    "test:watch": "varlet-cli test -w -cov"
   },
-  "peerDependencies": {
-    "vue": "^3.2.0"
-  },
-  "gitHead": "ee9c3866bedad96c86365b0f9888a3a6bb781b1f",
   "dependencies": {
+    "@popperjs/core": "^2.11.6",
     "@varlet/icons": "workspace:*",
+    "@varlet/shared": "workspace:*",
+    "@varlet/use": "workspace:*",
     "dayjs": "^1.10.4",
     "decimal.js": "^10.2.1"
   },
   "devDependencies": {
+    "@types/node": "^18.7.18",
     "@varlet/cli": "workspace:*",
     "@varlet/touch-emulator": "workspace:*",
-    "@vue/test-utils": "2.0.0-rc.6",
-    "@vue/runtime-core": "3.2.25",
-    "typescript": "^4.4.4",
-    "lodash-es": "^4.17.21",
+    "@varlet/ui": "workspace: *",
+    "@vitest/coverage-istanbul": "2.0.5",
+    "@vue/runtime-core": "3.4.21",
+    "@vue/test-utils": "2.4.1",
     "clipboard": "^2.0.6",
-    "vue": "3.2.25",
-    "vue-router": "4.0.12",
-    "live-server": "^1.2.1"
+    "jsdom": "24.1.1",
+    "live-server": "^1.2.1",
+    "shiki": "^1.21.0",
+    "typescript": "5.3.3",
+    "vitest": "2.0.5",
+    "vue": "3.4.21",
+    "vue-router": "4.2.0",
+    "zod": "^3.23.8"
   },
-  "browserslist": [
-    "Chrome >= 51",
-    "iOS >= 10"
-  ]
+  "peerDependencies": {
+    "vue": "^3.2.0"
+  },
+  "web-types": "highlight/web-types.en-US.json"
 }

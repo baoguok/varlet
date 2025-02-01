@@ -2,7 +2,7 @@
 
 ### 介绍
 
-在一组备选项中进行多选
+在一组备选项中进行多选。
 
 ### 基本使用
 
@@ -49,8 +49,8 @@ const value = ref(false)
 
 <template>
   <var-checkbox
-    unchecked-color="#e99eb4"
-    checked-color="#f44336"
+    unchecked-color="var(--color-warning)" 
+    checked-color="var(--color-danger)"
     v-model="value"
   >
     <template #unchecked-icon>
@@ -94,7 +94,27 @@ const value = ref(false)
 </template>
 ```
 
-### 复选框组/复选框操作
+### 不确定状态
+
+```html
+<script setup>
+import { ref } from 'vue'
+
+const value = ref(false)
+const indeterminate = ref(true)
+</script>
+
+<template>
+  <var-space :size="[0, 10]">
+    <var-checkbox v-model="value" v-model:indeterminate="indeterminate">
+      不确定状态的值: {{ value }}
+    </var-checkbox>
+    <var-button type="primary" @click="indeterminate = !indeterminate">切换</var-button>
+  </var-space>
+</template>
+```
+
+### 复选框组
 
 在复选框组中，必须给 `checkbox` 设置 `checked-value` 用来标识，
 复选框组会收集所有选择的标识。
@@ -111,21 +131,100 @@ const value = ref([])
     <var-checkbox :checked-value="0">吃饭</var-checkbox>
     <var-checkbox :checked-value="1">睡觉</var-checkbox>
   </var-checkbox-group>
+  <var-space :size="[0, 10]">
+    <var-button
+      type="primary"
+      @click="$refs.group.checkAll()"
+    >
+      全选
+    </var-button>
+    <var-button
+      type="primary"
+      @click="$refs.group.inverseAll()"
+    >
+      反选
+    </var-button>
+  </var-space>
+  <div>当前的值: {{ value }}</div>
+</template>
+```
+### 选项式 API
 
-  <var-button 
-    class="button" 
-    type="primary" 
-    @click="$refs.group.checkAll()"
-  >
-    全选
-  </var-button>
-  <var-button 
-    class="button" 
-    type="primary" 
-    @click="$refs.group.inverseAll()"
-  >
-    反选
-  </var-button>
+通过 `options` 属性设置子元素。
+
+```html
+<script setup>
+import { ref } from 'vue'
+
+const value = ref([])
+const options = ref([
+  { label: '吃饭', value: 0 },
+  { label: '睡觉', value: 1 },
+  { label: '游戏', value: 2, disabled: true },
+])
+</script>
+
+<template>
+  <var-checkbox-group v-model="value" :options="options" />
+  <div>当前的值: {{ value }}</div>
+</template>
+```
+
+### 自定义字段
+
+通过 `label-key` 和 `value-key` 属性自定义 `options` 中数据的格式。
+
+```html
+<script setup>
+import { ref } from 'vue'
+
+const value = ref([])
+const options = ref([
+  { name: '吃饭', id: 0 },
+  { name: '睡觉', id: 1 },
+  { name: '游戏', id: 2 },
+])
+</script>
+
+<template>
+  <var-checkbox-group v-model="value" :options="options" label-key="name" value-key="id" />
+  <div>当前的值: {{ value }}</div>
+</template>
+```
+
+### 垂直布局
+
+```html
+<script setup>
+import { ref } from 'vue'
+
+const value = ref([])
+</script>
+
+<template>
+  <var-checkbox-group v-model="value" direction="vertical">
+    <var-checkbox :checked-value="0">吃饭</var-checkbox>
+    <var-checkbox :checked-value="1">睡觉</var-checkbox>
+  </var-checkbox-group>
+</template>
+```
+
+### 最大选中数量
+
+在复选框组中，可以通过设置 `max` 属性来限制最大选中数量。
+
+```html
+<script setup>
+import { ref } from 'vue'
+
+const value = ref([])
+</script>
+
+<template>
+  <var-checkbox-group v-model="value" :max="1">
+    <var-checkbox :checked-value="0">吃饭</var-checkbox>
+    <var-checkbox :checked-value="1">睡觉</var-checkbox>
+  </var-checkbox-group>
 </template>
 ```
 
@@ -141,7 +240,27 @@ const value = ref([])
 <template>
   <var-checkbox
     v-model="value"
-    :rules="[v => v || '请勾选']"
+    :rules="v => v || '请勾选'"
+  >
+    当前的值: {{ value }}
+  </var-checkbox>
+</template>
+```
+
+### 使用 Zod 校验复选框字段
+
+```html
+<script setup>
+import { ref } from 'vue'
+import { z } from 'zod'
+
+const value = ref([])
+</script>
+
+<template>
+  <var-checkbox
+    v-model="value"
+    :rules="z.boolean().refine(v => v, '请勾选')"
   >
     当前的值: {{ value }}
   </var-checkbox>
@@ -160,7 +279,28 @@ const value = ref([])
 <template>
   <var-checkbox-group
     v-model="value"
-    :rules="[v => v.length === 2 || '请全选']"
+    :rules="v => v.length === 2 || '请全选'"
+  >
+    <var-checkbox :checked-value="0">吃饭</var-checkbox>
+    <var-checkbox :checked-value="1">睡觉</var-checkbox>
+  </var-checkbox-group>
+</template>
+```
+
+### 使用 Zod 校验复选框组字段
+
+```html
+<script setup>
+import { ref } from 'vue'
+import { z } from 'zod'
+
+const value = ref([])
+</script>
+
+<template>
+  <var-checkbox-group
+    v-model="value"
+    :rules="z.array(z.number()).length(2, '请全选')"
   >
     <var-checkbox :checked-value="0">吃饭</var-checkbox>
     <var-checkbox :checked-value="1">睡觉</var-checkbox>
@@ -179,8 +319,19 @@ const value = ref([])
 | --- | --- | --- | --- |
 | `v-model` | 绑定的值 | _any[]_ | `[]` |
 | `max` | 最大选择的数量 | _string \| number_ | `-` |
-| `direction` | 布局方向，可选值为 `horizontal` `vertical` | _string \| number_ | `horizontal` |
-| `rules` | 验证规则，返回 `true` 表示验证通过，其余的值则转换为文本作为用户提示 | _Array<(value: any[]) => any>_ | `horizontal` |
+| `direction` | 布局方向，可选值为 `horizontal` `vertical` | _string_ | `horizontal` |
+| `options` ***3.2.11*** | 指定可选项 | _CheckboxGroupOption[]_ | `[]` |
+| `label-key` ***3.2.12*** | 作为 label 唯一标识的键名 | _string_ | `label` |
+| `value-key` ***3.2.12*** | 作为 value 唯一标识的键名 | _string_ | `value` |
+| `rules` | 验证规则，返回 `true` 表示验证通过，其它类型的值将转换为文本作为用户提示。自 `3.5.0` 开始支持 [Zod 验证](#/zh-CN/zodValidation)  | _((v: any[]) => any) \| ZodType \| Array<((v: any[]) => any) \| ZodType>_ | `-` |
+
+#### CheckboxGroupOption 
+
+| 参数 | 说明 | 类型             | 默认值       |
+| ------- | --- |----------------|-----------|
+| `label`    |    选项的标签    | _string \| VNode \| (option: CheckboxGroupOption, checked: boolean) => VNodeChild_      | `-`   |
+| `value`  |    选项的值    | _any_      | `-`   |
+| `disabled`    |    是否禁用   | _boolean_      | `-`   |
 
 #### Checkbox Props
 
@@ -189,13 +340,14 @@ const value = ref([])
 | `v-model` | 绑定的值 | _any_ | `false` |
 | `checked-value` | 选中状态的值 | _any_ | `true` |
 | `unchecked-value` | 未选中状态的值 | _any_ | `false` |
-| `checked-color` | 选中状态的颜色 | _any_ | `-` |
-| `unchecked-color` | 未选中状态的颜色 | _any_ | `-` |
+| `checked-color` | 选中状态的颜色 | _string_ | `-` |
+| `unchecked-color` | 未选中状态的颜色 | _string_ | `-` |
 | `icon-size` | 图标尺寸 | _string \| number_ | `-` |
 | `disabled` | 是否禁用 | _boolean_ | `false` |
 | `readonly` | 是否只读 | _boolean_ | `false` |
+| `indeterminate` | 是否为不确定状态（样式优先级最高） | _boolean_ | `false` |
 | `ripple` | 是否开启水波纹 | _boolean_ | `true` |
-| `rules` | 验证规则，返回 `true` 表示验证通过，其余的值则转换为文本作为用户提示 | _Array<(value: any) => any>_ | `-` |
+| `rules` | 验证规则，返回 `true` 表示验证通过，其它类型的值将转换为文本作为用户提示。自 `3.5.0` 开始支持 [Zod 验证](#/zh-CN/zodValidation)  | _(v: string) => any \| ZodType \| Array<(v: string) => any \| ZodType>_ | `-` |
 
 ### 方法
 
@@ -206,8 +358,8 @@ const value = ref([])
 | `validate` | 触发校验 | `-` | `valid: Promise<boolean>` |
 | `resetValidation` | 清空校验信息 | `-` | `-` |
 | `reset` | 清空绑定的值(设置为 `[]`)和校验信息 | `-` | `-` |
-| `checkAll` | 全选 | `-` | `value: any` |
-| `inverseAll` | 反选 | `-` | `value: any` |
+| `checkAll` | 全选 | `-` | `value: any[]` |
+| `inverseAll` | 反选 | `-` | `value: any[]` |
 
 #### Checkbox Methods
 
@@ -216,7 +368,7 @@ const value = ref([])
 | `validate` | 触发校验 | `-` | `valid: Promise<boolean>` |
 | `resetValidation` | 清空校验信息 | `-` | `-` |
 | `reset` | 清空绑定的值(设置为 `unchecked-value`)和校验信息 | `-` | `-` |
-| `toggle` | 切换选中状态，传 `checked-value` 为选中， `unchecked-value` 为取消选中，不传或其他情况为取反 | `value: any` | `-` |
+| `toggle` | 切换选中状态，传 `checked-value` 为选中， `unchecked-value` 为取消选中，不传或其他情况为取反 | `value?: any` | `-` |
 
 ### 事件
 
@@ -247,10 +399,11 @@ const value = ref([])
 | --- | --- | --- |
 | `checked-icon` | 选中图标 | `-` |
 | `unchecked-icon` | 未选中图标 | `-` |
-| `default` | 显示的文本 | `-` |
+| `indeterminate-icon` | 不确定状态图标 | `-` |
+| `default` | 显示的文本 | `checked: boolean` 是否选中 |
 
 ### 样式变量
-以下为组件使用的 css 变量，可以使用 [StyleProvider 组件](#/zh-CN/style-provider) 进行样式定制
+以下为组件使用的 css 变量，可以使用 [StyleProvider 组件](#/zh-CN/style-provider) 进行样式定制。
 
 | 变量名 | 默认值 |
 | --- | --- |
@@ -259,4 +412,5 @@ const value = ref([])
 | `--checkbox-disabled-color` | `var(--color-text-disabled)` |
 | `--checkbox-error-color` | `var(--color-danger)` |
 | `--checkbox-action-padding` | `6px` |
+| `--checkbox-text-color` | `#555` |
 | `--checkbox-icon-size` | `24px` |

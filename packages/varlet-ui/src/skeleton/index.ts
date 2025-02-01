@@ -1,9 +1,11 @@
-import type { App } from 'vue'
+import { withInstall, withPropsDefaultsSetter } from '../utils/components'
+import { props as skeletonProps } from './props'
 import Skeleton from './Skeleton.vue'
 
-Skeleton.install = function (app: App) {
-  app.component(Skeleton.name, Skeleton)
-}
+withInstall(Skeleton)
+withPropsDefaultsSetter(Skeleton, skeletonProps)
+
+export { skeletonProps }
 
 export const _SkeletonComponent = Skeleton
 

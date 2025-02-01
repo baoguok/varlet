@@ -12,12 +12,10 @@
 ```html
 <script setup>
 import { Dialog } from '@varlet/ui'
-
-const createBasic = () => Dialog('兰亭临帖 行书如行云流水')
 </script>
 
 <template>
-  <var-button type="primary" block @click="createBasic">基本使用</var-button>
+  <var-button type="primary" block @click="Dialog('兰亭临帖 行书如行云流水')">基本使用</var-button>
 </template>
 ```
 
@@ -27,7 +25,7 @@ const createBasic = () => Dialog('兰亭临帖 行书如行云流水')
 <script setup>
 import { Dialog } from '@varlet/ui'
 
-const modifyTitle = () => {
+function modifyTitle() {
   Dialog({
     title: '兰亭序',
     message: '兰亭临帖 行书如行云流水',
@@ -46,7 +44,7 @@ const modifyTitle = () => {
 <script setup>
 import { Dialog } from '@varlet/ui'
 
-const hideButton = () => {
+function hideButton() {
   Dialog({
     message: '兰亭临帖 行书如行云流水',
     confirmButton: false,
@@ -75,7 +73,9 @@ const actions = {
   close: () => Snackbar.info('close'),
 }
 
-const createAction = async () => actions[await Dialog('兰亭临帖 行书如行云流水')]()
+async function createAction() {
+  actions[await Dialog('兰亭临帖 行书如行云流水')]()
+}
 </script>
 
 <template>
@@ -97,15 +97,16 @@ const actions = {
   close: () => Snackbar.info('close'),
 }
 
-const onBeforeClose = (action, done) => {
+function onBeforeClose(action, done) {
   Snackbar.loading('正在异步关闭')
+  
   setTimeout(() => {
     actions[action]()
     done()
   }, 1000)
 }
 
-const createAction = async () => {
+function createAction() {
   Dialog({
     message: '兰亭临帖 行书如行云流水',
     onBeforeClose
@@ -123,7 +124,7 @@ const createAction = async () => {
 ### 基本使用
 
 ```html
-<script>
+<script setup>
 import { ref } from 'vue'
 import { Snackbar } from '@varlet/ui'
    
@@ -136,9 +137,9 @@ const show = ref(false)
     title="兰亭序"
     message="兰亭临帖 行书如行云流水"
     v-model:show="show"
-    @confirm="() => Snackbar.success('confirm')"
-    @cancel="() => Snackbar.error('cancel')"
-    @closed="() => Snackbar.info('closed')"
+    @confirm="Snackbar.success('confirm')"
+    @cancel="Snackbar.error('cancel')"
+    @closed="Snackbar.info('closed')"
   />
 </template>
 ```
@@ -158,7 +159,7 @@ const actions = {
   close: () => Snackbar.info('close'),
 }
 
-const onBeforeClose = (action, done) => {
+function onBeforeClose(action, done) {
   Snackbar.loading('Asynchronous shutdown in progress')
 
   setTimeout(() => {
@@ -210,6 +211,7 @@ const show = ref(false)
 | --- | --- | --- | --- |
 | `v-model:show` | 是否显示对话框 | _boolean_ | `false` |
 | `title` | 对话框标题 | _string_ | `提示` |
+| `width` | 对话框宽度 | _string \| number_ | `-` |
 | `message` | 对话框内容 | _string_ | `-` |
 | `message-align` | 对话框内容文字对齐方式，可选值 `center` `left` `right` | _string_ | `left` |
 | `confirm-button` | 是否显示确认按钮 | _boolean_ | `true` |
@@ -227,7 +229,8 @@ const show = ref(false)
 | `overlay-style` | 自定义遮罩层的 style | _object_ | `-` |
 | `lock-scroll` | 是否禁止滚动穿透，禁止时滚动弹出层不会引发 body 的滚动 | _boolean_ | `true` |
 | `close-on-click-overlay` | 是否点击遮罩层关闭弹出层 | _boolean_ | `true` |
-| `teleport` | 弹出层挂载的位置 | _TeleportProps['to']_ | `-` |
+| `close-on-key-escape` | 是否支持键盘 ESC 关闭弹窗 | _boolean_ | `true`  |
+| `teleport` | 弹出层挂载的位置 | _TeleportProps['to'] \| false_ | `body` |
 
 ### 事件
 
@@ -241,6 +244,16 @@ const show = ref(false)
 | `confirm` | 确认时触发 | `-` |
 | `cancel` | 取消时触发 | `-` |
 | `click-overlay` | 点击遮罩层时触发 | `-` |
+| `key-escape` | 点击键盘 ESC 时触发 | `-` |
+
+### 方法
+
+| 方法名 | 说明 | 参数 | 返回值 |
+| --- | --- | --- | --- |
+| `Dialog` | 显示对话框 | _options \| string_ | `-` |
+| `Dialog.close` | 关闭对话框 | _-_ | `-` |
+| `Dialog.setDefaultOptions` | 设置默认的选项配置 | _options_ | `-` |
+| `Dialog.resetDefaultOptions` | 重置默认的选项配置 | _-_ | `-` |
 
 ### Dialog Options
 
@@ -249,6 +262,7 @@ const show = ref(false)
 | 参数 | 说明 | 类型 | 默认值 |
 | --- | --- | --- | --- |
 | `title` | 对话框标题 | _string_ | `提示` |
+| `width` | 对话框宽度 | _string \| number_ | `-` |
 | `message` | 对话框内容 | _string_ | `-` |
 | `messageAlign` | 对话框内容文字对齐方式，可选值 `center` `left` `right` | _string_ | `left` |
 | `confirmButton` | 是否显示确认按钮 | _boolean_ | `true` |
@@ -266,6 +280,7 @@ const show = ref(false)
 | `overlayStyle` | 自定义遮罩层的 style | _object_ | `-` |
 | `lockScroll` | 是否禁止滚动穿透，禁止时滚动弹出层不会引发 body 的滚动 | _boolean_ | `true` |
 | `closeOnClickOverlay` | 是否点击遮罩层关闭弹出层 | _boolean_ | `true` |
+| `closeOnKeyEscape` | 是否支持键盘 ESC 关闭弹窗 | _boolean_ | `true` |
 | `onOpen` | 对话框开启回调 | _() => void_ | `-` |
 | `onOpened` | 对话框开启动画结束回调 | _() => void_ | `-` |
 | `onBeforeClose` | 对话框关闭前回调，会阻止关闭 | _(action: confirm \| cancel \| close, done: Function) => void_ | `-` |
@@ -274,6 +289,7 @@ const show = ref(false)
 | `onConfirm` | 确认回调 | _() => void_ | `-` |
 | `onCancel` | 取消回调 | _() => void_ | `-` |
 | `onClickOverlay` | 遮罩层点击回调 | _() => void_ | `-` |
+| `onKeyEscape` | 点击键盘 ESC 时触发 | _() => void_ | `-` |
 
 ### 插槽
 
@@ -281,15 +297,16 @@ const show = ref(false)
 | --- | --- | --- |
 | `default` | 对话框主要内容 | `-` |
 | `title` | 对话框标题 | `-` |
+| `actions` ***3.3.3*** | 对话框底部操作区域 | `slotClass: string` 操作容器样式 <br> `cancel: () => void` 取消的回调函数 <br> `confirm: () => void` 确认的回调函数 |
 
 ### 样式变量
 
-以下为组件使用的 css 变量，可以使用 [StyleProvider 组件](#/zh-CN/style-provider) 进行样式定制
+以下为组件使用的 css 变量，可以使用 [StyleProvider 组件](#/zh-CN/style-provider) 进行样式定制。
 
 | 变量名 | 默认值 |
 | --- | --- |
 | `--dialog-width` | `280px` |
-| `--dialog-background` | `#fff` |
+| `--dialog-background` | `var(--color-surface-container-low)` |
 | `--dialog-border-radius` | `3px` |
 | `--dialog-title-padding` | `20px 20px 0` |
 | `--dialog-title-font-size` | `var(--font-size-lg)` |
@@ -299,5 +316,6 @@ const show = ref(false)
 | `--dialog-message-font-size` | `var(--font-size-md)` |
 | `--dialog-actions-padding` | `0 12px 12px` |
 | `--dialog-button-margin-left` | `6px` |
+| `--dialog-title-color`          | `#555`                 |
 | `--dialog-confirm-button-color` | `var(--color-primary)` |
 | `--dialog-cancel-button-color` | `var(--color-primary)` |

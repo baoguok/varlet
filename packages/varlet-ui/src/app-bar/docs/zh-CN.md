@@ -1,6 +1,10 @@
 # 导航栏
 
-### 基础导航栏
+### 介绍
+
+为页面提供导航功能，常用于页面顶部。
+
+### 基本使用
 
 通过 `title` 属性设置导航栏标题。
 
@@ -10,190 +14,144 @@
 </template>
 ```
 
-### 自定义样式
+### 开启圆角
 
-通过 `title-position`、`color` 属性设置标题所处位置、导航栏颜色。
+通过 `round` 属性开启圆角。
+
+```html
+<template>
+  <var-app-bar title="开启圆角" title-position="center" round />
+</template>
+```
+
+### 自定义背景色
 
 ```html
 <template>
   <var-app-bar
-    title="标题"
-    title-position="center"
-    color="#00c48f"
+    title="标题" 
+    title-position="center" 
+    color="linear-gradient(90deg, rgba(72,176,221,1) 0%, rgba(0,208,161,1) 100%)"
   />
 </template>
 ```
 
-### 添加标题处插槽
+### 添加标题插槽
 
 ```html
 <template>
-  <var-app-bar>从插槽处添加标题</var-app-bar>
-</template>
-```
-
-### 添加左侧插槽
-
-```html
-<script setup>
-import { Snackbar } from '@varlet/ui'
-
-const goBack = () => {
-  Snackbar({
-    content: '返回',
-    position: 'top'
-  })
-}
-</script>
-
-<template>
-  <var-app-bar title="title">
-    <template #left>
-      <var-button
-        round
-        text
-        color="transparent"
-        text-color="#fff"
-        @click="goBack"
-      >
-        <var-icon name="chevron-left" :size="24" />
-      </var-button>
-    </template>
-  </var-app-bar>
-</template>
-```
-
-```js
-
-```
-
-### 添加右侧插槽
-
-```html
-<script setup>
-import { Snackbar } from '@varlet/ui'
-
-const searchData = () => {
-  Snackbar({
-    content: '搜索',
-    position: 'top'
-  })
-}
-</script>
-
-<template>
-  <var-app-bar title="标题">
-    <template #right>
-      <var-button
-        round
-        text
-        color="transparent"
-        text-color="#ffffff"
-        @click="searchData"
-      >
-        <var-icon name="magnify" :size="24" />
-      </var-button>
-    </template>
-  </var-app-bar>
+  <var-app-bar>添加标题插槽</var-app-bar>
 </template>
 ```
 
 ### 添加左右插槽
 
 ```html
-<script setup>
-import { ref } from 'vue'
-import { Snackbar } from '@varlet/ui'
-
-const offsetY = ref(false)
-const menuList = ref([
-  { label: '选项一', value: 'menu1' },
-  { label: '选项二', value: 'menu2' }
-])
-
-const goBack = () => {
-  Snackbar({
-    content: '返回',
-    position: 'top'
-  })
-}
-</script>
-
 <template>
   <var-app-bar title="标题">
     <template #left>
       <var-button
-        round
-        text
         color="transparent"
         text-color="#fff"
-        @click="goBack"
+        round
+        text
       >
         <var-icon name="chevron-left" :size="24" />
       </var-button>
     </template>
 
     <template #right>
-      <var-menu
-        class="app-bar-example-menu"
-        :offset-y="42"
-        :offset-x="-20"
-        v-model:show="offsetY"
-      >
+      <var-menu>
         <var-button
+          color="transparent"
+          text-color="#fff"
           round
           text
-          color="transparent"
-          text-color="#ffffff"
-          @click="offsetY = true"
         >
           <var-icon name="menu" :size="24" />
         </var-button>
 
         <template #menu>
-          <div class="app-bar-example-menu-list">
-            <var-cell
-              class="app-bar-example-menu-cell"
-              v-for="value in menuList"
-              :key="value.value"
-              v-ripple
-            >
-              {{ value.label }}
-            </var-cell>
-          </div>
+          <var-cell ripple>选项卡</var-cell>
+          <var-cell ripple>选项卡</var-cell>
+          <var-cell ripple>选项卡</var-cell>
         </template>
       </var-menu>
     </template>
   </var-app-bar>
 </template>
+```
 
-<style>
-.app-bar-example-menu {
-  background: transparent;
-}
+### 扩展内容
 
-.app-bar-example-menu-list {
-  background: #fff;
-}
+```html
+<script setup>
+import { ref } from 'vue'
 
-.app-bar-example-menu-cell {
-  display: block;
-  padding: 10px;
-}
-</style>
+const active = ref(0)
+</script>
+
+<template>
+  <var-app-bar
+    round
+    image="https://varletjs.org/tree.jpeg"
+    image-linear-gradient="to right top, rgba(29, 68, 147, 0.5) 0%, rgba(74, 198, 170, 0.9) 100%"
+  >
+    标题
+    <template #left>
+      <var-button round text color="transparent" text-color="#fff">
+        <var-icon name="menu" :size="24" />
+      </var-button>
+    </template>
+
+    <template #right>
+      <var-button round text color="transparent" text-color="#fff">
+        <var-icon name="map-marker-radius" :size="24" />
+      </var-button>
+      <var-button round text color="transparent" text-color="#fff">
+        <var-icon name="star" :size="24" />
+      </var-button>
+      <var-button round text color="transparent" text-color="#fff">
+        <var-icon name="heart" :size="24" />
+      </var-button>
+    </template>
+
+    <template #content>
+      <var-tabs
+        style="margin-top: 100px"
+        color="transparent"
+        active-color="#fff"
+        inactive-color="#ddd"
+        v-model:active="active"
+      >
+        <var-tab>选项卡</var-tab>
+        <var-tab>选项卡</var-tab>
+        <var-tab>选项卡</var-tab>
+      </var-tabs>
+    </template>
+  </var-app-bar>
+</template>
 ```
 
 ## API
 
 ### 属性
 
-|参数 | 说明 | 类型 | 默认值 |
-| ---- | ---- | ---- | ---- |
-| `color` | 背景颜色 | _string_ | `-` |
-| `text-color` | 文字颜色 | _string_ | `-` |
-| `title` | 标题 | _string_ | - |
-| `title-position` | 标题位置，可选值为 `left` `center` `right` | _string_ | `left` |
-| `elevation` | 是否给导航栏设置海拔 | _boolean_ | `true` |
+| 参数               | 说明                                | 类型 | 默认值     |
+|------------------|-----------------------------------| ---- |---------|
+| `color`          | 背景颜色                              | _string_ | `-`     |
+| `text-color`     | 文字颜色                              | _string_ | `-`     |
+| `title`          | 标题                                | _string_ | -       |
+| `title-position` | 标题位置，可选值为 `left` `center` `right` | _string_ | `left`  |
+| `elevation` | 海拔高度，可选值为 `true` `false` 和 `0-24` 的等级 | _string \| number \| boolean_|   `true`    |
+| `fixed`          | 是否固定到顶部                            | _boolean_ | `false` |
+| `placeholder`  ***3.2.14***   | 是否在顶部生成相同高度的占位元素(需设置 `fixed`)  | _boolean_ | `false` |
+| `z-index`          | 元素 z-index                            | _number \| string_ | `1` |
+| `round`          | 是否使用圆角                            | _boolean_ | `false` |
+| `border` ***3.3.2***          | 是否使用底部边框                            | _boolean_ | `false` |
+| `image`          | 背景图片                            | _string_ | `-` |
+| `image-linear-gradient` | 背景图片渐变色 | _string_ | `-` |
+| `safe-area-top` | 是否开启顶部安全区适配 | _boolean_ | `false` |
 
 ### 插槽
 
@@ -202,15 +160,21 @@ const goBack = () => {
 | `default` | 自定义标题内容，会覆盖 `title` 的内容 | `-` |
 | `left` | 插入至导航栏左侧的内容 | `-` |
 | `right` | 插入至导航栏右侧的内容 | `-` |
+| `content` | 扩展内容 | `-` |
 
 ### 样式变量
-以下为组件使用的 css 变量，可以使用 [StyleProvider 组件](#/zh-CN/style-provider) 进行样式定制
 
-| 变量名 | 默认值 |
-| --- | --- |
-| `--app-bar-color` | `var(--color-primary)` |
-| `--app-bar-text-color` | `#fff` |
-| `--app-bar-height` | `54px` |
+以下为组件使用的 css 变量，可以使用 [StyleProvider 组件](#/zh-CN/style-provider) 进行样式定制。
+
+| 变量名                       | 默认值 |
+|---------------------------| --- |
+| `--app-bar-color`         | `var(--color-primary)` |
+| `--app-bar-text-color`    | `#fff` |
+| `--app-bar-height`        | `54px` |
 | `--app-bar-title-padding` | `0 12px` |
-| `--app-bar-left-gap` | `6px` |
-| `--app-bar-right-gap` | `6px` |
+| `--app-bar-title-font-size` | `var(--font-size-lg)` |
+| `--app-bar-left-gap`      | `6px` |
+| `--app-bar-right-gap`     | `6px` |
+| `--app-bar-border-radius` | `4px` |
+| `--app-bar-font-size` | `var(--font-size-lg)` |
+| `--app-bar-border-bottom` | `thin solid var(--color-outline)` |

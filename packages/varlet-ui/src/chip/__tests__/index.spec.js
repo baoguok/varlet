@@ -1,30 +1,34 @@
+import { createApp } from 'vue'
+import { mount } from '@vue/test-utils'
+import { describe, expect, test, vi } from 'vitest'
 import Chip from '..'
 import VarChip from '../Chip'
-import { mount } from '@vue/test-utils'
-import { createApp } from 'vue'
 
-test('test chip plugin', () => {
+test('chip plugin', () => {
   const app = createApp({}).use(Chip)
   expect(app.component(Chip.name)).toBeTruthy()
 })
 
-test('test chip close', () => {
-  const onClose = jest.fn()
+test('chip close', async () => {
+  const onClose = vi.fn()
   const wrapper = mount(VarChip, {
     props: {
       onClose,
-      closable: true,
+      closeable: true,
     },
   })
+
   const closeEl = wrapper.find('.var-chip--close')
 
   expect(closeEl.exists()).toBe(true)
-  closeEl.trigger('click')
+  await closeEl.trigger('click')
   expect(onClose).toHaveBeenCalledTimes(1)
+
+  wrapper.unmount()
 })
 
 describe('test chip component props', () => {
-  test('test chip type', () => {
+  test('chip type', () => {
     ;['default', 'primary', 'info', 'success', 'warning', 'danger'].forEach((type) => {
       const wrapper = mount(VarChip, {
         props: { type },
@@ -35,7 +39,7 @@ describe('test chip component props', () => {
     })
   })
 
-  test('test chip size', () => {
+  test('chip size', () => {
     ;['normal', 'mini', 'small', 'large'].forEach((size) => {
       const wrapper = mount(VarChip, {
         props: { size },
@@ -46,7 +50,7 @@ describe('test chip component props', () => {
     })
   })
 
-  test('test chip plain', async () => {
+  test('chip plain', async () => {
     const wrapper = mount(VarChip, {
       props: {
         plain: true,
@@ -59,7 +63,26 @@ describe('test chip component props', () => {
     wrapper.unmount()
   })
 
-  test('test chip round', async () => {
+  test('chip elevation', async () => {
+    const wrapper = mount(VarChip)
+
+    expect(wrapper.find('.var-elevation--1').exists()).toBe(false)
+
+    await wrapper.setProps({
+      elevation: true,
+    })
+
+    expect(wrapper.find('.var-elevation--1').exists()).toBe(true)
+
+    await wrapper.setProps({
+      elevation: 3,
+    })
+    expect(wrapper.find('.var-elevation--3').exists()).toBe(true)
+
+    wrapper.unmount()
+  })
+
+  test('chip round', async () => {
     const wrapper = mount(VarChip, {
       props: {
         round: true,
@@ -72,7 +95,7 @@ describe('test chip component props', () => {
     wrapper.unmount()
   })
 
-  test('test chip block', async () => {
+  test('chip block', async () => {
     const wrapper = mount(VarChip, {
       props: {
         block: true,
@@ -85,35 +108,39 @@ describe('test chip component props', () => {
     wrapper.unmount()
   })
 
-  test('test chip closeable', async () => {
+  test('chip closeable', async () => {
     const wrapper = mount(VarChip, {
       props: {
         closeable: true,
       },
     })
 
-    expect(wrapper.find('.var-chip').attributes('closeable')).toContain(true)
-    await wrapper.setProps({ closeable: false })
-    expect(wrapper.find('.var-chip').attributes('closeable')).toContain(false)
+    expect(wrapper.find('.var-chip--close').exists()).toBeTruthy()
+    await wrapper.setProps({
+      closeable: false,
+    })
+    expect(wrapper.find('.var-chip--close').exists()).toBeFalsy()
+
     wrapper.unmount()
   })
 
-  test('test chip close name', async () => {
+  test('chip iconName', async () => {
     const wrapper = mount(VarChip, {
       props: {
         closeable: true,
-        closeName: 'This is close name',
       },
     })
 
-    expect(wrapper.find('.var-chip').attributes('closename')).toBe('This is close name')
-    expect(wrapper.find('.var-chip').attributes('closeable')).toContain(true)
-    await wrapper.setProps({ closeable: false })
-    expect(wrapper.find('.var-chip').attributes('closeable')).toContain(false)
+    expect(wrapper.find('.var-icon-close-circle').exists()).toBe(true)
+    await wrapper.setProps({
+      iconName: 'delete',
+    })
+    expect(wrapper.find('.var-icon-delete').exists()).toBe(true)
+
     wrapper.unmount()
   })
 
-  test('test chip color', () => {
+  test('chip color', async () => {
     const wrapper = mount(VarChip, {
       props: {
         color: 'red',
@@ -121,10 +148,15 @@ describe('test chip component props', () => {
     })
 
     expect(wrapper.find('.var-chip').attributes('style')).toContain('background: red;')
+    await wrapper.setProps({
+      color: 'green',
+    })
+    expect(wrapper.find('.var-chip').attributes('style')).toContain('background: green;')
+
     wrapper.unmount()
   })
 
-  test('test chip text color', () => {
+  test('chip text color', async () => {
     const wrapper = mount(VarChip, {
       props: {
         textColor: 'red',
@@ -132,12 +164,17 @@ describe('test chip component props', () => {
     })
 
     expect(wrapper.find('.var-chip').attributes('style')).toContain('color: red;')
+    await wrapper.setProps({
+      textColor: 'green',
+    })
+    expect(wrapper.find('.var-chip').attributes('style')).toContain('color: green;')
+
     wrapper.unmount()
   })
 })
 
 describe('test chip component slots', () => {
-  test('test chip default slots', () => {
+  test('chip default slots', () => {
     const wrapper = mount(VarChip, {
       slots: {
         default: () => 'This is default slots',
@@ -148,7 +185,7 @@ describe('test chip component slots', () => {
     wrapper.unmount()
   })
 
-  test('test chip left slots', () => {
+  test('chip left slots', () => {
     const wrapper = mount(VarChip, {
       slots: {
         left: () => 'This is left slots',
@@ -159,7 +196,7 @@ describe('test chip component slots', () => {
     wrapper.unmount()
   })
 
-  test('test chip right slots', () => {
+  test('chip right slots', () => {
     const wrapper = mount(VarChip, {
       slots: {
         right: () => 'This is right slots',

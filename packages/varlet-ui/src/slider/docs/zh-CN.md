@@ -30,13 +30,13 @@ const value = ref(25)
 </script>
 
 <template>
-  <var-slider v-model="value" step="10" />
+  <var-slider v-model="value" :step="10" />
 </template>
 ```
 
 ### 双滑块
 
-通过 `range` 属性开启双滑块模式，确保 `value` 的值是一个**数组**。
+通过 `range` 属性开启双滑块模式，确保 `value` 的值是一个数组。
 
 ```html
 <script setup>
@@ -44,13 +44,27 @@ import { ref } from 'vue'
 
 const value = ref([24, 50])
 
-const handleChange = (value) => {
+function handleChange(value) {
   console.log(value)
 }
 </script>
 
 <template>
   <var-slider v-model="value" range @change="handleChange" />
+</template>
+```
+
+### 选择范围
+
+```html
+<script setup>
+import { ref } from 'vue'
+
+const value = ref(0)
+</script>
+
+<template>
+  <var-slider v-model="value" :max="210" :min="-50" label-visible="always" />
 </template>
 ```
 
@@ -94,7 +108,7 @@ const value = ref([7, 64])
 </script>
 
 <template>
-  <var-slider v-model="value" track-height="4" thumb-size="8" range />
+  <var-slider v-model="value" :track-height="4" :thumb-size="8" range />
 </template>
 ```
 
@@ -178,8 +192,7 @@ const value2 = ref(50)
 ### 值的校验
 
 通过 `rules` 属性对值进行校验。
-
-<span style="font-size: 12px"> `rules` 是一个可以接受 `function`、`boolean` 和 `string` 的数组。 函数传递输入值作为参数，必须返回 `true` / `false` 或包含错误消息的 `string`，如果函数返回 (或数组包含的任何值) `false` 或 `string`，输入字段将输入错误状态。</span>
+`rules` 是一个可以接受 `function`、`boolean` 和 `string` 的数组。 函数传递输入值作为参数，必须返回 `true` / `false` 或包含错误消息的 `string`，如果函数返回 (或数组包含的任何值) `false` 或 `string`，输入字段将输入错误状态。
 
 ```html
 <script setup>
@@ -189,35 +202,81 @@ const value = ref(20)
 </script>
 
 <template>
-  <var-slider v-model="value" :rules="[(v) => v > 35 || 'error message']" />
+  <var-slider v-model="value" :rules="[v => v > 35 || '错误信息']" />
 </template>
+```
+
+### 使用 Zod 校验
+
+```html
+<script setup>
+import { ref } from 'vue'
+import { z } from 'zod'
+
+const value = ref(20)
+</script>
+
+<template>
+  <var-slider v-model="value" :rules="z.number().min(36, '错误信息')" />
+</template>
+```
+
+### 垂直方向
+
+通过设置 `direction` 属性值为 `vertical` 来让滑块垂直显示。
+
+```html
+<script setup>
+import { ref } from 'vue'
+
+const value1 = ref(50)
+const value2 = ref([7, 64])
+</script>
+
+<template>
+ <var-space justify="space-around">
+    <div style="height: 300px">
+      <var-slider v-model="value1" direction="vertical" />
+    </div>
+    <div style="height: 300px">
+      <var-slider v-model="value2" range label-visible="always" direction="vertical" />
+    </div>
+  </var-space>
+</template>
+
 ```
 
 ## API
 
 ### 属性
 
-| 参数 | 说明 | 类型 | 默认值 |
-| ----- | -------------- | -------- | ---------- |
-| `v-model` | 当前进度值 | _number \| [number, number]_ | `0` |
-| `step`| 步长，取值为 `1 ~ 100` 间的整数 | _string \| number_ | `1` |
-| `range`| 是否启用双滑块 | _boolean_ | `false` |
-| `label-visible` | 是否显示标签，可选值为 `always normal never` | _string_ | `normal` |
-| `label-text-color` | 标签文字颜色 | _string_ | `#fff` |
-| `track-height` | slider的高度 | _string \| number_ | `2` |
-| `thumb-size` | 滑块的大小 | _string \| number_ | `12` |
-| `disabled`| 是否禁用 | _boolean_  | `false` |
-| `readonly`| 是否只读 | _boolean_  | `false` |
-| `rules`| 校验规则 | _array_  | `-` |
-
+| 参数                 | 说明                                | 类型 | 默认值               |
+|--------------------|-----------------------------------| ------ |-------------------|
+| `v-model`          | 当前进度值                             | _number \| [number, number]_ | `0` |
+| `step`             | 步长，取值必须大于 0                       | _string \| number_           | `1` |
+| `range`            | 是否启用双滑块                           | _boolean_ | `false`           |
+| `max`              | 最大值                               | _string \| number_ | `100`           |
+| `min`              | 最小值                               | _string \| number_ | `0`           |
+| `label-visible`    | 是否显示标签，可选值为 `always normal never` | _string_ | `normal`          |
+| `label-text-color` | 标签文字颜色                            | _string_ | `-`            |
+| `label-color`      | 标签颜色                              | _string_ | `-`               |
+| `active-color`     | 已激活的轨道背景颜色                        | _string_ | `-`               |
+| `track-color`      | 轨道背景颜色                            | _string_ | `-`               |
+| `track-height`     | 轨道的高度                             | _string \| number_           | `-` |
+| `thumb-size`       | 滑块的大小                             | _string \| number_           | `-` |
+| `thumb-color`      | 滑块的背景颜色                           | _string_ | `-`               |
+| `disabled`         | 是否禁用                              | _boolean_ | `false`           |
+| `readonly`         | 是否只读                              | _boolean_ | `false`           |
+| `direction`        | 显示方向，可选值为 `vertical horizontal`        | _string_ | `horizontal` |
+| `rules` | 验证规则，返回 `true` 表示验证通过，其它类型的值将转换为文本作为用户提示。自 `3.5.0` 开始支持 [Zod 验证](#/zh-CN/zodValidation)  | _((v: number \| [number, number]) => any) \| ZodType \| Array<((v: number \| [number, number]) => any) \| ZodType>_ | `-` |
 
 ### 事件
 
 | 事件名 | 说明 | 回调参数 |
 | ----- | -------- | -------- |
-| `change` | 	值改变时触发| value: 当前进度|
+| `change` |  值改变时触发| `value`: 当前进度|
 | `start` | 开始拖动时触发 | `-` |
-| `end` | 结束拖动时触发 | value: 当前进度 |
+| `end` | 结束拖动时触发 | `value`: 当前进度 |
 
 ### 插槽
 
@@ -227,14 +286,20 @@ const value = ref(20)
 
 ### 样式变量
 
-以下为组件使用的 css 变量，可以使用 [StyleProvider 组件](#/zh-CN/style-provider) 进行样式定制
+以下为组件使用的 css 变量，可以使用 [StyleProvider 组件](#/zh-CN/style-provider) 进行样式定制。
 
 | 变量名 | 默认值 |
 | --- | --- |
 | `--slider-error-color` | `var(--color-danger)` |
 | `--slider-track-background` | `#bdbdbd` |
+| `--slider-track-height` | `2px` |
+| `--slider-track-border-radius` | `0` |
+| `--slider-track-fill-border-radius` | `0` |
 | `--slider-track-fill-background` | `var(--color-primary)` |
 | `--slider-thumb-block-background` | `var(--color-primary)` |
 | `--slider-thumb-ripple-background` | `var(--color-primary)` |
 | `--slider-thumb-label-background` | `var(--color-primary)` |
 | `--slider-thumb-label-font-size` | `var(--font-size-sm)` |
+| `--slider-thumb-label-text-color` | `var(--color-on-primary)` |
+| `--slider-thumb-size` | `12px` |
+| `--slider-disabled-opacity` | `var(--opacity-disabled)` |

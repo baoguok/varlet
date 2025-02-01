@@ -64,9 +64,15 @@ If necessary, you can switch to the `css sticky` layout mode to improve performa
 | Prop | Description | Type | Default | 
 | --- | --- | --- | --- | 
 | `offset-top` | Sticky offset top | _string \| number_ | `0` |
-| `z-index` | Sticky z-index | _string \| number_ | `0` |
+| `z-index` | Sticky z-index | _string \| number_ | `10` |
 | `css-mode` | Enable native `css sticky` mode | _boolean_ | `false` |
 | `disabled` | Disable sticky, when set to `true`, the element will return to the document flow | _boolean_ | `false` |
+
+### Methods
+
+| Method | Description | Arguments | Return          |
+|----------|----------|------|-----------------|
+| `resize` | Triggered when sticky layout redraw | `-`  | `Promise<void>` |
 
 ### Events
 
@@ -76,6 +82,6 @@ If necessary, you can switch to the `css sticky` layout mode to improve performa
 
 ### Slots
 
-| Slot | Description | Arguments |
+| Name | Description | SlotProps |
 | --- | --- | --- |
 | `default` | Sticky content | `-` |

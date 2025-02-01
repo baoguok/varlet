@@ -1,155 +1,186 @@
 <template>
-  <div :class="classes(n(), 'var--box', [formDisabled || disabled, n('--disabled')])" @click="handleClick">
-    <div
-      :class="
-        classes(
-          n('controller'),
-          [isFocus, n('--focus')],
-          [errorMessage, n('--error')],
-          [formDisabled || disabled, n('--disabled')]
-        )
-      "
-      :style="{
-        color: !errorMessage ? (isFocus ? focusColor : blurColor) : undefined,
-      }"
+  <div
+    ref="root"
+    :class="n()"
+    :tabindex="disabled || formDisabled ? undefined : '0'"
+    @focus="handleFocus"
+    @blur="handleRootBlur"
+  >
+    <var-menu
+      v-model:show="showMenu"
+      var-select-cover
+      same-width
+      close-on-click-reference
+      :close-on-key-escape="false"
+      :class="n('menu')"
+      :popover-class="variant === 'standard' && hint ? n('--standard-menu-margin') : undefined"
+      :offset-y="offsetY"
+      :disabled="formReadonly || readonly || formDisabled || disabled"
+      :placement="placement"
+      :default-style="false"
+      @click-outside="handleClickOutside"
     >
-      <div :class="classes(n('icon'), [!hint, n('--non-hint')])">
-        <slot name="prepend-icon" />
-      </div>
+      <var-field-decorator
+        v-bind="{
+          value: modelValue,
+          size,
+          variant,
+          placeholder,
+          line,
+          hint,
+          textColor,
+          focusColor,
+          blurColor,
+          isFocusing,
+          isError: !!errorMessage,
+          formDisabled,
+          disabled,
+          clearable,
+          cursor,
+          onClick: handleClick,
+          onClear: handleClear,
+        }"
+      >
+        <template v-if="$slots['prepend-icon']" #prepend-icon>
+          <slot name="prepend-icon" />
+        </template>
 
-      <var-menu :class="n('menu')" var-select-cover :offset-y="offsetY" v-model:show="isFocus" @close="handleBlur">
-        <div :class="classes(n('wrap'), [!hint, n('--non-hint')])" ref="wrapEl" @click="handleFocus">
-          <div
-            :class="classes(n('select'), [errorMessage, n('--error')], [formDisabled || disabled, n('--disabled')])"
+        <div
+          :class="classes(n('select'), [errorMessage, n('--error')], [formDisabled || disabled, n('--disabled')])"
+          :style="{
+            textAlign,
+            color: textColor,
+          }"
+        >
+          <div :class="n('label')">
+            <slot v-if="!isEmptyModelValue" name="selected">
+              <template v-if="multiple">
+                <div v-if="chip" :class="n('chips')">
+                  <var-chip
+                    v-for="l in labels"
+                    :key="l"
+                    :class="n('chip')"
+                    var-select-cover
+                    closeable
+                    size="small"
+                    :type="errorMessage ? 'danger' : undefined"
+                    @click.stop
+                    @close="() => handleClose(l)"
+                  >
+                    <maybe-v-node :is="l" />
+                  </var-chip>
+                </div>
+                <div v-else :class="n('values')">
+                  <template v-for="(l, labelIndex) in labels" :key="l">
+                    <maybe-v-node :is="l" />{{ labelIndex !== labels.length - 1 ? separator : '' }}
+                  </template>
+                </div>
+              </template>
+
+              <maybe-v-node :is="label" v-else />
+            </slot>
+          </div>
+
+          <span
+            v-if="enableCustomPlaceholder"
+            :class="classes(n('placeholder'), n('$--ellipsis'))"
             :style="{
-              textAlign,
-              color: textColor,
+              color: placeholderColor,
             }"
           >
-            <div v-if="multiple">
-              <div :class="n('chips')" v-if="chip">
-                <var-chip
-                  :class="n('chip')"
-                  var-select-cover
-                  closable
-                  size="small"
-                  :type="errorMessage ? 'danger' : undefined"
-                  v-for="l in labels"
-                  :key="l"
-                  @click.stop
-                  @close="() => handleClose(l)"
-                >
-                  {{ l }}
-                </var-chip>
-              </div>
-              <div :class="n('values')" v-else>
-                {{ labels.join(separator) }}
-              </div>
-            </div>
+            {{ placeholder }}
+          </span>
 
-            <span v-else>{{ label }}</span>
-
+          <slot name="arrow-icon" :focus="isFocusing" :menu-open="showMenu">
             <var-icon
-              :class="classes(n('arrow'), [isFocus, n('--arrow-rotate')])"
+              :class="classes(n('arrow'), [showMenu, n('--arrow-rotate')])"
               var-select-cover
               name="menu-down"
               :transition="300"
             />
-          </div>
-          <label
-            :class="
-              classes(
-                n('placeholder'),
-                'var--ellipsis',
-                [isFocus, n('--focus')],
-                [errorMessage, n('--error')],
-                [formDisabled || disabled, n('--disabled')],
-                computePlaceholderState(),
-                [!hint, n('--placeholder-non-hint')]
-              )
-            "
-            :style="{
-              color: !errorMessage ? (isFocus ? focusColor : blurColor) : undefined,
-            }"
-          >
-            {{ placeholder }}
-          </label>
+          </slot>
         </div>
 
-        <template #menu>
-          <div :class="n('scroller')">
-            <slot />
-          </div>
+        <template #clear-icon="{ clear }">
+          <slot name="clear-icon" :clear="clear" />
         </template>
-      </var-menu>
 
-      <div :class="classes(n('icon'), [!hint, n('--non-hint')])">
-        <slot name="append-icon">
-          <var-icon :class="n('clear-icon')" name="close-circle" size="14px" v-if="clearable" @click="handleClear" />
-        </slot>
-      </div>
-    </div>
+        <template #append-icon>
+          <slot name="append-icon" />
+        </template>
+      </var-field-decorator>
 
-    <div
-      :class="classes(n('line'), [formDisabled || disabled, n('--line-disabled')], [errorMessage, n('--line-error')])"
-      :style="{ background: !errorMessage ? blurColor : undefined }"
-      v-if="line"
-    >
-      <div
-        :class="
-          classes(
-            n('dot'),
-            [isFocus, n('--spread')],
-            [formDisabled || disabled, n('--line-disabled')],
-            [errorMessage, n('--line-error')]
-          )
-        "
-        :style="{ background: !errorMessage ? focusColor : undefined }"
-      ></div>
-    </div>
+      <template #menu>
+        <div ref="menuEl" :class="classes(n('scroller'), n('$-elevation--3'))">
+          <template v-if="options.length">
+            <var-option
+              v-for="option in options"
+              :key="option[valueKey]"
+              :label="option[labelKey]"
+              :value="option[valueKey]"
+              :option="option"
+              :disabled="option.disabled"
+              :ripple="option.ripple"
+            />
+          </template>
+          <slot />
+        </div>
+      </template>
+    </var-menu>
 
-    <var-form-details :error-message="errorMessage" />
+    <var-form-details :error-message="errorMessage" @click.stop />
   </div>
 </template>
 
 <script lang="ts">
+import { computed, defineComponent, nextTick, ref, watch } from 'vue'
+import { assert, call, doubleRaf, isArray, isEmpty, isFunction, preventDefault } from '@varlet/shared'
+import { useEventListener } from '@varlet/use'
+import VarChip from '../chip'
+import VarFieldDecorator from '../field-decorator'
+import VarFormDetails from '../form-details'
+import { useForm } from '../form/provide'
 import VarIcon from '../icon'
 import VarMenu from '../menu'
-import VarChip from '../chip'
-import VarFormDetails from '../form-details'
-import { computed, defineComponent, ref, watch, nextTick } from 'vue'
-import { isArray, isEmpty } from '../utils/shared'
-import { props } from './props'
-import { useValidation, createNamespace, call } from '../utils/components'
-import { useOptions } from './provide'
-import { useForm } from '../form/provide'
-import { toPxNum } from '../utils/elements'
-import type { Ref, ComputedRef } from 'vue'
-import type { ValidateTriggers } from './props'
-import type { SelectProvider } from './provide'
-import type { OptionProvider } from '../option/provide'
+import VarOption from '../option'
+import { type OptionProvider } from '../option/provide'
+import { createNamespace, MaybeVNode, useValidation } from '../utils/components'
+import { focusChildElementByKey, toPxNum } from '../utils/elements'
+import { props, type SelectValidateTrigger } from './props'
+import { useOptions, type SelectProvider } from './provide'
+import { useSelectController } from './useSelectController'
 
-const { n, classes } = createNamespace('select')
+const { name, n, classes } = createNamespace('select')
+
 export default defineComponent({
-  name: 'VarSelect',
+  name,
   components: {
     VarIcon,
     VarMenu,
     VarChip,
+    VarOption,
+    VarFieldDecorator,
     VarFormDetails,
+    MaybeVNode,
   },
   props,
   setup(props) {
-    const wrapEl: Ref<HTMLElement | null> = ref(null)
-    const isFocus: Ref<boolean> = ref(false)
-    const multiple: ComputedRef<boolean> = computed(() => props.multiple)
-    const focusColor: ComputedRef<string | undefined> = computed(() => props.focusColor)
-    const label: Ref<string | number> = ref('')
-    const labels: Ref<(string | number)[]> = ref([])
-    const wrapWidth = ref<string>('0px')
+    const isFocusing = ref(false)
+    const showMenu = ref(false)
+    const root = ref<HTMLElement | null>(null)
+    const multiple = computed(() => props.multiple)
+    const focusColor = computed(() => props.focusColor)
+    const isEmptyModelValue = computed(() => isEmpty(props.modelValue))
+    const cursor = computed(() => (props.disabled || props.readonly ? '' : 'pointer'))
     const offsetY = ref(0)
     const { bindForm, form } = useForm()
     const { length, options, bindOptions } = useOptions()
+    const { label, labels, computeLabel, getSelectedValue } = useSelectController({
+      modelValue: () => props.modelValue,
+      multiple: () => props.multiple,
+      optionProviders: () => options,
+      optionProvidersLength: () => length.value,
+    })
     const {
       errorMessage,
       validateWithTrigger: vt,
@@ -157,113 +188,179 @@ export default defineComponent({
       // expose
       resetValidation,
     } = useValidation()
+    const menuEl = ref<HTMLElement | null>(null)
+    const placement = computed(() => (props.variant === 'outlined' ? 'bottom' : 'cover-top'))
+    const placeholderColor = computed(() => {
+      const { hint, blurColor, focusColor } = props
 
-    const computeLabel = () => {
-      const { multiple, modelValue } = props
+      if (hint) {
+        return undefined
+      }
 
-      if (multiple) {
-        const rawModelValue = modelValue as unknown as any[]
-        labels.value = rawModelValue.map(findLabel)
+      if (errorMessage.value) {
+        return 'var(--field-decorator-error-color)'
       }
-      if (!multiple && !isEmpty(modelValue)) {
-        label.value = findLabel(modelValue as any)
+
+      if (isFocusing.value) {
+        return focusColor || 'var(--field-decorator-focus-color)'
       }
-      if (!multiple && isEmpty(modelValue)) {
-        label.value = ''
+
+      return blurColor || 'var(--field-decorator-placeholder-color, var(--field-decorator-blur-color))'
+    })
+    const enableCustomPlaceholder = computed(() => !props.hint && isEmpty(props.modelValue))
+
+    const selectProvider: SelectProvider = {
+      multiple,
+      focusColor,
+      computeLabel,
+      onSelect,
+      reset,
+      validate,
+      resetValidation,
+    }
+
+    watch(
+      () => props.multiple,
+      () => {
+        assert(
+          props.multiple && isArray(props.modelValue),
+          'Select',
+          'The modelValue must be an array when multiple is true',
+        )
+      },
+    )
+
+    bindOptions(selectProvider)
+
+    useEventListener(() => window, 'keydown', handleKeydown)
+    useEventListener(() => window, 'keyup', handleKeyup)
+
+    call(bindForm, selectProvider)
+
+    function handleKeydown(event: KeyboardEvent) {
+      const { disabled, readonly } = props
+
+      if (form?.disabled.value || form?.readonly.value || disabled || readonly || !isFocusing.value) {
+        return
+      }
+
+      const { key } = event
+
+      if (key === ' ' && !showMenu.value) {
+        preventDefault(event)
+        return
+      }
+
+      if (key === 'Escape' && showMenu.value) {
+        root.value!.focus()
+        preventDefault(event)
+        showMenu.value = false
+        return
+      }
+
+      if (key === 'Tab' && showMenu.value) {
+        root.value!.focus()
+        preventDefault(event)
+        handleBlur()
+        return
+      }
+
+      if (key === 'Enter' && !showMenu.value) {
+        preventDefault(event)
+        showMenu.value = true
+        return
+      }
+
+      if ((key === 'ArrowDown' || key === 'ArrowUp') && showMenu.value) {
+        preventDefault(event)
+        focusChildElementByKey(root.value!, menuEl.value!, key)
       }
     }
 
-    const validateWithTrigger = (trigger: ValidateTriggers) => {
+    function handleKeyup(event: KeyboardEvent) {
+      const { disabled, readonly } = props
+
+      if (form?.disabled.value || form?.readonly.value || disabled || readonly || showMenu.value || !isFocusing.value) {
+        return
+      }
+
+      const { key } = event
+
+      if (key === ' ' && !showMenu.value) {
+        preventDefault(event)
+        showMenu.value = true
+      }
+    }
+
+    function validateWithTrigger(trigger: SelectValidateTrigger) {
       nextTick(() => {
         const { validateTrigger, rules, modelValue } = props
         vt(validateTrigger, trigger, rules, modelValue)
       })
     }
 
-    const findValueOrLabel = ({ value, label }: OptionProvider) => {
-      if (value.value != null) {
-        return value.value
-      }
-
-      return label.value
-    }
-
-    const findLabel = (modelValue: string | number | any[]) => {
-      let option = options.find(({ value }) => value.value === modelValue)
-
-      if (!option) {
-        option = options.find(({ label }) => label.value === modelValue)
-      }
-
-      return option!.label.value
-    }
-
-    const computePlaceholderState = () => {
-      const { hint, modelValue } = props
-
-      if (!hint && !isEmpty(modelValue)) {
-        return n('--placeholder-hidden')
-      }
-      if (hint && (!isEmpty(modelValue) || isFocus.value)) {
-        return n('--placeholder-hint')
-      }
-    }
-
-    const getWrapWidth = () => {
-      return (wrapEl.value && window.getComputedStyle(wrapEl.value as HTMLElement).width) || '0px'
-    }
-
-    const getOffsetY = () => {
-      const paddingTop = (wrapEl.value && window.getComputedStyle(wrapEl.value as HTMLElement).paddingTop) || '0px'
-      return toPxNum(paddingTop) * 1.5
-    }
-
-    const handleFocus = () => {
+    function handleFocus() {
       const { disabled, readonly, onFocus } = props
 
       if (form?.disabled.value || form?.readonly.value || disabled || readonly) {
         return
       }
 
-      wrapWidth.value = getWrapWidth()
-      offsetY.value = getOffsetY() + toPxNum(props.offsetY)
+      offsetY.value = toPxNum(props.offsetY)
 
-      isFocus.value = true
-
+      focus()
       call(onFocus)
       validateWithTrigger('onFocus')
     }
 
-    const handleBlur = () => {
+    function handleBlur() {
       const { disabled, readonly, onBlur } = props
-
       if (form?.disabled.value || form?.readonly.value || disabled || readonly) {
         return
       }
 
+      blur()
       call(onBlur)
       validateWithTrigger('onBlur')
     }
 
-    const onSelect = (option: OptionProvider) => {
+    function handleRootBlur() {
+      if (showMenu.value) {
+        return
+      }
+
+      handleBlur()
+    }
+
+    function handleClickOutside() {
+      if (!isFocusing.value) {
+        return
+      }
+
+      handleBlur()
+    }
+
+    function onSelect(option: OptionProvider) {
       const { disabled, readonly, multiple, onChange } = props
 
       if (form?.disabled.value || form?.readonly.value || disabled || readonly) {
         return
       }
 
-      const selectedValue: any = multiple
-        ? options.filter(({ selected }) => selected.value).map(findValueOrLabel)
-        : findValueOrLabel(option)
-
+      const selectedValue = getSelectedValue(option)
       call(props['onUpdate:modelValue'], selectedValue)
       call(onChange, selectedValue)
       validateWithTrigger('onChange')
 
-      !multiple && (isFocus.value = false)
+      if (!multiple) {
+        root.value!.focus()
+        doubleRaf().then(() => {
+          showMenu.value = false
+        })
+      }
     }
 
-    const handleClear = () => {
+    function handleClear() {
       const { disabled, readonly, multiple, clearable, onClear } = props
 
       if (form?.disabled.value || form?.readonly.value || disabled || readonly || !clearable) {
@@ -271,13 +368,12 @@ export default defineComponent({
       }
 
       const changedModelValue = multiple ? [] : undefined
-
       call(props['onUpdate:modelValue'], changedModelValue)
       call(onClear, changedModelValue)
       validateWithTrigger('onClear')
     }
 
-    const handleClick = (e: Event) => {
+    function handleClick(e: Event) {
       const { disabled, onClick } = props
 
       if (form?.disabled.value || disabled) {
@@ -288,99 +384,72 @@ export default defineComponent({
       validateWithTrigger('onClick')
     }
 
-    const handleClose = (text: any) => {
+    function handleClose(text: any) {
       const { disabled, readonly, modelValue, onClose } = props
 
       if (form?.disabled.value || form?.readonly.value || disabled || readonly) {
         return
       }
 
-      const rawModelValue = modelValue as unknown as any[]
       const option = options.find(({ label }) => label.value === text)
-      const currentModelValue = rawModelValue.filter((value) => value !== (option!.value.value ?? option!.label.value))
+      const currentModelValue = (modelValue as unknown as any[]).filter(
+        (value) => value !== (option!.value.value ?? option!.label.value),
+      )
 
       call(props['onUpdate:modelValue'], currentModelValue)
       call(onClose, currentModelValue)
       validateWithTrigger('onClose')
     }
 
-    const syncOptions = () => {
-      const { multiple, modelValue } = props
-
-      if (multiple) {
-        const rawModelValue = modelValue as unknown as any[]
-        options.forEach((option) => option.sync(rawModelValue.includes(findValueOrLabel(option))))
-      } else {
-        options.forEach((option) => option.sync(modelValue === findValueOrLabel(option)))
-      }
-
-      computeLabel()
+    // expose
+    function focus() {
+      offsetY.value = toPxNum(props.offsetY)
+      isFocusing.value = true
     }
 
     // expose
-    const focus = () => {
-      wrapWidth.value = getWrapWidth()
-      offsetY.value = getOffsetY() + toPxNum(props.offsetY)
-      isFocus.value = true
+    function blur() {
+      isFocusing.value = false
+      showMenu.value = false
     }
 
     // expose
-    const blur = () => {
-      isFocus.value = false
+    function validate() {
+      return v(props.rules, props.modelValue)
     }
 
     // expose
-    const validate = () => v(props.rules, props.modelValue)
-
-    // expose
-    const reset = () => {
+    function reset() {
       call(props['onUpdate:modelValue'], props.multiple ? [] : undefined)
       resetValidation()
     }
 
-    watch(
-      () => props.multiple,
-      () => {
-        const { multiple, modelValue } = props
-        if (multiple && !isArray(modelValue)) {
-          throw Error('The modelValue must be an array when multiple is true')
-        }
-      }
-    )
-
-    watch(() => props.modelValue, syncOptions, { deep: true })
-
-    watch(() => length.value, syncOptions)
-
-    const selectProvider: SelectProvider = {
-      wrapWidth: computed(() => wrapWidth.value),
-      multiple,
-      focusColor,
-      onSelect,
-      reset,
-      validate,
-      resetValidation,
-    }
-
-    bindOptions(selectProvider)
-    call(bindForm, selectProvider)
-
     return {
-      wrapEl,
+      root,
       offsetY,
-      isFocus,
+      isFocusing,
+      showMenu,
       errorMessage,
       formDisabled: form?.disabled,
+      formReadonly: form?.readonly,
       label,
       labels,
+      isEmptyModelValue,
+      menuEl,
+      placement,
+      cursor,
+      placeholderColor,
+      enableCustomPlaceholder,
+      isFunction,
       n,
       classes,
-      computePlaceholderState,
       handleFocus,
       handleBlur,
+      handleClickOutside,
       handleClear,
       handleClick,
       handleClose,
+      handleRootBlur,
       reset,
       validate,
       resetValidation,
@@ -393,9 +462,12 @@ export default defineComponent({
 
 <style lang="less">
 @import '../styles/common';
+@import '../styles/elevation';
 @import '../icon/icon';
 @import '../menu/menu';
+@import '../field-decorator/fieldDecorator';
 @import '../form-details/formDetails';
 @import '../chip/chip';
+@import '../option/option';
 @import './select';
 </style>

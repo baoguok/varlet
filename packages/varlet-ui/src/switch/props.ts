@@ -1,4 +1,7 @@
-import type { PropType } from 'vue'
+import { type PropType } from 'vue'
+import { defineListenerProp } from '../utils/components'
+
+export type SwitchValidateTrigger = 'onChange' | 'onLazyChange'
 
 export const props = {
   modelValue: {
@@ -10,45 +13,30 @@ export const props = {
   inactiveValue: {
     default: false,
   },
-  disabled: {
-    type: Boolean,
-    default: false,
-  },
-  readonly: {
-    type: Boolean,
-    default: false,
-  },
-  loading: {
-    type: Boolean,
-    default: false,
-  },
-  color: {
-    type: String,
-  },
-  loadingColor: {
-    type: String,
-  },
-  closeColor: {
-    type: String,
-  },
-  size: {
-    type: [String, Number],
-    default: 20,
-  },
-  rules: {
-    type: Array as PropType<Array<(v: boolean) => any>>,
-  },
+  lazyChange: Boolean,
+  disabled: Boolean,
+  readonly: Boolean,
+  loading: Boolean,
+  color: String,
+  loadingColor: String,
+  closeColor: String,
+  size: [String, Number],
+  variant: Boolean,
+  rules: [Array, Function, Object] as PropType<any>,
   ripple: {
     type: Boolean,
     default: true,
   },
-  onClick: {
-    type: Function as PropType<(event: MouseEvent) => void>,
+  buttonElevation: {
+    type: [Boolean, String, Number],
+    default: true,
   },
-  onChange: {
-    type: Function as PropType<(value: boolean) => void>,
+  validateTrigger: {
+    type: Array as PropType<Array<SwitchValidateTrigger>>,
+    default: () => ['onChange', 'onLazyChange'],
   },
-  'onUpdate:modelValue': {
-    type: Function as PropType<(value: boolean) => void>,
-  },
+  onClick: defineListenerProp<(event: Event) => void>(),
+  onBeforeChange: defineListenerProp<(value: any, change: (value: any) => void) => void>(),
+  onChange: defineListenerProp<(value: any) => void>(),
+  'onUpdate:modelValue': defineListenerProp<(value: any) => void>(),
 }

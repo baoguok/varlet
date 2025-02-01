@@ -1,8 +1,7 @@
-import { getAllParentScroller, inViewport } from '../utils/elements'
-import { createCache, removeItem, throttle } from '../utils/shared'
-import type { App, Directive, Plugin, DirectiveBinding } from 'vue'
-import type { CacheInstance } from '../utils/shared'
-import { call } from '../utils/components'
+import { type App, type Directive, type DirectiveBinding, type Plugin } from 'vue'
+import { call, doubleRaf, inViewport, removeItem, throttle } from '@varlet/shared'
+import { getAllParentScroller } from '../utils/elements'
+import { createCache, type CacheInstance } from '../utils/shared'
 
 interface LazyOptions {
   loading?: string
@@ -158,7 +157,11 @@ function attemptLoad(el: LazyHTMLElement) {
 }
 
 async function check(el: LazyHTMLElement) {
-  ;(await inViewport(el)) && attemptLoad(el)
+  await doubleRaf()
+
+  if (inViewport(el)) {
+    attemptLoad(el)
+  }
 }
 
 function checkAll() {

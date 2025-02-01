@@ -1,4 +1,4 @@
-import type { PropType } from 'vue'
+import { defineListenerProp } from '../utils/components'
 
 export const props = {
   offsetTop: {
@@ -9,15 +9,7 @@ export const props = {
     type: [String, Number],
     default: 10,
   },
-  cssMode: {
-    type: Boolean,
-    default: false,
-  },
-  disabled: {
-    type: Boolean,
-    default: false,
-  },
-  onScroll: {
-    type: Function as PropType<(offsetTop: number, isFixed: boolean) => void>,
-  },
+  cssMode: Boolean,
+  disabled: Boolean,
+  onScroll: defineListenerProp<(offsetTop: number, isFixed: boolean) => void>(),
 }

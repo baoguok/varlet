@@ -1,81 +1,263 @@
-import Menu from '..'
-import VarMenu from '../Menu'
-import { mount } from '@vue/test-utils'
 import { createApp } from 'vue'
-import { delay, mockStubs } from '../../utils/jest'
+import { doubleRaf } from '@varlet/shared'
+import { mount } from '@vue/test-utils'
+import { expect, test, vi } from 'vitest'
+import Menu from '..'
+import { delay, mockStubs, trigger, triggerKeyboard } from '../../utils/test'
+import VarMenu from '../Menu'
 
-test('test menu plugin', () => {
+test('menu plugin', () => {
   const app = createApp({}).use(Menu)
   expect(app.component(Menu.name)).toBeTruthy()
 })
 
-const Wrapper = {
-  components: {
-    [VarMenu.name]: VarMenu,
-  },
-  data: () => ({
-    show: false,
-  }),
-  template: `
-    <div class="container">
-      <var-menu
-        :offset-x="100"
-        :offset-y="100"
-        :teleport="null"
-        v-model:show="show"
-      >
-        <template #menu>
-          <div class="menu-content"></div>
-        </template>
-      </var-menu>
-    </div>
-  `,
-}
+test('menu placement', () => {
+  ;[
+    'top',
+    'top-start',
+    'top-end',
+    'bottom',
+    'bottom-start',
+    'bottom-end',
+    'right',
+    'right-start',
+    'right-end',
+    'left',
+    'left-start',
+    'left-end',
+    'cover-top',
+    'cover-top-start',
+    'cover-top-end',
+    'cover-bottom',
+    'cover-bottom-start',
+    'cover-bottom-end',
+    'cover-left',
+    'cover-right',
+  ].forEach((placement) => {
+    const { mockRestore } = mockStubs()
 
-test('test menu trigger', async () => {
-  const { mockRestore } = mockStubs()
-  const wrapper = mount(Wrapper, { attachTo: document.body })
-  await wrapper.setData({ show: true })
+    const root = document.createElement('div')
 
-  expect(wrapper.find('.menu-content').isVisible()).toBeTruthy()
-  expect(wrapper.html()).toMatchSnapshot()
+    const wrapper = mount(VarMenu, {
+      props: {
+        placement,
+        teleport: root,
+      },
+    })
 
-  await wrapper.find('.container').trigger('click')
-  await delay(300)
-  expect(wrapper.find('.menu-content').isVisible()).toBeFalsy()
-  expect(wrapper.html()).toMatchSnapshot()
+    expect(root.innerHTML).toMatchSnapshot()
 
-  mockRestore()
-  wrapper.unmount()
+    wrapper.unmount()
+    mockRestore()
+  })
 })
 
-test('test menu click forbid trigger', async () => {
+test('menu click trigger', async () => {
   const { mockRestore } = mockStubs()
-  const wrapper = mount(Wrapper, { attachTo: document.body })
-  await wrapper.setData({ show: true })
 
-  await wrapper.find('.menu-content').trigger('click')
-  expect(wrapper.find('.menu-content').isVisible()).toBeTruthy()
-  expect(wrapper.html()).toMatchSnapshot()
+  const wrapper = mount(VarMenu, {
+    attachTo: document.body,
+  })
+
+  await wrapper.trigger('click')
+  await delay(300)
+  expect(document.body.innerHTML).toMatchSnapshot()
+
+  await trigger(document, 'click')
+  await delay(300)
+  expect(document.body.innerHTML).toMatchSnapshot()
+
+  document.body.innerHTML = ''
 
   mockRestore()
-  wrapper.unmount()
 })
 
-test('test menu z-index', async () => {
+test('menu manual trigger', async () => {
   const { mockRestore } = mockStubs()
-  const wrapper = mount(Wrapper, { attachTo: document.body })
-  await wrapper.setData({ show: true })
+
+  const root = document.createElement('div')
+
+  const wrapper = mount(VarMenu, {
+    props: {
+      trigger: 'manual',
+      teleport: root,
+    },
+  })
+
+  await doubleRaf()
+  await wrapper.trigger('click')
+  await trigger(root.querySelector('.var-menu__menu'), 'mouseenter')
+  await delay(300)
+  expect(root.innerHTML).toMatchSnapshot()
+
+  mockRestore()
+})
+
+test('menu hover trigger and events', async () => {
+  const { mockRestore } = mockStubs()
+
+  const onOpen = vi.fn()
+  const onOpened = vi.fn()
+  const onClose = vi.fn()
+  const onClosed = vi.fn()
+
+  const root = document.createElement('div')
+
+  const wrapper = mount(VarMenu, {
+    props: {
+      trigger: 'hover',
+      teleport: root,
+      onOpen,
+      onOpened,
+      onClose,
+      onClosed,
+    },
+  })
+
+  await wrapper.trigger('mouseenter')
+  expect(onOpen).toHaveBeenCalledTimes(1)
+
   await delay(300)
 
-  const prevIndex = +wrapper.find('.var-menu__menu').element.style.zIndex
+  expect(onOpened).toHaveBeenCalledTimes(1)
+  expect(root.innerHTML).toMatchSnapshot()
 
-  await wrapper.setData({ show: false })
-  await delay(300)
-  await wrapper.setData({ show: true })
+  await wrapper.trigger('mouseleave')
+
+  await doubleRaf()
+  await delay(0)
+  expect(onClose).toHaveBeenCalledTimes(1)
   await delay(300)
 
-  expect(+wrapper.find('.var-menu__menu').element.style.zIndex).toBe(prevIndex + 1)
+  expect(onClosed).toHaveBeenCalledTimes(1)
+  expect(root.innerHTML).toMatchSnapshot()
+
+  wrapper.unmount()
+  mockRestore()
+})
+
+test('menu close on escape', async () => {
+  const { mockRestore } = mockStubs()
+
+  const onClose = vi.fn()
+
+  const root = document.createElement('div')
+
+  const wrapper = mount(VarMenu, {
+    props: {
+      teleport: root,
+      show: true,
+      onClose,
+    },
+  })
+
+  await wrapper.trigger('mouseenter')
+  await triggerKeyboard(window, 'keydown', { key: 'Escape' })
+
+  await doubleRaf()
+  await delay(0)
+  expect(onClose).toHaveBeenCalledTimes(1)
+
+  wrapper.unmount()
+  mockRestore()
+})
+
+test('menu default style', async () => {
+  const root = document.createElement('div')
+
+  mount(VarMenu, {
+    props: {
+      defaultStyle: false,
+      teleport: root,
+    },
+  })
+
+  await doubleRaf()
+
+  expect(root.innerHTML).toMatchSnapshot()
+})
+
+test('menu offset', async () => {
+  const { mockRestore } = mockStubs()
+
+  const root = document.createElement('div')
+
+  mount(VarMenu, {
+    props: {
+      offsetX: 100,
+      offsetY: 100,
+      teleport: root,
+    },
+  })
+
+  await doubleRaf()
+
+  expect(root.innerHTML).toMatchSnapshot()
+
+  mockRestore()
+})
+
+test('menu hover the menu list', async () => {
+  const { mockRestore } = mockStubs()
+
+  const root = document.createElement('div')
+
+  mount(VarMenu, {
+    props: {
+      show: true,
+      trigger: 'hover',
+      teleport: root,
+    },
+  })
+
+  await doubleRaf()
+  await trigger(root.querySelector('.var-menu__menu'), 'mouseenter')
+  await trigger(root.querySelector('.var-menu__menu'), 'mouseleave')
+  await delay(300)
+  expect(root.innerHTML).toMatchSnapshot()
+
+  mockRestore()
+})
+
+test('menu same width', async () => {
+  const { mockRestore } = mockStubs()
+
+  const root = document.createElement('div')
+
+  mount(VarMenu, {
+    props: {
+      show: true,
+      sameWidth: true,
+      trigger: 'hover',
+      teleport: root,
+    },
+  })
+
+  await doubleRaf()
+  expect(root.innerHTML).toMatchSnapshot()
+
+  mockRestore()
+})
+
+test('menu elevation', async () => {
+  const { mockRestore } = mockStubs()
+
+  const root = document.createElement('div')
+
+  const wrapper = mount(VarMenu, {
+    props: {
+      show: true,
+      elevation: false,
+      teleport: root,
+    },
+  })
+
+  await doubleRaf()
+  expect(root.innerHTML).toMatchSnapshot()
+  await wrapper.setProps({
+    elevation: 10,
+  })
+  expect(root.innerHTML).toMatchSnapshot()
 
   mockRestore()
   wrapper.unmount()

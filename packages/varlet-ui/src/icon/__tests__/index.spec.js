@@ -1,16 +1,17 @@
-import Icon from '..'
-import VarIcon from '../Icon'
-import { mount } from '@vue/test-utils'
 import { createApp } from 'vue'
-import { delay } from '../../utils/jest'
+import { mount } from '@vue/test-utils'
+import { describe, expect, test, vi } from 'vitest'
+import Icon from '..'
+import { delay } from '../../utils/test'
+import VarIcon from '../Icon'
 
-test('test icon plugin', () => {
+test('icon plugin', () => {
   const app = createApp({}).use(Icon)
   expect(app.component(Icon.name)).toBeTruthy()
 })
 
-test('test icon onClick', () => {
-  const onClick = jest.fn()
+test('icon onClick', () => {
+  const onClick = vi.fn()
   const wrapper = mount(VarIcon, {
     props: {
       onClick,
@@ -23,7 +24,7 @@ test('test icon onClick', () => {
 })
 
 describe('test icon component props', () => {
-  test('test icon name', () => {
+  test('icon name', () => {
     const wrapper = mount(VarIcon, {
       props: {
         name: 'checkbox-marked-circle',
@@ -34,7 +35,7 @@ describe('test icon component props', () => {
     wrapper.unmount()
   })
 
-  test('test icon size', async () => {
+  test('icon size', async () => {
     const wrapper = mount(VarIcon, {
       props: {
         size: '20px',
@@ -47,7 +48,7 @@ describe('test icon component props', () => {
     wrapper.unmount()
   })
 
-  test('test icon color', () => {
+  test('icon color', () => {
     const wrapper = mount(VarIcon, {
       props: {
         color: 'red',
@@ -58,7 +59,7 @@ describe('test icon component props', () => {
     wrapper.unmount()
   })
 
-  test('test icon namespace', () => {
+  test('icon namespace', () => {
     const wrapper = mount(VarIcon, {
       props: {
         namespace: 'my-icons',
@@ -69,7 +70,7 @@ describe('test icon component props', () => {
     wrapper.unmount()
   })
 
-  test('test icon transition', async () => {
+  test('icon transition', async () => {
     const wrapper = mount(VarIcon, {
       props: {
         transition: 0,
@@ -78,16 +79,33 @@ describe('test icon component props', () => {
     })
 
     expect(wrapper.find('.var-icon-check').exists()).toBeTruthy()
-    expect(wrapper.element.style.transition).toEqual('transform 0ms')
+    expect(wrapper.element.style['transition-duration']).toEqual('0ms')
 
     await wrapper.setProps({
       transition: 300,
       name: 'error',
     })
+
+    await delay(150)
+    expect(wrapper.find('i').classes()).toContain('var-icon--shrinking')
     await delay(400)
 
     expect(wrapper.find('.var-icon-error').exists()).toBeTruthy()
-    expect(wrapper.element.style.transition).toEqual('transform 300ms')
+    expect(wrapper.element.style['transition-duration']).toEqual('300ms')
+
+    await wrapper.setProps({
+      animationClass: 'fade',
+      transition: 300,
+      name: 'check',
+    })
+
+    await delay(150)
+    expect(wrapper.find('i').classes()).toContain('fade')
+    await delay(400)
+
+    expect(wrapper.find('.var-icon-check').exists()).toBeTruthy()
+    expect(wrapper.element.style['transition-duration']).toEqual('300ms')
+
     wrapper.unmount()
   })
 })

@@ -1,13 +1,18 @@
-import type { PropType } from 'vue'
+import { PropType } from 'vue'
+import { defineListenerProp } from '../utils/components'
+
+export interface SwipeToOptions {
+  event?: boolean
+}
+
+export type SwipeNavigation = 'hover'
 
 export const props = {
   loop: {
     type: Boolean,
     default: true,
   },
-  autoplay: {
-    type: [String, Number],
-  },
+  autoplay: [String, Number],
   duration: {
     type: [String, Number],
     default: 300,
@@ -16,22 +21,19 @@ export const props = {
     type: [String, Number],
     default: 0,
   },
+  navigation: {
+    type: [Boolean, String] as PropType<boolean | SwipeNavigation>,
+    default: false,
+  },
   indicator: {
     type: Boolean,
     default: true,
   },
-  indicatorColor: {
-    type: String,
-  },
-  vertical: {
-    type: Boolean,
-    default: false,
-  },
+  indicatorColor: String,
+  vertical: Boolean,
   touchable: {
     type: Boolean,
     default: true,
   },
-  onChange: {
-    type: Function as PropType<(index: number) => void>,
-  },
+  onChange: defineListenerProp<(index: number) => void>(),
 }

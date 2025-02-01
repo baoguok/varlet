@@ -1,9 +1,11 @@
-import type { App } from 'vue'
-import Menu from './Menu'
+import { withInstall, withPropsDefaultsSetter } from '../utils/components'
+import Menu from './Menu.vue'
+import { props as menuProps } from './props'
 
-Menu.install = function (app: App) {
-  app.component(Menu.name, Menu)
-}
+withInstall(Menu)
+withPropsDefaultsSetter(Menu, menuProps)
+
+export { menuProps }
 
 export const _MenuComponent = Menu
 

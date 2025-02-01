@@ -1,9 +1,11 @@
-import type { App } from 'vue'
+import { withInstall, withPropsDefaultsSetter } from '../utils/components'
 import Chip from './Chip.vue'
+import { props as chipProps } from './props'
 
-Chip.install = function (app: App) {
-  app.component(Chip.name, Chip)
-}
+withInstall(Chip)
+withPropsDefaultsSetter(Chip, chipProps)
+
+export { chipProps }
 
 export const _ChipComponent = Chip
 

@@ -1,36 +1,52 @@
 <template>
-  <div :class="classes(n(), 'var--box')">
+  <div :class="classes(n(), n('$--box'))">
     <div
-      :class="classes(
-        n('controller'),
-        'var-elevation--2',
-        [disabled || formDisabled, n('--disabled')],
-        [errorMessage, n('--error')]
-      )"
-      :style="{ background: color ? color : undefined }"
+      :class="
+        classes(
+          n('controller'),
+          formatElevation(elevation, 2),
+          [disabled || formDisabled, n('--disabled')],
+          [errorMessage, n('--error')],
+        )
+      "
+      :style="{ background: color }"
       v-bind="$attrs"
     >
-      <var-icon
-        var-counter-cover
-        name="minus"
-        :class="classes(
-          n('decrement-button'),
-          [!decrementButton, n('--hidden')]
-        )"
+      <var-button
+        :class="
+          classes(
+            n('decrement-button'),
+            [!decrementButton, n('--hidden')],
+            [disabled || formDisabled, n('--not-allowed')],
+          )
+        "
         :style="{
           width: toSizeUnit(buttonSize),
           height: toSizeUnit(buttonSize),
         }"
-        v-ripple="{
-          disabled: !ripple || disabled || readonly || disableDecrement || !decrementButton || isMin,
-        }"
+        round
+        var-counter-cover
+        :ripple="
+          ripple &&
+          decrementButton &&
+          !disabled &&
+          !formDisabled &&
+          !readonly &&
+          !formReadonly &&
+          !disableDecrement &&
+          !isMin
+        "
         @click="decrement"
         @touchstart="pressDecrement"
         @touchend="releaseDecrement"
         @touchcancel="releaseDecrement"
-      />
+      >
+        <var-icon name="minus" />
+      </var-button>
+
       <input
-        :class="n('input')"
+        v-model="inputValue"
+        :class="classes(n('input'), [disabled || formDisabled, n('--not-allowed')])"
         :style="{
           width: toSizeUnit(inputWidth),
           fontSize: toSizeUnit(inputTextSize),
@@ -38,28 +54,40 @@
         :inputmode="toNumber(decimalLength) === 0 ? 'numeric' : 'decimal'"
         :readonly="readonly || formReadonly"
         :disabled="disabled || formDisabled || disableInput"
-        v-model="inputValue"
         @change="handleChange"
       />
-      <var-icon
-        var-counter-cover
-        name="plus"
-        :class="classes(
-          n('increment-button'),
-          [!incrementButton, n('--hidden')]
-        )"
+
+      <var-button
+        :class="
+          classes(
+            n('increment-button'),
+            [!incrementButton, n('--hidden')],
+            [disabled || formDisabled, n('--not-allowed')],
+          )
+        "
         :style="{
           width: toSizeUnit(buttonSize),
           height: toSizeUnit(buttonSize),
         }"
-        v-ripple="{
-          disabled: !ripple || disabled || readonly || disableIncrement || !incrementButton || isMax,
-        }"
+        round
+        var-counter-cover
+        :ripple="
+          ripple &&
+          incrementButton &&
+          !disabled &&
+          !formDisabled &&
+          !readonly &&
+          !formReadonly &&
+          !disableIncrement &&
+          !isMax
+        "
         @click="increment"
         @touchstart="pressIncrement"
         @touchend="releaseIncrement"
         @touchcancel="releaseIncrement"
-      />
+      >
+        <var-icon name="plus" />
+      </var-button>
     </div>
 
     <var-form-details :error-message="errorMessage"></var-form-details>
@@ -67,27 +95,28 @@
 </template>
 
 <script lang="ts">
-import VarIcon from '../icon'
-import VarFormDetails from '../form-details'
-import Ripple from '../ripple'
-import { defineComponent, ref, watch, computed, nextTick } from 'vue'
+import { computed, defineComponent, nextTick, ref, watch, type ComputedRef } from 'vue'
+import { call, toNumber } from '@varlet/shared'
 import { Decimal } from 'decimal.js'
-import { props } from './props'
-import { toNumber } from '../utils/shared'
-import { toSizeUnit } from '../utils/elements'
+import VarButton from '../button'
+import VarFormDetails from '../form-details'
 import { useForm } from '../form/provide'
-import { useValidation, createNamespace, call } from '../utils/components'
-import type { Ref, ComputedRef } from 'vue'
-import type { ValidateTriggers } from './props'
-import type { CounterProvider } from './provide'
+import VarIcon from '../icon'
+import Ripple from '../ripple'
+import { createNamespace, formatElevation, useValidation } from '../utils/components'
+import { toSizeUnit } from '../utils/elements'
+import { props, type CounterValidateTrigger } from './props'
+import { type CounterProvider } from './provide'
 
-const { n, classes } = createNamespace('counter')
 const SPEED = 100
 const DELAY = 600
 
+const { name, n, classes } = createNamespace('counter')
+
 export default defineComponent({
-  name: 'VarCounter',
+  name,
   components: {
+    VarButton,
     VarIcon,
     VarFormDetails,
   },
@@ -95,11 +124,7 @@ export default defineComponent({
   inheritAttrs: false,
   props,
   setup(props) {
-    const inputValue: Ref<string | number> = ref('')
-    let incrementTimer: number
-    let decrementTimer: number
-    let incrementDelayTimer: number
-    let decrementDelayTimer: number
+    const inputValue = ref<string | number>('')
     const { bindForm, form } = useForm()
     const {
       errorMessage,
@@ -109,11 +134,43 @@ export default defineComponent({
       resetValidation,
     } = useValidation()
     const { readonly: formReadonly, disabled: formDisabled } = form ?? {}
+    const isMax: ComputedRef<boolean> = computed(() => {
+      const { max, modelValue } = props
+      return max != null && toNumber(modelValue) >= toNumber(max)
+    })
+    const isMin: ComputedRef<boolean> = computed(() => {
+      const { min, modelValue } = props
+      return min != null && toNumber(modelValue) <= toNumber(min)
+    })
+
+    let incrementTimer: number
+    let decrementTimer: number
+    let incrementDelayTimer: number
+    let decrementDelayTimer: number
+    const counterProvider: CounterProvider = {
+      reset,
+      validate,
+      resetValidation,
+    }
+
+    call(bindForm, counterProvider)
+
+    watch(
+      () => props.modelValue,
+      (newValue) => {
+        setNormalizedValue(normalizeValue(String(newValue)))
+        call(props.onChange, toNumber(newValue))
+      },
+    )
+
+    setNormalizedValue(normalizeValue(String(props.modelValue)))
 
     // expose
-    const validate = () => v(props.rules, props.modelValue)
+    function validate() {
+      return v(props.rules, props.modelValue)
+    }
 
-    const validateWithTrigger = (trigger: ValidateTriggers) => {
+    function validateWithTrigger(trigger: CounterValidateTrigger) {
       nextTick(() => {
         const { validateTrigger, rules, modelValue } = props
         vt(validateTrigger, trigger, rules, modelValue)
@@ -121,30 +178,14 @@ export default defineComponent({
     }
 
     // expose
-    const reset = () => {
+    function reset() {
       const { min } = props
 
       call(props['onUpdate:modelValue'], min != null ? toNumber(min) : 0)
       resetValidation()
     }
 
-    const counterProvider: CounterProvider = {
-      reset,
-      validate,
-      resetValidation,
-    }
-
-    const isMax: ComputedRef<boolean> = computed(() => {
-      const { max, modelValue } = props
-      return max != null && toNumber(modelValue) >= toNumber(max)
-    })
-
-    const isMin: ComputedRef<boolean> = computed(() => {
-      const { min, modelValue } = props
-      return min != null && toNumber(modelValue) <= toNumber(min)
-    })
-
-    const normalizeValue = (value: string) => {
+    function normalizeValue(value: string) {
       const { decimalLength, max, min } = props
       let num: number = toNumber(value)
 
@@ -165,7 +206,7 @@ export default defineComponent({
       return value
     }
 
-    const handleChange = (event: Event) => {
+    function handleChange(event: Event) {
       const { lazyChange, onBeforeChange } = props
       const { value } = event.target as HTMLInputElement
       const normalizedValue = normalizeValue(value)
@@ -175,7 +216,7 @@ export default defineComponent({
       validateWithTrigger('onInputChange')
     }
 
-    const decrement = () => {
+    function decrement() {
       const {
         disabled,
         readonly,
@@ -210,7 +251,7 @@ export default defineComponent({
       }
     }
 
-    const increment = () => {
+    function increment() {
       const {
         disabled,
         readonly,
@@ -245,7 +286,7 @@ export default defineComponent({
       }
     }
 
-    const pressDecrement = () => {
+    function pressDecrement() {
       const { press, lazyChange } = props
 
       if (!press || lazyChange) {
@@ -257,7 +298,7 @@ export default defineComponent({
       }, DELAY)
     }
 
-    const pressIncrement = () => {
+    function pressIncrement() {
       const { press, lazyChange } = props
 
       if (!press || lazyChange) {
@@ -269,31 +310,31 @@ export default defineComponent({
       }, DELAY)
     }
 
-    const releaseDecrement = () => {
+    function releaseDecrement() {
       decrementTimer && clearTimeout(decrementTimer)
       decrementDelayTimer && clearTimeout(decrementDelayTimer)
     }
 
-    const releaseIncrement = () => {
+    function releaseIncrement() {
       incrementTimer && clearTimeout(incrementTimer)
       incrementDelayTimer && clearTimeout(incrementDelayTimer)
     }
 
-    const continuedIncrement = () => {
+    function continuedIncrement() {
       incrementTimer = window.setTimeout(() => {
         increment()
         continuedIncrement()
       }, SPEED)
     }
 
-    const continuedDecrement = () => {
+    function continuedDecrement() {
       decrementTimer = window.setTimeout(() => {
         decrement()
         continuedDecrement()
       }, SPEED)
     }
 
-    const setNormalizedValue = (normalizedValue: string) => {
+    function setNormalizedValue(normalizedValue: string) {
       inputValue.value = normalizedValue
 
       const normalizedValueNum = toNumber(normalizedValue)
@@ -301,32 +342,21 @@ export default defineComponent({
       call(props['onUpdate:modelValue'], normalizedValueNum)
     }
 
-    const change = (value: string | number) => {
+    function change(value: number) {
       setNormalizedValue(normalizeValue(String(value)))
       validateWithTrigger('onLazyChange')
     }
 
-    call(bindForm, counterProvider)
-
-    watch(
-      () => props.modelValue,
-      (newValue) => {
-        setNormalizedValue(normalizeValue(String(newValue)))
-        call(props.onChange, toNumber(newValue))
-      }
-    )
-
-    setNormalizedValue(normalizeValue(String(props.modelValue)))
-
     return {
-      n,
-      classes,
       inputValue,
       errorMessage,
       formDisabled,
       formReadonly,
       isMax,
       isMin,
+      n,
+      classes,
+      formatElevation,
       validate,
       reset,
       resetValidation,
@@ -348,6 +378,8 @@ export default defineComponent({
 @import '../styles/common';
 @import '../styles/elevation';
 @import '../icon/icon';
+@import '../loading/loading';
+@import '../button/button';
 @import '../form-details/formDetails';
 @import '../ripple/ripple';
 @import './counter';

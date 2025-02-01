@@ -1,45 +1,46 @@
 <template>
   <div :class="n('wrap')">
-    <div :class="n()" @click="handleClick" v-bind="$attrs">
+    <div role="radio" :aria-checked="checked" :class="n()" v-bind="$attrs" @click="handleClick">
       <div
+        ref="action"
+        v-ripple="{ disabled: formReadonly || readonly || formDisabled || disabled || !ripple }"
+        v-hover:desktop="handleHovering"
         :class="
           classes(
             n('action'),
             [checked, n('--checked'), n('--unchecked')],
             [errorMessage || radioGroupErrorMessage, n('--error')],
-            [formDisabled || disabled, n('--disabled')]
+            [formDisabled || disabled, n('--disabled')],
           )
         "
-        v-ripple="{ disabled: formReadonly || readonly || formDisabled || disabled || !ripple }"
+        :tabindex="tabIndex"
         :style="{ color: checked ? checkedColor : uncheckedColor }"
+        @focus="isFocusing = true"
+        @blur="isFocusing = false"
       >
-        <slot name="checked-icon" v-if="checked">
-          <var-icon
-            :class="classes(n('icon'), [withAnimation, n('--with-animation')])"
-            var-radio-cover
-            name="radio-marked"
-            :size="iconSize"
-          />
+        <slot v-if="checked" name="checked-icon">
+          <var-icon :class="n('icon')" var-radio-cover name="radio-marked" :size="iconSize" />
         </slot>
-        <slot name="unchecked-icon" v-else>
-          <var-icon
-            :class="classes(n('icon'), [withAnimation, n('--with-animation')])"
-            var-radio-cover
-            name="radio-blank"
-            :size="iconSize"
-          />
+        <slot v-else name="unchecked-icon">
+          <var-icon :class="n('icon')" var-radio-cover name="radio-blank" :size="iconSize" />
         </slot>
+        <var-hover-overlay
+          :hovering="!disabled && !formDisabled && hovering"
+          :focusing="!disabled && !formDisabled && isFocusing"
+        />
       </div>
       <div
+        v-if="$slots.default"
         :class="
           classes(
             n('text'),
             [errorMessage || radioGroupErrorMessage, n('--error')],
-            [formDisabled || disabled, n('--disabled')]
+            [formDisabled || disabled, n('--disabled')],
           )
         "
+        @click="handleTextClick"
       >
-        <slot />
+        <slot :checked="checked" />
       </div>
     </div>
 
@@ -48,34 +49,42 @@
 </template>
 
 <script lang="ts">
-import VarIcon from '../icon'
+import { computed, defineComponent, nextTick, ref } from 'vue'
+import { call, preventDefault } from '@varlet/shared'
+import { useEventListener, useVModel } from '@varlet/use'
 import VarFormDetails from '../form-details'
-import Ripple from '../ripple'
-import { computed, defineComponent, nextTick, ref, watch } from 'vue'
-import { props } from './props'
-import { useValidation, createNamespace, call } from '../utils/components'
-import { useRadioGroup } from './provide'
 import { useForm } from '../form/provide'
-import type { Ref, ComputedRef } from 'vue'
-import type { ValidateTriggers } from './props'
-import type { RadioProvider } from './provide'
+import Hover from '../hover'
+import VarHoverOverlay, { useHoverOverlay } from '../hover-overlay'
+import VarIcon from '../icon'
+import Ripple from '../ripple'
+import { createNamespace, useValidation } from '../utils/components'
+import { props, type RadioValidateTrigger } from './props'
+import { useRadioGroup, type RadioProvider } from './provide'
 
-const { n, classes } = createNamespace('radio')
+const { name, n, classes } = createNamespace('radio')
+
 export default defineComponent({
-  name: 'VarRadio',
-  directives: { Ripple },
+  name,
+  directives: { Ripple, Hover },
   components: {
     VarIcon,
     VarFormDetails,
+    VarHoverOverlay,
   },
   inheritAttrs: false,
   props,
   setup(props) {
-    const value: Ref = ref(false)
-    const checked: ComputedRef<boolean> = computed(() => value.value === props.checkedValue)
-    const withAnimation: Ref<boolean> = ref(false)
+    const action = ref<HTMLElement>()
+    const isFocusing = ref(false)
+    const value = useVModel(props, 'modelValue')
+    const checked = computed(() => value.value === props.checkedValue)
     const { radioGroup, bindRadioGroup } = useRadioGroup()
+    const { hovering, handleHovering } = useHoverOverlay()
     const { form, bindForm } = useForm()
+    const tabIndex = computed(() =>
+      form?.disabled.value || props.disabled || (checked.value && radioGroup) ? undefined : '0',
+    )
     const {
       errorMessage,
       validateWithTrigger: vt,
@@ -84,14 +93,63 @@ export default defineComponent({
       resetValidation,
     } = useValidation()
 
-    const validateWithTrigger = (trigger: ValidateTriggers) => {
+    const radioProvider: RadioProvider = {
+      sync,
+      validate,
+      resetValidation,
+      reset,
+      isFocusing: computed(() => isFocusing.value),
+      // keyboard arrow move
+      move() {
+        action.value!.focus()
+        action.value!.click()
+      },
+      moveable() {
+        return !form?.disabled.value && !props.disabled && !form?.readonly.value && !props.readonly
+      },
+    }
+
+    call(bindRadioGroup, radioProvider)
+    call(bindForm, radioProvider)
+
+    useEventListener(() => window, 'keydown', handleKeydown)
+    useEventListener(() => window, 'keyup', handleKeyup)
+
+    function handleKeydown(event: KeyboardEvent) {
+      if (!isFocusing.value) {
+        return
+      }
+
+      const { key } = event
+
+      if (key === 'Enter' || key === ' ') {
+        preventDefault(event)
+      }
+
+      if (key === 'Enter') {
+        action.value!.click()
+      }
+    }
+
+    function handleKeyup(event: KeyboardEvent) {
+      if (!isFocusing.value) {
+        return
+      }
+
+      if (event.key === ' ') {
+        preventDefault(event)
+        action.value!.click()
+      }
+    }
+
+    function validateWithTrigger(trigger: RadioValidateTrigger) {
       nextTick(() => {
         const { validateTrigger, rules, modelValue } = props
         vt(validateTrigger, trigger, rules, modelValue)
       })
     }
 
-    const change = (changedValue: any) => {
+    function change(changedValue: any) {
       const { checkedValue, onChange } = props
 
       if (radioGroup && value.value === checkedValue) {
@@ -100,13 +158,12 @@ export default defineComponent({
 
       value.value = changedValue
 
-      call(props['onUpdate:modelValue'], value.value)
       call(onChange, value.value)
       radioGroup?.onToggle(checkedValue)
       validateWithTrigger('onChange')
     }
 
-    const handleClick = (e: Event) => {
+    function handleClick(e: Event) {
       const { disabled, readonly, uncheckedValue, checkedValue, onClick } = props
 
       if (form?.disabled.value || disabled) {
@@ -118,26 +175,31 @@ export default defineComponent({
         return
       }
 
-      withAnimation.value = true
       change(checked.value ? uncheckedValue : checkedValue)
     }
 
-    const sync = (v: any) => {
+    function handleTextClick() {
+      action.value!.focus()
+    }
+
+    function sync(v: any) {
       const { checkedValue, uncheckedValue } = props
       value.value = v === checkedValue ? checkedValue : uncheckedValue
     }
 
     // expose
-    const reset = () => {
-      call(props['onUpdate:modelValue'], props.uncheckedValue)
+    function reset() {
+      value.value = props.uncheckedValue
       resetValidation()
     }
 
     // expose
-    const validate = () => v(props.rules, props.modelValue)
+    function validate() {
+      return v(props.rules, props.modelValue)
+    }
 
     // expose
-    const toggle = (changedValue?: any) => {
+    function toggle(changedValue?: any) {
       const { uncheckedValue, checkedValue } = props
 
       const shouldReverse = ![uncheckedValue, checkedValue].includes(changedValue)
@@ -148,34 +210,21 @@ export default defineComponent({
       change(changedValue)
     }
 
-    watch(
-      () => props.modelValue,
-      (newValue) => {
-        value.value = newValue
-      },
-      { immediate: true }
-    )
-
-    const radioProvider: RadioProvider = {
-      sync,
-      validate,
-      resetValidation,
-      reset,
-    }
-
-    call(bindRadioGroup, radioProvider)
-    call(bindForm, radioProvider)
-
     return {
-      withAnimation,
+      action,
+      isFocusing,
       checked,
       errorMessage,
       radioGroupErrorMessage: radioGroup?.errorMessage,
       formDisabled: form?.disabled,
       formReadonly: form?.readonly,
+      hovering,
+      tabIndex,
+      handleHovering,
       n,
       classes,
       handleClick,
+      handleTextClick,
       toggle,
       reset,
       validate,
@@ -190,5 +239,6 @@ export default defineComponent({
 @import '../ripple/ripple';
 @import '../icon/icon';
 @import '../form-details/formDetails';
+@import '../hover-overlay/hoverOverlay';
 @import './radio';
 </style>

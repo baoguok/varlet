@@ -1,9 +1,11 @@
-import type { App } from 'vue'
+import { withInstall, withPropsDefaultsSetter } from '../utils/components'
+import { props as selectProps } from './props'
 import Select from './Select.vue'
 
-Select.install = function (app: App) {
-  app.component(Select.name, Select)
-}
+withInstall(Select)
+withPropsDefaultsSetter(Select, selectProps)
+
+export { selectProps }
 
 export const _SelectComponent = Select
 

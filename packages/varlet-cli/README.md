@@ -1,397 +1,294 @@
-# @varlet/cli
+# Components Library Tools
 
-开箱即用的 `Vue3组件库` 快速成型工具，提供了一系列命令和工具去解决组件库开发上的问题
+### Intro
 
-### 特性
+The out-of-the-box `Vue3 component library` rapid prototyping tool provides a series of commands and tools to solve the problem of component library development.
 
-- 1.开箱即用的组件库开发环境
-- 2.开箱即用的组件库编译工具，支持导出 `esm` 和 `umd` 两种模块代码
-- 3.基于配置文件的组件库文档站点,支持百度统计和主题定制
-- 4.支持 `单文件组件(sfc)` 和 `tsx,jsx` 两种风格的组件库编写风格
-- 5.开箱即用的代码检查工具
-- 6.开箱即用的单元测试工具
-- 7.开箱即用的代码发布工具,发布到 npm 和 github, 并自动生成更新日志
-- 8.支持 `Typescript`
-- 9.支持 `暗黑模式`
-- 10.基于 `pnpm`
+### Features
 
-### 快速开始
+- 📦 &nbsp;Out-of-the-box component library development environment
+- 📦 &nbsp;An out-of-the-box component library compilation tool that supports exporting `esm`, `cjs`, `umd` module codes
+- 🛠️ &nbsp;Configuration file-based component library documentation site, support Baidu statistics and theme customization
+- 🛠️ &nbsp;Supports both `sfc` and `tsx` styles for writing component libraries
+- 📦 &nbsp;Out-of-the-box code inspection tool
+- 📦 &nbsp;Out-of-the-box unit testing tools
+- 📦 &nbsp;Out-of-the-box code publishing tool, publishes to both `npm` and `github`, and automatically generates changelogs
+- 💪 &nbsp;Support for `VSCode` extension development
+- 💪 &nbsp;Support `build svg to web fonts`
+- 💪 &nbsp;Support for `Typescript`
+- 💪 &nbsp;Support `Various themes, including Material Design 2, Material Design 3`
+- 🌍 &nbsp;Support `Internationalization`
+- 🚀 &nbsp;Based on `pnpm`
 
-`@varlet/cli` 内置了 `单文件组件(sfc)` 和 `tsx, jsx` 两种风格的组件库项目模板，可以通过 `gen` 命令直接生成。
-帮助用户直接进入组件本身的开发，推荐使用 `pnpm` 作为包管理工具。
+### Quickstart
+
+`@varlet/cli` has built-in `sfc` and `tsx` style component library project templates, which can be generated directly by the `gen` command.
+It is convenient for you to directly enter the component library development.
 
 ```shell
-# 安装命令行工具
+# playground-ignore
 pnpm add @varlet/cli -g
-# 使用 gen 命令生成项目
-varlet-cli gen 项目名
-cd 项目名
-pnpm install
-pnpm dev
+varlet-cli gen
 ```
 
-然后通过简单修改一些组件库模板的基础信息，就可以开始组件库的开发了
+## Advanced customization
 
-## 高级定制
+### Configuration file
 
-### 配置文件
+The `varlet.config.mjs` in the project root directory is used to manage the specific details of the entire component library project.
+The default configuration can be viewed [varlet.default.config.ts](https://github.com/varletjs/varlet/blob/dev/packages/varlet-cli/src/node/config/varlet.default.config.ts).
+Also refer to `@varlet/ui` [varlet.config.mjs](https://github.com/varletjs/varlet/blob/dev/packages/varlet-ui/varlet.config.mjs).
 
-项目根目录下的 `varlet.config.js` 用来管理整个组件库项目的具体细节
+| Parameter | Description | Type | Default |
+| --- | -------------- | -------- | ---------- |
+| `name` | The full name of the component library, which will be used as the package name | _string_ | `Varlet` |
+| `namespace` | Component library namespace, will be used as component prefix | _string_ | `var` |
+| `host` | Development server host | _number_ | `localhost` |
+| `port` | Development server port | _number_ | `8080` |
+| `proxy` | Development server proxy | _Record<string, string \| ProxyOptions>_ | `-` |
+| `title` | The title of the component library in the document | _string_ | `VARLET` |
+| `logo` | The logo of the component library in the document | _string_ | `-` |
+| `alias` | Path alias (root is src folder when use relative path) | _Record<string, string>_ | `-` |
+| `defaultLanguage` | Document default language | _string_ | `zh-CN` |
+| `defaultLightTheme` | The default light theme | _string_ | `md3LightTheme` |
+| `defaultDarkTheme` | The default dark theme | _string_ | `md3DarkTheme` |
+| `useMobile` | Whether to display the mobile phone preview on the right | _boolean_ | `false` |
+| `themeKey` | The key of the theme in local storage | _string_ | `VARLET_THEME` |
+| `lightTheme` | md2 light mode document theme | _Record<string, any>_ | `-` |
+| `darkTheme` | md2 dark mode document theme | _Record<string, any>_ | `-` |
+| `md3LightTheme` | md3 light mode document theme | _Record<string, any>_ | `-` |
+| `md3DarkTheme` | md3 dark mode document theme | _Record<string, any>_ | `-` |
+| `highlight` | Document code snippet style related | _{ style: string }_ | `-` |
+| `analysis` | Document statistics related | _{ baidu: string }_ | `-` |
+| `pc` | PC side document structure configuration | _[VarletConfigPc](https://github.com/varletjs/varlet/blob/dev/packages/varlet-cli/src/node/config/varlet.config.ts)_ | `-` |
+| `mobile` | Mobile document structure configuration | _[VarletConfigMobile](https://github.com/varletjs/varlet/blob/dev/packages/varlet-cli/src/node/config/varlet.config.ts)_ | `-` |
+| `bundle` | Bundle output options | _{ external: string[], globals: Record<string, string> }_ | `-` |
+| `vitePlugins` | vite plugins | _[Plugin](https://vite.dev/guide/using-plugins.html)[]_ \| `(plugins: Plugin[]) => Plugin[])` | `-` |
+| `directives` | Component library directive folder name | _string[]_ | `[]` |
+| `copy` | Copy file configuration | _[CopyPath[]](https://github.com/varletjs/varlet/blob/dev/packages/varlet-vite-plugins/src/copy.ts)_ | `- ` |
+| `icons` | Font icon packaging related configurations | _[VarletConfigIcons](https://github.com/varletjs/varlet/blob/dev/packages/varlet-cli/src/node/config/varlet.config.ts) _ | `-` |
+| `esbuild` | esbuild configuration | _[VarletConfigEsbuild](https://github.com/varletjs/varlet/blob/dev/packages/varlet-cli/src/node/config/varlet.config.ts)_ | ` -` |
+| `seo` | seo options | _[VarletConfigSeo](https://github.com/varletjs/varlet/blob/dev/packages/varlet-cli/src/node/config/varlet.config.ts)_ | ` -` |
 
-| 参数 | 说明 | 类型 | 默认值 |
-| ----- | -------------- | -------- | ---------- |
-| `host` | 开发服务器主机 | _number_ | `localhost` |
-| `port` | 开发服务器端口 | _number_ | `8080` |
-| `name` | 组件库全名	| _string_ | `Varlet` |
-| `namespace` | 组件库命名空间, 会作为组件前缀 | _string_ | `var` |
-| `title` | 文档中组件库的标题 | _string_ | `VARLET` |
-| `logo` | 文档中组件库的logo | _string_ | `-` |
-| `defaultLanguage` | 文档默认语言 | _string_ | `zh-CN` |
-| `useMobile` | 是否显示右侧手机预览 | _boolean_ | `false` |
-| `themes` | 文档主题 | _SiteThemes_ | `-` |
-| `darkThemes` | 暗黑模式文档主题 | _SiteThemes_ | `-` |
-| `highlight` | 文档代码片段样式相关 | _SiteHighlight_ | `-` |
-| `analysis` | 文档统计相关 | _SiteAnalysis_ | `-` |
-| `pc` | pc端文档结构配置 | _SitePC_ | `-` |
-| `mobile` | mobile端文档结构配置 | _SiteMobile_ | `-` |
-| `moduleCompatible` | 模块兼容配置 | _Record<string, string>_ | `-` |
+#### Menu
 
-#### 模块适配对象
+| Parameter | Description | Type | Default |
+| --- | -------------- | -------- | ---------- |
+| `doc` | The document page corresponds to the matching file name, required | _string_ | `-` |
+| `type` | The type of menu, when the type is `1`, it means the category menu, when the type is `2`, the doc field matches the component file under src, when the type is `3`, the doc field matches the md file under docs, required | _MenuTypes_ | `-` |
+| `text` | The text displayed in the menu, English display text can be configured when internationalization is set, required | _Record<string, string>_ | `-` |
+| `useMobile` | Whether to display the mobile phone preview on the right side on the current document page, if not filled, the default value is useMobile in config  | _boolean_ | `-` |
 
-一些外部依赖可能需要进行模块语法的适配，以达到可以正确编译到 `commonjs` 和 `esmodule` 的目的，例如 `dayjs` 的 `esmodule` 写法是
+### Custom pages
 
-```js
-import dayjs from 'dayjs/esm'
+If you want to insert other pages into the component library, you can create a `pages` folder in the project root directory to write a vue component to generate other pages.
+The directory structure is as follows:
+
+```text
+// playground-ignore
+|-- varlet-ui
+  |-- src
+  |-- docs
+  |-- pages
+    |-- sponsor
+      |-- index.vue
+    |-- contributor
+      |-- locale
+        |-- en-US.ts
+      |-- index.vue
+    |-- changelog
+      |-- locale
+        |-- zh-CN.ts
+        |-- en-US.ts
+      |-- index.vue
+      
 ```
 
-而为了构建 `commonjs` 时的写法是
+The resulting route is as follows:
 
-```js
-import * as dayjs from 'dayjs'
+```text
+// playground-ignore
+/zh-CN/sponsor
+/en-US/contributor
+/zh-CN/changelog
+/en-US/changelog
 ```
 
-在项目中我们拥抱 `esmodule` 模块使用第一种写法，并做如下配置进行适配
+### Command related
 
-```js
-// varlet.config.js
-module.exports = {
-  moduleCompatible: {
-    "import dayjs from 'dayjs/esm'\n": "import * as dayjs from 'dayjs'\n"
-  }
-}
-```
-
-#### SiteThemes
-
-主题变量相关，由于默认的主题变量可能时常修改，以 `varlet` 官方文档的主题为准
-
-| 参数 |
-| ----- |
-| `color-body` |
-| `color-bar` |
-| `color-sub-bar` |
-| `color-text` |
-| `color-sub-text` |
-| `color-border` |
-| `color-shadow` |
-| `color-introduce-border` |
-| `color-primary` |
-| `color-link` |
-| `color-type` |
-| `color-progress` |
-| `color-progress-track` |
-| `color-side-bar` |
-| `color-side-bar-active-background` |
-| `color-app-bar` |
-| `color-nav-button-hover-background` |
-| `color-mobile-cell-hover` |
-| `color-pc-language-active` |
-| `color-pc-language-active-background` |
-| `color-mobile-language-active` |
-| `color-mobile-language-active-background` |
-| `color-hl-background` |
-| `color-hl-code` |
-| `color-hl-border` |
-| `color-hl-group-a` |
-| `color-hl-group-b` |
-| `color-hl-group-c` |
-| `color-hl-group-d` |
-| `color-hl-group-e` |
-| `color-hl-group-f` |
-| `color-hl-group-g` |
-| `color-hl-group-h` |
-| `color-hl-group-i` |
-
-#### SiteHighlight
-
-代码片段高亮，基于[highlight.js](https://highlightjs.org/)
-
-| 参数 | 说明 | 类型 | 默认值 |
-| ----- | -------------- | -------- | ---------- |
-| `style` | highlight的css地址 | _string_ | `-` |
-
-#### SiteAnalysis
-
-统计埋点相关
-
-| 参数 | 说明 | 类型 | 默认值 |
-| ----- | -------------- | -------- | ---------- |
-| `baidu` | 百度统计脚本地址 | _string_ | `-` |
-
-#### SitePC, SiteMobile
-
-文档结构部分相关，示例配置如下
-
-```js
-module.exports = {
-  pc: {
-    redirect: '/home',
-    title: {
-      'zh-CN': '一个组件库',
-    },
-    header: {
-      darkMode: null,
-      i18n: null,
-      github: 'https://github.com/varletjs/varlet',
-    },
-    menu: [
-      {
-        text: {
-          'zh-CN': '开发指南',
-        },
-        // 侧边栏菜单目录
-        type: 1,
-      },
-      {
-        text: {
-          'zh-CN': '基本介绍',
-        },
-        doc: 'home',
-        // 索引项目根目录下的md文档
-        type: 3,
-      },
-      {
-        text: {
-          'zh-CN': '基础组件',
-        },
-        type: 1,
-      },
-      {
-        text: {
-          'zh-CN': 'Button 按钮',
-        },
-        doc: 'button',
-        // 索引组件根目录下的md文档
-        type: 2,
-      },
-    ],
-  },
-  mobile: {
-    redirect: '/home',
-    title: {
-      'zh-CN': '一个组件库',
-    },
-    header: {
-      darkMode: null,
-      i18n: null,
-      playground: null,
-      github: 'https://github.com/varletjs/varlet',
-    },
-  },
-}
-```
-
-### 命令相关
-
-#### 启动开发服务器
+#### Start the development server
 
 ```shell
+# playground-ignore
 varlet-cli dev
+# force mode
+varlet-cli dev -f
+# draft mode
+varlet-cli dev -d
 ```
 
-#### 构建文档站点
+#### Build a documentation site
 
 ```shell
+# playground-ignore
 varlet-cli build
 ```
 
-#### 预览文档站点
+#### Preview documentation site
 
 ```shell
+# playground-ignore
 varlet-cli preview
+# set port number
+varlet-cli preview -p <port>
 ```
 
-#### 构建组件库代码
+#### Compile component library
 
 ```shell
+# playground-ignore
 varlet-cli compile
 ```
 
-#### 执行所有的单元测试
+#### Compile style vars types declaration file
 
 ```shell
+# playground-ignore
+varlet-cli compile:style-vars
+```
+
+#### Run VSCode extension development environment
+
+```shell
+# playground-ignore
+varlet-cli dev:extension
+```
+
+#### Build VSCode extension for production
+
+```shell
+# playground-ignore
+varlet-cli build:extension
+```
+
+#### Build svg to web fonts
+
+```shell
+# playground-ignore
+varlet-cli build:icons -w
+varlet-cli build:icons
+```
+
+#### Execute all unit tests
+
+```shell
+# playground-ignore
 varlet-cli test
 ```
 
-#### 以 watch 模式执行单元测试
+#### Execute a unit test
 
 ```shell
+# playground-ignore
+varlet-cli test -c <componentName>
+```
+
+#### Execute unit tests in watch mode
+
+```shell
+# playground-ignore
 varlet-cli test -w
-or
-varlet-cli test -wa
 ```
 
-#### 检查代码
+#### Execute unit tests and report coverage
 
 ```shell
-varlet-cli lint
+# playground-ignore
+varlet-cli test -cov
 ```
 
-#### 校验提交信息
+#### Lint git commit message
 
 ```shell
+# playground-ignore
 varlet-cli commit-lint
 ```
 
-#### 生成更新日志
+#### Show checklist
 
 ```shell
+# playground-ignore
+varlet-cli checklist
+```
+
+#### Generate changelog
+
+```shell
+# playground-ignore
 varlet-cli changelog
 ```
 
-#### 发布组件库
+#### Release component library
 
 ```shell
+# playground-ignore
 varlet-cli release
 ```
 
-#### 生成一个项目模板
-```shell
-varlet-cli gen <projectName>
-```
-
-### babel
-
-对 `babel` 进行配置，首先在 `package.json` 中指定目标浏览器
-
-```json
-{
-  "browserslist": [
-    "Chrome >= 51",
-    "iOS >= 10"
-  ]
-}
-```
-
-创建 `babel.config,js`
-
-```js
-// babel.config.js
-module.exports = {
-  presets: [
-    [
-      '@varlet/cli/preset',
-      {
-        loose: process.env.NODE_ENV === 'compile',
-      },
-    ],
-  ],
-}
-```
-
-### git 和 npm
-
-#### git-hook
-
-`simple-git-hooks`，`lint-staged` 配合 `eslint`，`stylelint`，`varlet-cli commit-lint` 做commit前的检查，`package.json` 配置如下
-
-```json
-{
-  "simple-git-hooks": {
-    "pre-commit": "pnpm exec lint-staged --allow-empty --concurrent false",
-    "commit-msg": "npx --no-install varlet-cli commit-lint $1"
-  },
-  "lint-staged": {
-    "*.{ts,tsx,js,vue,less}": "prettier --write",
-    "*.{ts,tsx,js,vue}": "eslint --fix",
-    "*.{vue,css,less}": "stylelint --fix"
-  },
-  "eslintConfig": {
-    "root": true,
-    "ignorePatterns": [
-      "es/**",
-      "umd/**",
-      "site/**",
-      "public/**",
-      "src/*/__tests__/**",
-      ".varlet/**"
-    ],
-    "extends": [
-      "@varlet"
-    ]
-  },
-  "stylelint": {
-    "extends": [
-      "@varlet/stylelint-config"
-    ],
-    "ignoreFiles": [
-      "es/**",
-      "umd/**",
-      "site/**",
-      "coverage/**",
-      "public/**",
-      "highlight/**"
-    ]
-  }
-}
-```
-
-挂载钩子
+#### Generate a project template
 
 ```shell
-npx simple-git-hooks
+# playground-ignore
+varlet-cli gen
+
+# Options
+-n
+--name
+  project name
+-s
+--sfc
+  Generate sfc-style project templates
+-t
+--tsx
+  Generate tsx-style project templates
+-l
+--locale
+  Need to support internationalization
 ```
 
-创建 `.prettierignore`
+#### Create a component template file
 
-```text
-// .prettierignore
-coverage/**
-es/**
-umd/**
-site/**
-public/**
-src/*/__tests__/**
-*.md
+```shell
+# playground-ignore
+varlet-cli create
+
+# Options
+-n
+--name
+  project name
+-s
+--sfc
+  Generate sfc-style component
+-t
+--tsx
+  Generate tsx-style component
+-l
+--locale
+  Need to support internationalization
 ```
 
-### typescript
+### Note before publish
 
-创建 `tsconfig.json`
+1. `npm` repository registry must set to `npm` official mirror
+2. Execute `npm login` to log in
 
-```json
-{
-  "compilerOptions": {
-    "strict": true,
-    "downlevelIteration": true,
-    "declaration": true,
-    "skipLibCheck": true,
-    "esModuleInterop": true,
-    "allowJs": true,
-    "lib": ["esnext", "dom"],
-    "allowSyntheticDefaultImports": true,
-    "jsx": "preserve"
-  }
-}
+### Q & A
+
+#### How to solve failure of installing sharp ?
+
+- You can choose to change mirror site which contains binaries for both sharp and libvips.
+
+``` shell
+pnpm config set sharp_binary_host "https://npmmirror.com/mirrors/sharp"
+pnpm config set sharp_libvips_binary_host "https://npmmirror.com/mirrors/sharp-libvips"
 ```
-
-#### 发布前注意
-
-1. `npm` 的仓库源必须指向 `npm` 官方镜像
-2. 执行 `npm login` 进行登录
-
-### Contributors
-
-<a href="https://github.com/varletjs/varlet/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=haoziqaq/varlet" />
-</a>

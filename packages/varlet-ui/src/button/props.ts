@@ -1,74 +1,50 @@
-import { props as loadingProps } from '../loading/props'
-import { pickProps } from '../utils/components'
-import type { PropType } from 'vue'
+import { type ButtonHTMLAttributes, type PropType } from 'vue'
+import { loadingProps } from '../loading'
+import { defineListenerProp, pickProps } from '../utils/components'
 
-function typeValidator(type: string): boolean {
-  return ['default', 'primary', 'info', 'success', 'warning', 'danger'].includes(type)
-}
+export type ButtonType = 'default' | 'primary' | 'info' | 'success' | 'warning' | 'danger'
 
-function sizeValidator(size: string): boolean {
-  return ['normal', 'mini', 'small', 'large'].includes(size)
-}
+export type ButtonSize = 'normal' | 'mini' | 'small' | 'large'
 
 export const props = {
-  type: {
-    type: String as PropType<'default' | 'primary' | 'info' | 'success' | 'warning' | 'danger'>,
-    default: 'default',
-    validator: typeValidator,
+  type: String as PropType<ButtonType>,
+  nativeType: {
+    type: String as PropType<ButtonHTMLAttributes['type']>,
+    default: 'button',
   },
-  size: {
-    type: String as PropType<'normal' | 'mini' | 'small' | 'large'>,
-    default: 'normal',
-    validator: sizeValidator,
-  },
-  loading: {
-    type: Boolean,
-    default: false,
-  },
-  round: {
-    type: Boolean,
-    default: false,
-  },
-  block: {
-    type: Boolean,
-    default: false,
-  },
-  text: {
-    type: Boolean,
-    default: false,
-  },
-  outline: {
-    type: Boolean,
-    default: false,
-  },
-  disabled: {
-    type: Boolean,
-    default: false,
-  },
+  size: String as PropType<ButtonSize>,
+  loading: Boolean,
+  round: Boolean,
+  block: Boolean,
+  text: Boolean,
+  outline: Boolean,
+  disabled: Boolean,
+  autoLoading: Boolean,
+  iconContainer: Boolean,
   ripple: {
     type: Boolean,
     default: true,
   },
-  color: {
-    type: String,
-  },
-  textColor: {
-    type: String,
-  },
-  autoLoading: {
+  focusable: {
     type: Boolean,
-    default: false,
+    default: true,
   },
-  loadingRadius: {
-    type: [Number, String],
-    default: 12,
+  color: String,
+  textColor: String,
+  elevation: {
+    type: [Boolean, Number, String],
+    default: true,
   },
+  loadingRadius: [Number, String],
   loadingType: pickProps(loadingProps, 'type'),
-  loadingSize: pickProps(loadingProps, 'size'),
-  onClick: {
-    type: Function as PropType<(e: Event) => void | Promise<any>>,
+  loadingSize: {
+    ...pickProps(loadingProps, 'size'),
+    default: undefined,
   },
-  onTouchstart: {
-    type: Function as PropType<(e: Event) => void | Promise<any>>,
+  loadingColor: {
+    ...pickProps(loadingProps, 'color'),
+    default: 'currentColor',
   },
+  onClick: defineListenerProp<(e: Event) => void | Promise<any>>(),
+  onTouchstart: defineListenerProp<(e: Event) => void | Promise<any>>(),
 }

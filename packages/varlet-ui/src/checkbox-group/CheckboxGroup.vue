@@ -1,6 +1,18 @@
 <template>
   <div :class="n('wrap')">
     <div :class="classes(n(), n(`--${direction}`))">
+      <template v-if="options.length">
+        <var-checkbox
+          v-for="option in options"
+          :key="option[valueKey]"
+          :checked-value="option[valueKey]"
+          :disabled="option.disabled"
+        >
+          <template #default="{ checked }">
+            <maybe-v-node :is="isFunction(option[labelKey]) ? option[labelKey](option, checked) : option[labelKey]" />
+          </template>
+        </var-checkbox>
+      </template>
       <slot />
     </div>
     <var-form-details :error-message="errorMessage" />
@@ -8,25 +20,24 @@
 </template>
 
 <script lang="ts">
+import { computed, defineComponent, nextTick, watch } from 'vue'
+import { call, isFunction, uniq } from '@varlet/shared'
+import VarCheckbox from '../checkbox'
 import VarFormDetails from '../form-details'
-import { defineComponent, computed, watch, nextTick } from 'vue'
-import { props } from './props'
-import { useValidation, createNamespace, call } from '../utils/components'
-import { useCheckboxes } from './provide'
 import { useForm } from '../form/provide'
-import { uniq } from '../utils/shared'
-import type { ComputedRef } from 'vue'
-import type { ValidateTriggers } from './props'
-import type { CheckboxGroupProvider } from './provide'
+import { createNamespace, MaybeVNode, useValidation } from '../utils/components'
+import { props, type CheckboxGroupValidateTrigger } from './props'
+import { useCheckboxes, type CheckboxGroupProvider } from './provide'
 
-const { n, classes } = createNamespace('checkbox-group')
+const { name, n, classes } = createNamespace('checkbox-group')
+
 export default defineComponent({
-  name: 'VarCheckboxGroup',
-  components: { VarFormDetails },
+  name,
+  components: { VarFormDetails, VarCheckbox, MaybeVNode },
   props,
   setup(props) {
-    const max: ComputedRef<number | string | undefined> = computed(() => props.max)
-    const checkedCount: ComputedRef<number> = computed(() => props.modelValue.length)
+    const max = computed(() => props.max)
+    const checkedCount = computed(() => props.modelValue.length)
     const { length, checkboxes, bindCheckboxes } = useCheckboxes()
     const { bindForm } = useForm()
     const {
@@ -36,83 +47,7 @@ export default defineComponent({
       // expose
       resetValidation,
     } = useValidation()
-    const checkboxGroupErrorMessage: ComputedRef<string> = computed(() => errorMessage.value)
-
-    const validateWithTrigger = (trigger: ValidateTriggers) => {
-      nextTick(() => {
-        const { validateTrigger, rules, modelValue } = props
-        vt(validateTrigger, trigger, rules, modelValue)
-      })
-    }
-
-    const change = (changedModelValue: any) => {
-      call(props['onUpdate:modelValue'], changedModelValue)
-      call(props.onChange, changedModelValue)
-      validateWithTrigger('onChange')
-    }
-
-    const onChecked = (changedValue: any) => {
-      const { modelValue } = props
-
-      if (!modelValue.includes(changedValue)) {
-        change([...modelValue, changedValue])
-      }
-    }
-
-    const onUnchecked = (changedValue: any) => {
-      const { modelValue } = props
-
-      if (!modelValue.includes(changedValue)) {
-        return
-      }
-
-      change(modelValue.filter((value) => value !== changedValue))
-    }
-
-    const syncCheckboxes = () => checkboxes.forEach(({ sync }) => sync(props.modelValue))
-
-    const resetWithAnimation = () => {
-      checkboxes.forEach((checkbox) => checkbox.resetWithAnimation())
-    }
-
-    // expose
-    const checkAll = () => {
-      const checkedValues: any[] = checkboxes.map(({ checkedValue }) => checkedValue.value)
-      const changedModelValue: any[] = uniq(checkedValues)
-
-      resetWithAnimation()
-
-      call(props['onUpdate:modelValue'], changedModelValue)
-
-      return changedModelValue
-    }
-
-    // expose
-    const inverseAll = () => {
-      const checkedValues: any[] = checkboxes
-        .filter(({ checked }) => !checked.value)
-        .map(({ checkedValue }) => checkedValue.value)
-      const changedModelValue: any[] = uniq(checkedValues)
-
-      resetWithAnimation()
-
-      call(props['onUpdate:modelValue'], changedModelValue)
-
-      return changedModelValue
-    }
-
-    // expose
-    const reset = () => {
-      call(props['onUpdate:modelValue'], [])
-      resetValidation()
-    }
-
-    // expose
-    const validate = () => v(props.rules, props.modelValue)
-
-    watch(() => props.modelValue, syncCheckboxes, { deep: true })
-
-    watch(() => length.value, syncCheckboxes)
+    const checkboxGroupErrorMessage = computed(() => errorMessage.value)
 
     const checkboxGroupProvider: CheckboxGroupProvider = {
       max,
@@ -125,8 +60,80 @@ export default defineComponent({
       errorMessage: checkboxGroupErrorMessage,
     }
 
+    watch(() => props.modelValue, syncCheckboxes, { deep: true })
+
+    watch(() => length.value, syncCheckboxes)
+
     bindCheckboxes(checkboxGroupProvider)
     call(bindForm, checkboxGroupProvider)
+
+    function validateWithTrigger(trigger: CheckboxGroupValidateTrigger) {
+      nextTick(() => {
+        const { validateTrigger, rules, modelValue } = props
+        vt(validateTrigger, trigger, rules, modelValue)
+      })
+    }
+
+    function change(changedModelValue: any) {
+      call(props['onUpdate:modelValue'], changedModelValue)
+      call(props.onChange, changedModelValue)
+      validateWithTrigger('onChange')
+    }
+
+    function onChecked(changedValue: any) {
+      const { modelValue } = props
+
+      if (!modelValue.includes(changedValue)) {
+        change([...modelValue, changedValue])
+      }
+    }
+
+    function onUnchecked(changedValue: any) {
+      const { modelValue } = props
+
+      if (!modelValue.includes(changedValue)) {
+        return
+      }
+
+      change(modelValue.filter((value) => value !== changedValue))
+    }
+
+    function syncCheckboxes() {
+      checkboxes.forEach(({ sync }) => sync(props.modelValue))
+    }
+
+    // expose
+    function checkAll() {
+      const checkedValues: any[] = checkboxes.map(({ checkedValue }) => checkedValue.value)
+      const changedModelValue: any[] = uniq(checkedValues)
+
+      call(props['onUpdate:modelValue'], changedModelValue)
+
+      return changedModelValue
+    }
+
+    // expose
+    function inverseAll() {
+      const checkedValues: any[] = checkboxes
+        .filter(({ checked }) => !checked.value)
+        .map(({ checkedValue }) => checkedValue.value)
+      const changedModelValue: any[] = uniq(checkedValues)
+
+      call(props['onUpdate:modelValue'], changedModelValue)
+
+      return changedModelValue
+    }
+
+    // expose
+    function reset() {
+      call(props['onUpdate:modelValue'], [])
+      resetValidation()
+    }
+
+    // expose
+    function validate() {
+      return v(props.rules, props.modelValue)
+    }
 
     return {
       errorMessage,
@@ -137,6 +144,7 @@ export default defineComponent({
       reset,
       validate,
       resetValidation,
+      isFunction,
     }
   },
 })
@@ -145,5 +153,9 @@ export default defineComponent({
 <style lang="less">
 @import '../styles/common';
 @import '../form-details/formDetails';
+@import '../ripple/ripple';
+@import '../icon/icon';
+@import '../hover-overlay/hoverOverlay';
+@import '../checkbox/checkbox';
 @import './checkboxGroup';
 </style>

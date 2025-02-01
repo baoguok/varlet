@@ -1,11 +1,12 @@
+import { nextTick, reactive, type TeleportProps } from 'vue'
+import { call, inBrowser, isString } from '@varlet/shared'
+import { mountInstance, withInstall, withPropsDefaultsSetter } from '../utils/components'
 import VarDialog from './Dialog.vue'
-import { reactive, nextTick } from 'vue'
-import { inBrowser, isNumber, isString } from '../utils/shared'
-import { mountInstance } from '../utils/components'
-import type { App, TeleportProps } from 'vue'
+import { props as dialogProps } from './props'
 
-interface DialogOptions {
+export interface DialogOptions {
   show?: boolean
+  width?: string | number
   title?: string
   message?: string
   messageAlign?: string
@@ -24,6 +25,7 @@ interface DialogOptions {
   overlayStyle?: Record<string, any>
   lockScroll?: boolean
   closeOnClickOverlay?: boolean
+  closeOnKeyEscape?: boolean
   onOpen?: () => void
   onOpened?: () => void
   onBeforeClose?: (done: () => void) => void
@@ -32,15 +34,27 @@ interface DialogOptions {
   onConfirm?: () => void
   onCancel?: () => void
   onClickOverlay?: () => void
+  onKeyEscape?: () => void
   // internal
   teleport?: TeleportProps['to']
 }
 
 export type DialogActions = 'confirm' | 'cancel' | 'close'
 
-let singletonOptions: DialogOptions | null
+export type UserDialogOptions = DialogOptions | string
 
-function Dialog(options: DialogOptions | string | number): Promise<DialogActions | void> {
+let singletonOptions: DialogOptions | null
+let defaultOptions: DialogOptions = {}
+
+function normalizeOptions(options: UserDialogOptions = {}) {
+  if (isString(options)) {
+    return { ...defaultOptions, message: options }
+  }
+
+  return { ...defaultOptions, ...options }
+}
+
+function Dialog(options?: UserDialogOptions): Promise<DialogActions | void> {
   if (!inBrowser()) {
     return Promise.resolve()
   }
@@ -48,26 +62,26 @@ function Dialog(options: DialogOptions | string | number): Promise<DialogActions
   return new Promise((resolve) => {
     Dialog.close()
 
-    const dialogOptions: DialogOptions = isString(options) || isNumber(options) ? { message: String(options) } : options
+    const dialogOptions: DialogOptions = normalizeOptions(options)
     const reactiveDialogOptions: DialogOptions = reactive(dialogOptions)
     reactiveDialogOptions.teleport = 'body'
     singletonOptions = reactiveDialogOptions
 
     const { unmountInstance } = mountInstance(VarDialog, reactiveDialogOptions, {
       onConfirm: () => {
-        reactiveDialogOptions.onConfirm?.()
+        call(reactiveDialogOptions.onConfirm)
         resolve('confirm')
       },
       onCancel: () => {
-        reactiveDialogOptions.onCancel?.()
+        call(reactiveDialogOptions.onCancel)
         resolve('cancel')
       },
       onClose: () => {
-        reactiveDialogOptions.onClose?.()
+        call(reactiveDialogOptions.onClose)
         resolve('close')
       },
       onClosed: () => {
-        reactiveDialogOptions.onClosed?.()
+        call(reactiveDialogOptions.onClosed)
         unmountInstance()
         singletonOptions === reactiveDialogOptions && (singletonOptions = null)
       },
@@ -84,15 +98,15 @@ function Dialog(options: DialogOptions | string | number): Promise<DialogActions
   })
 }
 
-VarDialog.install = function (app: App) {
-  app.component(VarDialog.name, VarDialog)
+Dialog.setDefaultOptions = function (options: DialogOptions) {
+  defaultOptions = options
 }
 
-Dialog.install = function (app: App) {
-  app.component(VarDialog.name, VarDialog)
+Dialog.resetDefaultOptions = function () {
+  defaultOptions = {}
 }
 
-Dialog.close = () => {
+Dialog.close = function () {
   if (singletonOptions != null) {
     const prevSingletonOptions = singletonOptions
     singletonOptions = null
@@ -104,6 +118,11 @@ Dialog.close = () => {
 }
 
 Dialog.Component = VarDialog
+withInstall(VarDialog)
+withInstall(VarDialog, Dialog)
+withPropsDefaultsSetter(Dialog, dialogProps)
+
+export { dialogProps }
 
 export const _DialogComponent = VarDialog
 
